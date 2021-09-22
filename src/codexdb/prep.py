@@ -33,12 +33,13 @@ def extract(spider_dir, db_json):
     db_path = f'{db_dir}/{db_id}.sqlite'
     print(f'Path to DB: {db_path}')
     with sqlite3.connect(db_path) as con:
-        con.text_factory = bytes
+        #con.text_factory = bytes
+        con.text_factory = lambda b: b.decode(errors = 'ignore')
         for tbl in db_json['table_names_original']:
             query = f'select * from {tbl}'
             df = pd.read_sql_query(query, con)
             out_path = f'{db_dir}/{tbl}.csv'
-            df.to_csv(out_path, sep='\t')
+            df.to_csv(out_path, index=False)
 
 
 def get_result(spider_dir, query_json):
@@ -69,6 +70,15 @@ if __name__ == '__main__':
     parser.add_argument('key', type=str, help='OpenAI Key')
     parser.add_argument('spider', type=str, help='Path to SPIDER benchmark')
     args = parser.parse_args()
+        
+    tables_path = f'{args.spider}/tables.json'
+    with open(tables_path) as file:
+        tables = json.load(file)
+        nr_dbs = len(tables)
+        for db_idx, db in enumerate(tables):
+            db_id = db['db_id']
+            print(f'Extracting {db_id} ({db_idx+1}/{nr_dbs})')
+            extract(args.spider, db)
     
     all_results = pd.DataFrame({
         'db_id':[], 'question':[], 'query':[], 'results':[]})
@@ -98,12 +108,3 @@ if __name__ == '__main__':
         print(f'Processed {nr_valid}/{nr_queries} queries')
         results_out = f'{args.spider}/all_results.csv'
         all_results.to_csv(results_out, sep='\t')
-    
-    tables_path = f'{args.spider}/tables.json'
-    with open(tables_path) as file:
-        tables = json.load(file)
-        nr_dbs = len(tables)
-        for db_idx, db in enumerate(tables):
-            db_id = db['db_id']
-            print(f'Extracting {db_id} ({db_idx+1}/{nr_dbs})')
-            extract(args.spider, db)
