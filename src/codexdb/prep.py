@@ -80,8 +80,7 @@ if __name__ == '__main__':
             print(f'Extracting {db_id} ({db_idx+1}/{nr_dbs})')
             extract(args.spider, db)
     
-    all_results = pd.DataFrame({
-        'db_id':[], 'question':[], 'query':[], 'results':[]})
+    all_results = []
     train_path = f'{args.spider}/train_spider.json'
     with open(train_path) as file:
         queries = json.load(file)
@@ -99,12 +98,12 @@ if __name__ == '__main__':
                 row = {
                     'db_id':db_id, 'question':question,
                     'query':query, 'results':result}
-                all_results = all_results.append(
-                    row, ignore_index=True)
+                all_results.append(row)
                 nr_valid += 1
             except:
                 print(f'Invalid Query: {query} on {db_id}')
     
         print(f'Processed {nr_valid}/{nr_queries} queries')
-        results_out = f'{args.spider}/all_results.csv'
-        all_results.to_csv(results_out, sep='\t')
+        results_path = f'{args.spider}/all_results.json'
+        with open(results_path, 'w') as file:
+            json.dump(all_results, file)

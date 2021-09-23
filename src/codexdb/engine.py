@@ -5,6 +5,7 @@ Created on Sep 21, 2021
 '''
 from io import StringIO
 from contextlib import redirect_stdout
+import sys
 
 class PythonExec():
     """ Executes automatically generated Python code. """
@@ -35,10 +36,14 @@ class PythonExec():
         all_code = all_code.replace(
             "pd.read_csv('", f"pd.read_csv('{data_path}")
         
-        f = StringIO()
-        with redirect_stdout(f):
-            exec(all_code)
-        return f.getvalue()
+        try:
+            f = StringIO()
+            with redirect_stdout(f):
+                exec(all_code)
+            return f.getvalue()
+        except Exception as e:
+            sys.stderr.write(f'Exception: {e}\n')
+            return ''
     
     def _prune_code(self, generated):
         """ Prune generated code. 
@@ -51,7 +56,13 @@ class PythonExec():
         """
         gen_lines = generated.split('\n')
         gen_lines = [g for g in gen_lines if g]
-        gen_lines.pop()
+        if len(gen_lines) > 1:
+            gen_lines.pop()
+        
+        if gen_lines:
+            first_line = gen_lines[0]
+            if not first_line.startswith('print('):
+                gen_lines[0] = 'print(' + first_line + ')'
         
         pruned = []
         for line in gen_lines:

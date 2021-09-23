@@ -29,8 +29,9 @@ class AllPrompt():
         p_parts = []
         p_parts.append('import pandas as pd\n')
         p_parts.append(self.db_prompt.load_data(db_id))
-        p_parts.append(f"\n# {question}")
-        p_parts.append(f"\nprint('{question}')")
+        q_requoted = question.replace("'", '"')
+        p_parts.append(f"\n# {q_requoted}")
+        p_parts.append(f"\nprint('{q_requoted}')")
         p_parts.append('\n')
         return ''.join(p_parts)
     

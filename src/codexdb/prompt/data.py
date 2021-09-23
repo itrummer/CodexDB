@@ -29,6 +29,11 @@ class DbPrompt():
         tbl_to_cols = self._get_tbls_to_cols(db_id)
         rows = []
         for tbl, cols in tbl_to_cols.items():
+            # df_name = tbl.replace(' ', '_')
+            # quoted_cols = [f"'{c}'" for c in cols]
+            # col_list = ', '.join(quoted_cols)
+            # row = f"{df_name} = pd.read_csv('{tbl}.csv', names=[{col_list}])"
+            # rows.append(row)
             df_name = tbl.replace(' ', '_')
             row = f"{df_name} = pd.read_csv('{tbl}.csv')"
             rows.append(row)
@@ -108,7 +113,7 @@ class DbPrompt():
             dictionary mapping tables to columns
         """
         db_json = self.schemata[db_id]
-        tables = db_json['table_names']
+        tables = db_json['table_names_original']
         columns = db_json['column_names']
         
         col_names = [name for _, name in columns]
