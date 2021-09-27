@@ -80,30 +80,31 @@ if __name__ == '__main__':
             print(f'Extracting {db_id} ({db_idx+1}/{nr_dbs})')
             extract(args.spider, db)
     
-    all_results = []
-    train_path = f'{args.spider}/train_spider.json'
-    with open(train_path) as file:
-        queries = json.load(file)
-        nr_queries = len(queries)
-        nr_valid = 0
-        
-        for q_idx, q_json in enumerate(queries):
-            query = q_json['query']
-            question = q_json['question']
-            db_id = q_json['db_id']
-            print(f'"{query}" on "{db_id}" ({q_idx+1}/{nr_queries})')
+    for in_file in ['train_spider', 'dev']:
+        all_results = []
+        train_path = f'{args.spider}/{in_file}.json'
+        with open(train_path) as file:
+            queries = json.load(file)
+            nr_queries = len(queries)
+            nr_valid = 0
             
-            try:
-                result = get_result(args.spider, q_json)
-                row = {
-                    'db_id':db_id, 'question':question,
-                    'query':query, 'results':result}
-                all_results.append(row)
-                nr_valid += 1
-            except:
-                print(f'Invalid Query: {query} on {db_id}')
-    
-        print(f'Processed {nr_valid}/{nr_queries} queries')
-        results_path = f'{args.spider}/all_results.json'
-        with open(results_path, 'w') as file:
-            json.dump(all_results, file)
+            for q_idx, q_json in enumerate(queries):
+                query = q_json['query']
+                question = q_json['question']
+                db_id = q_json['db_id']
+                print(f'"{query}" on "{db_id}" ({q_idx+1}/{nr_queries})')
+                
+                try:
+                    result = get_result(args.spider, q_json)
+                    row = {
+                        'db_id':db_id, 'question':question,
+                        'query':query, 'results':result}
+                    all_results.append(row)
+                    nr_valid += 1
+                except:
+                    print(f'Invalid Query: {query} on {db_id}')
+        
+            print(f'Processed {nr_valid}/{nr_queries} queries')
+            results_path = f'{args.spider}/results_{in_file}.json'
+            with open(results_path, 'w') as file:
+                json.dump(all_results, file)
