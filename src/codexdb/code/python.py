@@ -57,7 +57,6 @@ class PythonGenerator(codexdb.code.generic.Generator):
                 snippets += self._add_task(db_json, question, 5000 + f_idx * 100)
                 code = f"print({tbl_1}.merge({tbl_2}, left_on='{col_1}', right_on='{col_2}'))"
                 snippets += [(5010 + f_idx * 100, code)]
-                #snippets += [(5011 + f_idx * 100, '\n')]
         return snippets
     
     def _add_data_load(self, db_json, tbl_idx):
@@ -96,7 +95,7 @@ class PythonGenerator(codexdb.code.generic.Generator):
         code = f"{tbl_name}.columns = [{col_list}]"
         priority = 1001 + tbl_idx * self.tbl_p_step
         return [(priority, code)]
-    
+
     def _add_data_types(self, db_json, tbl_idx):
         tables = db_json['table_names_original']
         tbl_name = tables[tbl_idx]
@@ -125,6 +124,9 @@ class PythonGenerator(codexdb.code.generic.Generator):
         snippets = [(first_priority, f"# {q_requoted} Print answer.")]
         snippets += [(first_priority+1, f"print('{q_requoted}')")]
         return snippets
+    
+    def _cmd_load(self, table, data_path):
+        return f"{table} = pd.read_csv('{data_path}')"
     
     def _prune_code(self, generated):
         """ Prune generated code. 
