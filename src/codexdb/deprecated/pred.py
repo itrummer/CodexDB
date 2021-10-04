@@ -5,7 +5,7 @@ Created on Sep 20, 2021
 '''
 import argparse
 import codexdb.code.python
-import codexdb.check
+import codexdb.deprecated.check
 import json
 import openai
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 print(f'Generated answer: {answer}')
                 ref_res = query["results"]
                 print(f'Actual response: {ref_res}')
-                cmp = codexdb.check.set_compare(ref_res, answer)
+                cmp = codexdb.deprecated.check.set_compare(ref_res, answer)
                 print(f'Set comparison: {cmp}')
                 log_file.write(f'{ctr}: DB: {db_id}; Q: {question}; C: {cmp}\n')
                 if cmp:

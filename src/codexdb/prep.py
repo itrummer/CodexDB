@@ -4,6 +4,7 @@ Created on Sep 19, 2021
 @author: immanueltrummer
 '''
 import argparse
+import collections
 import json
 import pandas as pd
 import sqlite3
@@ -72,15 +73,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
         
     tables_path = f'{args.spider}/tables.json'
+    db_to_s = {}
     with open(tables_path) as file:
         tables = json.load(file)
         nr_dbs = len(tables)
         for db_idx, db in enumerate(tables):
             db_id = db['db_id']
+            db_to_s[db_id] = db
             print(f'Extracting {db_id} ({db_idx+1}/{nr_dbs})')
             extract(args.spider, db)
+    db_path = f'{args.spider}/schemata.json'
+    with open(db_path, 'w') as file:
+        json.dump(db_to_s, file)
     
     for in_file in ['train_spider', 'dev']:
+        db_to_q = collections.defaultdict(lambda:[])
         all_results = []
         train_path = f'{args.spider}/{in_file}.json'
         with open(train_path) as file:
@@ -94,6 +101,7 @@ if __name__ == '__main__':
                 db_id = q_json['db_id']
                 print(f'"{query}" on "{db_id}" ({q_idx+1}/{nr_queries})')
                 
+                db_to_q[db_id].append(q_json)
                 try:
                     result = get_result(args.spider, q_json)
                     row = {
@@ -108,3 +116,7 @@ if __name__ == '__main__':
             results_path = f'{args.spider}/results_{in_file}.json'
             with open(results_path, 'w') as file:
                 json.dump(all_results, file)
+        
+        q_path = f'{args.spider}/{in_file}_queries.json'
+        with open(q_path, 'w') as file:
+            json.dump(db_to_q, file)

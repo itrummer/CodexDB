@@ -4,28 +4,11 @@ Created on Sep 30, 2021
 @author: immanueltrummer
 '''
 import argparse
+import codexdb.mining.common
 import openai
+import pandas as pd
 import pdfplumber
-import re
 import time
-
-def summarize(text):
-    """ Summarize text using OpenAI GPT-3 Codex.
-    
-    Args:
-        text: the text to summarize
-    
-    Returns:
-        one sentence summary
-    """
-    prompt = f'{text}\n\nTL;DR: In summary,'
-    response = openai.Completion.create(
-        engine='davinci-codex', prompt=prompt, 
-        temperature=0, max_tokens=50)
-    summary = response['choices'][0]['text']
-    # print(f'Summary: {summary}')
-    first_sentence = re.search('.*\.', summary).group()
-    return first_sentence.strip()
 
 if __name__ == '__main__':
     
@@ -35,14 +18,19 @@ if __name__ == '__main__':
     parser.add_argument('out_file', type=str, help='Path to output file')
     args = parser.parse_args()
     
+    sum_by_page = []
     start_s = time.time()
     openai.api_key = args.key
     with pdfplumber.open(args.in_file) as pdf:
-        with open(args.out_file, 'w') as out:
-            for p_idx, p in enumerate(pdf.pages):
-                text = p.extract_text()
-                summary = summarize(text)
-                out.write(f'{summary}\n')
-                print(f'{p_idx}: {summary}')
-                total_s = time.time() - start_s
-                print(f'Time elapsed: {total_s} seconds')
+        for p_idx, p in enumerate(pdf.pages):
+            text = p.extract_text()
+            summary = codexdb.mining.common.summarize(text)
+            sum_by_page.append(summary)
+            print(f'{p_idx}: {summary}')
+            total_s = time.time() - start_s
+            print(f'Time elapsed: {total_s} seconds')
+    
+    df = pd.DataFrame(sum_by_page)
+    df.columns = ['summaries']
+    df.index.name = 'page_idx'
+    df.to_csv(args.out_file)
