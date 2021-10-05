@@ -1,0 +1,53 @@
+{
+	"query": {
+		"from_nl": {
+			"to_python": {
+				"template": "\"\"\"\nThis Python program answers the query \"<query>\" on the following tables:\n<database>\n<plan>\n\"\"\"\n\n--- Start of Python program ---",
+				"marker": "--- End of Python program ---",
+				"linepre": ""
+			},
+			"to_bash": {
+				"template": "# Answer the query \"<query>\" on the following tables:\n<database>\n<plan>--- Start of Bash script ---\n#!/bin/bash\n",
+				"marker": "--- End of Bash script ---",
+				"linepre": "# "
+			},
+			"to_cpp": {
+				"template": "// This C++ program answers the query \"<query>\" on the following tables:\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
+				"marker": "--- End of C++ program ---",
+				"linepre": "// "
+			}
+		},
+		"from_sql": {
+			"to_python": {
+			},
+			"to_bash": {
+			},
+			"to_cpp": {
+			}
+		},
+		"tactics": [
+			"Import libraries<strategy>.",
+			"Load data for all relevant tables.",
+			"Sort data<strategy>.",
+			"Hash data<strategy>.",
+			"Process the query.",
+			"Enable display for all rows and columns, strings of infinite length.",
+			"Print out query result only."
+		],
+		"precedence": [
+			{"F":0, "S":4},
+			{"F":5, "S":6},
+			{"F":1, "S":2},
+			{"F":1, "S":3},
+			{"F":1, "S":4},
+			{"F":4, "S":6}
+		],
+		"strategies": [
+			"", 
+			" for parallel processing", 
+			" for GPU processing",
+			" for efficient processing"]
+	},
+	"transform": {
+	}
+}
