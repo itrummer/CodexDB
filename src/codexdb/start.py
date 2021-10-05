@@ -4,21 +4,42 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import argparse
+import openai
 import sys
+from codexdb.code import CodeGenerator
+from codexdb.engine import ExecuteCode
+from codexdb.catalog import DbCatalog
 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('key', type=str, help='Key for OpenAI Codex access')
     parser.add_argument('data_dir', type=str, help='Data directory')
-    parser.add_argument('src_lang', type=str, help='Source language (NL vs SQL)')
+    parser.add_argument('db', type=str, help='Name of database')
+    parser.add_argument('from_lang', type=str, help='Source language (NL vs SQL)')
+    parser.add_argument('to_lang', type=str, help='Admissible target language(s)')
+    parser.add_argument('config', type=str, help='Path to configuration file')
     args = parser.parse_args()
     
-    src_lang = args.src_lang.lower()
-    if src_lang not in ['nl', 'sql']:
-        sys.exit(f'Unknown source language: {src_lang}')
+    openai.api_key = args.key
+    from_lang = args.from_lang.lower()
+    if from_lang not in ['nl', 'sql']:
+        sys.exit(f'Unknown source language: {from_lang}')
+    
+    code_gen = CodeGenerator(args.config)
+    catalog = DbCatalog(args.data_dir)
+    engine = ExecuteCode(catalog)
     
     cmd = ''
+    print('CodexDB ready - enter your queries:')
     while not (cmd == 'quit'):
         cmd = input()
         print(f'Processing command "{cmd}" ...')
+        schema = catalog.schema(args.db)
+        files = catalog.files(args.db)
+        code = code_gen.generate(
+            'query', schema, files, args.from_lang, 
+            args.to_lang, cmd)
+        result = engine.execute(
+            args.db_id, args.to_lang, code)
+        print(result)

@@ -4,10 +4,11 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import json
+import openai
 
 
-class Generator():
-    """ Generates prompts for Codex. """
+class CodeGenerator():
+    """ Generates code using Codex. """
     
     def __init__(self, space_path):
         """ Initializes search space.
@@ -20,22 +21,31 @@ class Generator():
     
     def generate(
             self, p_type, schema, files, from_lang,
-            to_lang, query, tactics_p, strategy):
-        """ Generate a text prompt as specified.
+            to_lang, task, tactics_p=None, strategy=None):
+        """ Generate a piece of code solving specified task.
         
         Args:
-            p_type: prompt type ('query' vs. 'transform')
+            p_type: task type ('query' vs. 'transform')
             schema: JSON description of database schema
             files: names of files storing tables
             from_lang: query language
             to_lang: query processing language
-            query: query in query language
+            task: task description in source language
             tactics_p: assigns each tactics to priority
             strategy: high-level processing strategy
         """
+        if from_lang == to_lang:
+            return task
+        
         tactics = self.spaces[p_type]['tactics']
         precedence = self.spaces[p_type]['precedence']
         snippets = self.spaces[p_type][from_lang][to_lang]
+        
+        nr_tactics = len(tactics)
+        if tactics_p is None:
+            tactics_p = [1] * nr_tactics
+        if strategy is None:
+            strategy = ''
         
         line_pre = snippets['linepre']
         ordered_ts = self._plan(tactics, precedence, tactics_p)
@@ -47,9 +57,30 @@ class Generator():
         
         prompt = snippets['template']
         prompt = prompt.replace('<plan>', plan)
-        prompt = prompt.replace('<query>', query)
+        prompt = prompt.replace('<task>', task)
         prompt = prompt.replace('<database>', db_info)
-        return prompt
+        
+        completion = self._complete(prompt)
+        marker = snippets['marker']
+        return completion.replace(marker, '')
+    
+    def _complete(self, prompt):
+        """ Complete prompt using Codex. 
+        
+        Args:
+            prompt: initiate generation with this prompt
+        
+        Returns:
+            generated code, following prompt
+        """
+        try:
+            response = openai.Completion.create(
+                engine='davinci-codex', prompt=prompt, 
+                temperature=0, max_tokens=150)
+            return response['choices'][0]['text']
+        except Exception as e:
+            print(f'Error querying Codex: {e}')
+            return ''
     
     def _db_info(self, schema, files):
         """ Generate description of database.
@@ -92,7 +123,7 @@ class Generator():
         for c in precedence:
             if c['F'] not in used:
                 usable.remove(c['S'])
-        return usable
+        return usable        
         
     def _plan(self, tactics, precedence, tactics_p):
         """ Generate list of ordered tactics.
@@ -116,7 +147,7 @@ class Generator():
 
 
 if __name__ == '__main__':
-    generator = Generator('config/spaces.json')
+    generator = CodeGenerator('config/spaces.json')
     print(generator.space)
     print(generator.space['from_nl'])
     print(generator.space['tactics'])
