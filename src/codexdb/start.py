@@ -35,11 +35,13 @@ if __name__ == '__main__':
     while not (cmd == 'quit'):
         cmd = input()
         print(f'Processing command "{cmd}" ...')
-        schema = catalog.schema(args.db)
-        files = catalog.files(args.db)
-        code = code_gen.generate(
-            'query', schema, files, args.from_lang, 
-            args.to_lang, cmd)
-        result = engine.execute(
-            args.db_id, args.to_lang, code)
-        print(result)
+        if not (cmd == 'quit'):
+            schema = catalog.schema(args.db)
+            files = catalog.files(args.db)
+            code = code_gen.generate(
+                'query', schema, files, args.from_lang, 
+                args.to_lang, cmd)
+            print(code)
+            result = engine.execute(
+                args.db, args.to_lang, code)
+            print(result)

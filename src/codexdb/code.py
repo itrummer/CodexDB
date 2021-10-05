@@ -36,10 +36,12 @@ class CodeGenerator():
         """
         if from_lang == to_lang:
             return task
+        from_lang = 'from_' + from_lang
+        to_lang = 'to_' + to_lang
         
-        tactics = self.spaces[p_type]['tactics']
-        precedence = self.spaces[p_type]['precedence']
-        snippets = self.spaces[p_type][from_lang][to_lang]
+        tactics = self.space[p_type]['tactics']
+        precedence = self.space[p_type]['precedence']
+        snippets = self.space[p_type][from_lang][to_lang]
         
         nr_tactics = len(tactics)
         if tactics_p is None:
@@ -49,7 +51,8 @@ class CodeGenerator():
         
         line_pre = snippets['linepre']
         ordered_ts = self._plan(tactics, precedence, tactics_p)
-        plan = '\n'.join([line_pre + t for t in ordered_ts])
+        plan_lines = [f'{l_id+1}. {l}' for l_id, l in enumerate(ordered_ts)]
+        plan = '\n'.join([line_pre + t for t in plan_lines])
         plan = plan.replace('<strategy>', strategy)
         
         db_lines = self._db_info(schema, files)
@@ -59,16 +62,18 @@ class CodeGenerator():
         prompt = prompt.replace('<plan>', plan)
         prompt = prompt.replace('<task>', task)
         prompt = prompt.replace('<database>', db_info)
+        print(prompt)
         
-        completion = self._complete(prompt)
         marker = snippets['marker']
+        completion = self._complete(prompt, marker)
         return completion.replace(marker, '')
     
-    def _complete(self, prompt):
+    def _complete(self, prompt, marker):
         """ Complete prompt using Codex. 
         
         Args:
             prompt: initiate generation with this prompt
+            marker: generation stops at marker text
         
         Returns:
             generated code, following prompt
@@ -76,7 +81,8 @@ class CodeGenerator():
         try:
             response = openai.Completion.create(
                 engine='davinci-codex', prompt=prompt, 
-                temperature=0, max_tokens=150)
+                temperature=0, max_tokens=1000,
+                stop=marker)
             return response['choices'][0]['text']
         except Exception as e:
             print(f'Error querying Codex: {e}')
@@ -122,7 +128,7 @@ class CodeGenerator():
         usable = usable.difference(used)
         for c in precedence:
             if c['F'] not in used:
-                usable.remove(c['S'])
+                usable.discard(c['S'])
         return usable        
         
     def _plan(self, tactics, precedence, tactics_p):
@@ -137,7 +143,7 @@ class CodeGenerator():
             ordered list of tactics
         """
         ordered_ts = []
-        used = {}
+        used = set()
         while (self._eligible_tactics(tactics, precedence, used)):
             usable = self._eligible_tactics(tactics, precedence, used)
             use = max(usable, key=lambda t_id:tactics_p[t_id])

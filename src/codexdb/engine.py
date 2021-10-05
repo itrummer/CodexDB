@@ -84,10 +84,17 @@ class ExecuteCode():
             output generated when executing code
         """
         filename = 'execute.py'
-        self._write_file(db_id, filename, code)
         db_dir = self.catalog.db_dir(db_id)
-        os.system(f'PYTHONPATH={db_dir} python {db_dir}/{filename} &> pout.txt')
-        with open(f'{db_dir}/pout.txt') as file:
+        for file in self.catalog.files(db_id):
+            full_path = f'{db_dir}/{file}'
+            code = code.replace(file, full_path)
+        self._write_file(db_id, filename, code)
+        python_path = f'PYTHONPATH={db_dir}'
+        python_exe = '/opt/homebrew/anaconda3/envs/literate/bin/python'
+        exe_file = f'{db_dir}/{filename}'
+        out_file = f'{db_dir}/pout.txt'
+        os.system(f'{python_path} {python_exe} {exe_file} &> {out_file}')
+        with open(f'{out_file}') as file:
             return file.read()
     
     def _write_file(self, db_id, filename, code):

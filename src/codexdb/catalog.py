@@ -14,7 +14,7 @@ class DbCatalog():
         Args:
             data_dir: contains databases and schemata
         """
-        
+        self.data_dir = data_dir
         self.schema_path = f'{data_dir}/schemata.json'
         with open(self.schema_path) as file:
             self.schemata = json.load(file)
@@ -28,7 +28,7 @@ class DbCatalog():
         Returns:
             path of directory containing database
         """
-        return f'{self.data_dir}/{db_id}'
+        return f'{self.data_dir}/database/{db_id}'
     
     def files(self, db_id):
         """ Returns names of files containing database tables.
