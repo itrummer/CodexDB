@@ -38,9 +38,10 @@ if __name__ == '__main__':
         if not (cmd == 'quit'):
             schema = catalog.schema(args.db)
             files = catalog.files(args.db)
+            tactics_p = [0, 0, 0, 0, 1, 0, 1]
             code = code_gen.generate(
                 'query', schema, files, args.from_lang, 
-                args.to_lang, cmd)
+                args.to_lang, cmd, tactics_p)
             print(code)
             result = engine.execute(
                 args.db, args.to_lang, code)

@@ -21,7 +21,8 @@ class CodeGenerator():
     
     def generate(
             self, p_type, schema, files, from_lang,
-            to_lang, task, tactics_p=None, strategy=None):
+            to_lang, task, use_examples=True, 
+            tactics_p=None, strategy=None):
         """ Generate a piece of code solving specified task.
         
         Args:
@@ -30,6 +31,7 @@ class CodeGenerator():
             files: names of files storing tables
             from_lang: query language
             to_lang: query processing language
+            use_examples: whether to use example queries
             task: task description in source language
             tactics_p: assigns each tactics to priority
             strategy: high-level processing strategy
@@ -37,33 +39,31 @@ class CodeGenerator():
         if from_lang == to_lang:
             return task
         from_lang = 'from_' + from_lang
-        to_lang = 'to_' + to_lang
+        to_lang = 'to_' + to_lang        
         
-        tactics = self.space[p_type]['tactics']
-        precedence = self.space[p_type]['precedence']
-        snippets = self.space[p_type][from_lang][to_lang]
+        sample_parts = []
+        if use_examples:
+            sample_dbs = self.space['sample_databases']
+            from_content = self.space[p_type][from_lang]
+            sample_tasks = from_content['sample_tasks']
+            sample_solutions = from_content[to_lang]['sample_solutions']
+            
+            for sample_task, solution in zip(sample_tasks, sample_solutions):
+                sample_text = sample_task['task']
+                sample_db_id = sample_task['db_id']
+                sample_db = sample_dbs[sample_db_id]
+                sample_prompt = self._prompt(
+                    p_type, sample_db, files, from_lang, 
+                    to_lang, sample_text, tactics_p, strategy)
+                sample_parts.append(sample_prompt)
+                sample_parts.append(solution)
         
-        nr_tactics = len(tactics)
-        if tactics_p is None:
-            tactics_p = [1] * nr_tactics
-        if strategy is None:
-            strategy = ''
+        last_prompt = self._prompt(
+            p_type, schema, files, from_lang, 
+            to_lang, task, tactics_p, strategy)
+        prompt = '\n'.join(sample_parts) + '\n' + last_prompt
         
-        line_pre = snippets['linepre']
-        ordered_ts = self._plan(tactics, precedence, tactics_p)
-        plan_lines = [f'{l_id+1}. {l}' for l_id, l in enumerate(ordered_ts)]
-        plan = '\n'.join([line_pre + t for t in plan_lines])
-        plan = plan.replace('<strategy>', strategy)
-        
-        db_lines = self._db_info(schema, files)
-        db_info = '\n'.join([line_pre + l for l in db_lines])
-        
-        prompt = snippets['template']
-        prompt = prompt.replace('<plan>', plan)
-        prompt = prompt.replace('<task>', task)
-        prompt = prompt.replace('<database>', db_info)
-        print(prompt)
-        
+        snippets = self.space[p_type][from_lang][to_lang]        
         marker = snippets['marker']
         completion = self._complete(prompt, marker)
         return completion.replace(marker, '')
@@ -81,7 +81,7 @@ class CodeGenerator():
         try:
             response = openai.Completion.create(
                 engine='davinci-codex', prompt=prompt, 
-                temperature=0, max_tokens=1000,
+                temperature=0, max_tokens=500,
                 stop=marker)
             return response['choices'][0]['text']
         except Exception as e:
@@ -148,12 +148,51 @@ class CodeGenerator():
             usable = self._eligible_tactics(tactics, precedence, used)
             use = max(usable, key=lambda t_id:tactics_p[t_id])
             used.add(use)
-            ordered_ts.append(tactics[use])
+            if tactics_p[use] > 0:
+                ordered_ts.append(tactics[use])
         return ordered_ts
-
+    
+    def _prompt(
+            self, p_type, schema, files, from_lang,
+            to_lang, task, tactics_p=None, strategy=None):
+        """ Generate a prompt initiating code generation.
+        
+        Args:
+            p_type: task type ('query' vs. 'transform')
+            schema: JSON description of database schema
+            files: names of files storing tables
+            from_lang: query language
+            to_lang: query processing language
+            task: task description in source language
+            tactics_p: assigns each tactics to priority
+            strategy: high-level processing strategy
+        """
+        tactics = self.space[p_type]['tactics']
+        precedence = self.space[p_type]['precedence']
+        snippets = self.space[p_type][from_lang][to_lang]
+        
+        nr_tactics = len(tactics)
+        if tactics_p is None:
+            tactics_p = [1] * nr_tactics
+        if strategy is None:
+            strategy = ''
+        
+        line_pre = snippets['linepre']
+        ordered_ts = self._plan(tactics, precedence, tactics_p)
+        plan_lines = [f'{l_id+1}. {l}' for l_id, l in enumerate(ordered_ts)]
+        plan = '\n'.join([line_pre + t for t in plan_lines])
+        plan = plan.replace('<strategy>', strategy)
+        
+        db_lines = self._db_info(schema, files)
+        db_info = '\n'.join([line_pre + l for l in db_lines])
+        
+        prompt = snippets['template']
+        prompt = prompt.replace('<plan>', plan)
+        prompt = prompt.replace('<task>', task)
+        prompt = prompt.replace('<database>', db_info)
+        return prompt
 
 if __name__ == '__main__':
     generator = CodeGenerator('config/spaces.json')
     print(generator.space)
-    print(generator.space['from_nl'])
-    print(generator.space['tactics'])
+    print(generator.space['query']['from_nl']['to_cpp']['sample_solutions'])

@@ -47,10 +47,11 @@ class ExecuteCode():
             Output of executed code
         """
         filename = 'execute.sh'
+        code = self._expand_paths(db_id, code)
         self._write_file(db_id, filename, code)
         db_dir = self.catalog.db_dir(db_id)
-        os.system(f'chmod {db_dir}/execute.sh +x')
-        os.system(f'{db_dir}/execute.sh &> bout.txt')
+        os.system(f'chmod +x {db_dir}/execute.sh')
+        os.system(f'{db_dir}/execute.sh &> {db_dir}/bout.txt')
         with open(f'{db_dir}/bout.txt') as file:
             return file.read()
     
@@ -65,12 +66,13 @@ class ExecuteCode():
             output of executed code
         """
         filename = 'execute.cpp'
+        code = self._expand_paths(db_id, code)
         self._write_file(db_id, filename, code)
         db_dir = self.catalog.db_dir(db_id)
         exefile = 'execute.out'
-        os.system(f'gpp {db_dir}/{filename} -o {db_dir}/{exefile}')
-        os.system(f'{db_dir}/{exefile} &> output.txt')
-        with open(f'{db_dir}/output.txt') as file:
+        os.system(f'g++ {db_dir}/{filename} -o {db_dir}/{exefile}')
+        os.system(f'{db_dir}/{exefile} &> {db_dir}/cout.txt')
+        with open(f'{db_dir}/cout.txt') as file:
             return file.read()
     
     def _exec_python(self, db_id, code):
@@ -85,9 +87,7 @@ class ExecuteCode():
         """
         filename = 'execute.py'
         db_dir = self.catalog.db_dir(db_id)
-        for file in self.catalog.files(db_id):
-            full_path = f'{db_dir}/{file}'
-            code = code.replace(file, full_path)
+        code = self._expand_paths(db_id, code)
         self._write_file(db_id, filename, code)
         python_path = f'PYTHONPATH={db_dir}'
         python_exe = '/opt/homebrew/anaconda3/envs/literate/bin/python'
@@ -96,6 +96,22 @@ class ExecuteCode():
         os.system(f'{python_path} {python_exe} {exe_file} &> {out_file}')
         with open(f'{out_file}') as file:
             return file.read()
+    
+    def _expand_paths(self, db_id, code):
+        """ Expand relative paths to data files in code.
+        
+        Args:
+            db_id: database identifier
+            code: generated code
+        
+        Returns:
+            code after expanding paths
+        """
+        db_dir = self.catalog.db_dir(db_id)
+        for file in self.catalog.files(db_id):
+            full_path = f'{db_dir}/{file}'
+            code = code.replace(file, full_path)
+        return code
     
     def _write_file(self, db_id, filename, code):
         """ Write code into file in database directory. 

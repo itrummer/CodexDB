@@ -1,23 +1,46 @@
 {
+	"sample_databases": [
+		{
+			"db_id": "toys",
+			"column_names_original": [[0, "toy_id"], [0, "age_group"], [0, "rating"], [0, "remarks"], [0, "sold_by"], [1, "vendor_id"], [1, "vendor_name"], [1, "nr_employees"]],
+			"table_names_original": ["toys", "vendors"],
+			"files": ["toys.csv", "vendors.csv"]
+		}
+	],
 	"query": {
 		"from_nl": {
+			"sample_tasks": [
+				{"task": "How many toys?", "db_id": 0}
+			],
 			"to_python": {
 				"template": "\"\"\"\nThis Python program answers the query \"<task>\" on the following tables:\n<database>\n<plan>\n\"\"\"\n\n--- Start of Python program ---",
 				"marker": "--- End of Python program ---",
-				"linepre": ""
+				"linepre": "",
+				"sample_solutions": ["\nimport pandas as pd\n\ntoys=pd.read_csv(\"toys.csv\")\nprint(toys.shape[0])\n--- End of Python program ---"]
 			},
 			"to_bash": {
-				"template": "# Answer the query \"<task>\" on the following tables:\n<database>\n<plan>--- Start of Bash script ---\n#!/bin/bash\n",
+				"template": "# This Bash script answers the query \"<task>\" on the following tables:\n<database>\n# Answer the query \"<task>\":\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Processing query ...\"",
 				"marker": "--- End of Bash script ---",
-				"linepre": "# "
+				"linepre": "# ",
+				"sample_solutions": ["\ntail +2 toys.csv | wc -l\n--- End of Bash script ---"]
 			},
 			"to_cpp": {
 				"template": "// This C++ program answers the query \"<task>\" on the following tables:\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
 				"marker": "--- End of C++ program ---",
-				"linepre": "// "
+				"linepre": "// ",
+				"sample_solutions": ["\n#include <iostream>\n#include <fstream>\n#include <sstream>\n#include <vector>\nusing namespace std;\n\nstruct s_toys {\n\tstring toy_id;\n\tstring age_group;\n\tdouble rating;\n\tstring remarks;\n\tstring sold_by;\n};\n\nint main()\n{\n\tifstream toys_file(\"toys.csv\");\n\ttoys_file.ignore(5000, '\\n');\n\n\tvector<s_toys> toys_vector;\n\tstring line, field;\n\twhile (getline(toys_file, line)) {\n\t\tstringstream ss(line);\n\t\tstruct s_toys toys;\n\t\tgetline(ss, field, ',');\n\t\ttoys.toy_id=field;\n\n\t\tgetline(ss, field, ',');\n\t\ttoys.age_group=field;\n\n\t\tgetline(ss, field, ',');\n\t\ttoys.rating=stod(field);\n\n\t\tgetline(ss, field, ',');\ntoys.remarks=field;\n\n\t\ttoys_vector.push_back(toys);\n\t}\n\n\tcout << toys_vector.size() << endl;\n}\n\n--- End of C++ program ---"]
+			},
+			"to_pg_sql": {
+				"template": "##### Translate this query into SQL: <task>\n<database>\n--- Start of SQL query ---\nSELECT ",
+				"marker": "--- End of SQL query ---",
+				"linepre": "# ",
+				"sample_solutions": ["\nselect count(*) from toys;\n--- End of SQL query ---"]
 			}
 		},
 		"from_pg_sql": {
+			"sample_queries": [
+				
+			],
 			"to_python": {
 			},
 			"to_bash": {
@@ -30,7 +53,7 @@
 			"Load data for all relevant tables.",
 			"Sort data<strategy>.",
 			"Hash data<strategy>.",
-			"Process the query.",
+			"Calculate the answer to the query.",
 			"Enable display for all rows and columns, strings of infinite length.",
 			"Print out query result only."
 		],
