@@ -67,7 +67,7 @@ class CodeGenerator():
             '\n'.join(sample_parts) + \
             '\n' + last_prompt
         
-        snippets = self.prompts[p_type][from_lang][to_lang]        
+        snippets = self._snippets(p_type, from_lang, to_lang)
         marker = snippets['marker']
         completion = self._complete(prompt, marker)
         return completion.replace(marker, '')
@@ -173,7 +173,7 @@ class CodeGenerator():
         """
         tactics = self.prompts[p_type]['tactics']
         precedence = self.prompts[p_type]['precedence']
-        snippets = self.prompts[p_type][from_lang][to_lang]
+        snippets = self._snippets(p_type, from_lang, to_lang)
         
         nr_tactics = len(tactics)
         if tactics_p is None:
@@ -195,6 +195,22 @@ class CodeGenerator():
         prompt = prompt.replace('<task>', task)
         prompt = prompt.replace('<database>', db_info)
         return prompt
+    
+    def _snippets(self, p_type, from_lang, to_lang):
+        """ Return snippets for most specific source language.
+        
+        Args:
+            p_type: type of prompt (i.e., processing stage)
+            from_lang: translate query from this language
+            to_lang: execute query using this language
+        
+        Returns:
+            prompt snippets for specified source language or generalization
+        """
+        if from_lang in self.prompts[p_type]:
+            return self.prompts[p_type][from_lang][to_lang]
+        else:
+            return self.prompts[p_type]['from_*'][to_lang]
 
 if __name__ == '__main__':
     generator = CodeGenerator('config/spaces.json')

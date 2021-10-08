@@ -58,7 +58,7 @@ class PromptEnv(gym.Env):
         self.to_langs = self.engine.supported_langs()
         self.nr_to_langs = len(self.to_langs)
         
-        self.action_dims = self._action_dims()
+        self.nr_action_dims = self._action_dims()
         action_shape = (self.nr_action_dims,)
         self.observation_space = gym.spaces.Box(shape=(2,), low=0, high=1)
         self.action_space = gym.spaces.Box(shape=action_shape, low=0, high=1)
@@ -81,6 +81,7 @@ class PromptEnv(gym.Env):
         strategies = self.prompts[p_type]['strategies']
         
         to_lang_idx = math.floor(self.nr_to_langs * action[0])
+        to_lang_idx = min(to_lang_idx, self.nr_to_langs)
         to_lang = self.to_langs[to_lang_idx]
         use_examples = True if action[1] > 0.5 else False
         
@@ -94,12 +95,13 @@ class PromptEnv(gym.Env):
         
         nr_strategies = len(strategies)
         strat_idx = math.floor(nr_strategies * action[-1])
+        strat_idx = min(strat_idx, nr_strategies)
         strategy = strategies[strat_idx]
         
         # TODO: consider examples once available for all stages
         code = self.coder.generate(
-            p_type, schema, files, self.from_lang, to_lang, 
-            task, False, tactics_p, strategy)
+            self.context, p_type, schema, files, self.from_lang, 
+            to_lang, task, False, tactics_p, strategy)
         print(f'Generated code:\n---\n{code}\n---\n')
         approval = input('Do you approve executing this code? [y for yes]')
         if approval == 'y':
@@ -117,7 +119,7 @@ class PromptEnv(gym.Env):
             if self.cur_stage == 2:
                 # Query processing stage - compare to reference
                 ref_code = self.coder.generate(
-                    p_type, schema, files, self.from_lang, 
+                    [], p_type, schema, files, self.from_lang, 
                     self.ref_lang, task, use_examples, 
                     tactics_p, strategy)
                 ref_output = self.engine.execute(

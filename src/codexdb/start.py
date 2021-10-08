@@ -11,7 +11,9 @@ from codexdb.catalog import DbCatalog
 from codexdb.code import CodeGenerator
 from codexdb.engine import ExecuteCode
 from codexdb.learn import PromptEnv
+import os
 from stable_baselines3 import DQN
+from stable_baselines3 import A2C
 from stable_baselines3.common.evaluation import evaluate_policy
 
 
@@ -26,9 +28,10 @@ if __name__ == '__main__':
     parser.add_argument('config', type=str, help='Path to configuration file')
     args = parser.parse_args()
     
+    os.environ['KMP_DUPLICATE_LIB_OK']='True'
     openai.api_key = args.key
     from_lang = args.from_lang.lower()
-    if from_lang not in ['nl', 'sql']:
+    if from_lang not in ['nl', 'pg_sql']:
         sys.exit(f'Unknown source language: {from_lang}')
     
     with open(args.config) as file:
@@ -46,9 +49,9 @@ if __name__ == '__main__':
             schema = catalog.schema(args.db)
             files = catalog.files(args.db)
             env = PromptEnv(
-                catalog, args.db_id, prompts, 
+                catalog, args.db, prompts, 
                 from_lang, 'pg_sql', [cmd], 10)
-            model = DQN('MlpPolicy', env, verbose=1)
+            model = A2C('MlpPolicy', env, verbose=1)
             model.learn(total_timesteps=int(50))
             #
             # tactics_p = [0, 0, 0, 0, 1, 0, 1]
