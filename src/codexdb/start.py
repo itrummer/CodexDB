@@ -7,9 +7,13 @@ import argparse
 import json
 import openai
 import sys
+from codexdb.catalog import DbCatalog
 from codexdb.code import CodeGenerator
 from codexdb.engine import ExecuteCode
-from codexdb.catalog import DbCatalog
+from codexdb.learn import PromptEnv
+from stable_baselines3 import DQN
+from stable_baselines3.common.evaluation import evaluate_policy
+
 
 if __name__ == '__main__':
     
@@ -41,11 +45,17 @@ if __name__ == '__main__':
         if not (cmd == 'quit'):
             schema = catalog.schema(args.db)
             files = catalog.files(args.db)
-            tactics_p = [0, 0, 0, 0, 1, 0, 1]
-            code = code_gen.generate(
-                'query', schema, files, args.from_lang, 
-                args.to_lang, cmd, tactics_p)
-            print(code)
-            result = engine.execute(
-                args.db, args.to_lang, code)
-            print(result)
+            env = PromptEnv(
+                catalog, args.db_id, prompts, 
+                from_lang, 'pg_sql', [cmd], 10)
+            model = DQN('MlpPolicy', env, verbose=1)
+            model.learn(total_timesteps=int(50))
+            #
+            # tactics_p = [0, 0, 0, 0, 1, 0, 1]
+            # code = code_gen.generate(
+                # 'query', schema, files, args.from_lang, 
+                # args.to_lang, cmd, tactics_p)
+            # print(code)
+            # result = engine.execute(
+                # args.db, args.to_lang, code)
+            # print(result)

@@ -21,8 +21,9 @@ def result_cmp(ref_output, cmp_output):
     """
     ref_len = len(ref_output)
     cmp_len = len(cmp_output)
-    ref_lines =ref_output.split('\n')
-    cmp_lines = cmp_output.split('\n')
+    return min(ref_len, cmp_len)/(1+max(ref_len, cmp_len))
+    # ref_lines =ref_output.split('\n')
+    # cmp_lines = cmp_output.split('\n')
         
 
 class PromptEnv(gym.Env):
@@ -95,28 +96,36 @@ class PromptEnv(gym.Env):
         strat_idx = math.floor(nr_strategies * action[-1])
         strategy = strategies[strat_idx]
         
+        # TODO: consider examples once available for all stages
         code = self.coder.generate(
             p_type, schema, files, self.from_lang, to_lang, 
-            task, use_examples, tactics_p, strategy)
-        success, output, elapsed_s = self.engine.execute(
-            self.db_id, to_lang, code)
+            task, False, tactics_p, strategy)
+        print(f'Generated code:\n---\n{code}\n---\n')
+        approval = input('Do you approve executing this code? [y for yes]')
+        if approval == 'y':
+            success, output, elapsed_s = self.engine.execute(
+                self.db_id, to_lang, code)
+        else:
+            success, output, elapsed_s = False, '', 1
         
         if not success:
             reward = 0
             done = True
         else:
             reward = 1
-            done = False
-        
-        if self.cur_stage == 2:
-            # Query processing stage - compare to reference
-            ref_code = self.coder.generate(
-                p_type, schema, files, self.from_lang, 
-                self.ref_lang, task, use_examples, 
-                tactics_p, strategy)
-            ref_output = self.engine.execute(
-                self.db_id, self.ref_lang, ref_code)
-            
+            done = False        
+            if self.cur_stage == 2:
+                # Query processing stage - compare to reference
+                ref_code = self.coder.generate(
+                    p_type, schema, files, self.from_lang, 
+                    self.ref_lang, task, use_examples, 
+                    tactics_p, strategy)
+                ref_output = self.engine.execute(
+                    self.db_id, self.ref_lang, ref_code)
+                reward = result_cmp(ref_output, output)
+                reward /= elapsed_s
+            else:
+                self.context.append(code)
         
         self.cur_stage = min(self.nr_stages-1, self.cur_stage+1)
         self.cur_query = self.cur_query+1 % self.nr_queries        

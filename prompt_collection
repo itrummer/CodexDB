@@ -1,0 +1,141 @@
+"""
+This Python program answers the query "What is the average age of customers?" on the following tables:
+- Table customers, columns customer_id, name, age, zip, stored in 'customer.csv'.
+The program performs the followings steps:
+1. Import libraries for efficient data processing.
+2. Load data for all tables.
+3. Process the query.
+4. Enable display for all rows and columns, strings of infinite length.
+5. Print out the query result.
+"""
+
+--- Start of Python program ---
+
+---
+
+"""
+File "customer.csv" stores table customer with columns customer_ID, age, name, zip.
+Write a Python program for data format transformation:
+1. Load libraries for efficient data formats.
+2. Read "customer.csv" from disk.
+3. Change into more efficient format.
+4. Write changed file to hard disk.
+5. Print only the name of the new file.
+6. --- End of Python program ---
+"""
+
+--- Begin of Python program ---
+
+---
+Write a script for executing a C program, stored in file "testProgram", on Linux (no prompts):
+
+--- Script starts here ---
+
+---
+Write a script for executing a Python program, stored in file "helloWorld", with Linux (no prompts):
+
+--- Script starts here ---
+---
+"""
+This Python program answers the query "What is the average age of customers?" on the following tables:
+- Table customers, columns customer_id, name, age, zip, stored in 'customer.csv'.
+The program performs the followings steps:
+1. Import libraries for efficient data processing.
+2. Load data for all tables.
+3. Process the query.
+4. Print out the query result.
+"""
+
+---
+
+# Answer the query "What is the average age of customers?" on the following tables:
+# - Table customers, columns customer_id, name, age, zip, stored in 'customer.csv'.
+
+#!/bin/bash
+
+---
+
+"""
+Write Python program to transform 'customer.csv' into a more efficient file format.
+1. Read data from 'customer.csv'.
+2. Transform into efficient format for large-scale processing.
+3. Write transformed file to hard disk.
+4. Print out name of new file only.
+"""
+
+---
+
+///// Translate query from SQL to C++.
+/// SQL query:
+// Table lineorder, columns lo_extendedprice (numeric), lo_discount (numeric), lo_quantity (integer)
+// Table date, columns d_year (integer)
+select sum(lo_extendedprice*lo_discount) as revenue
+ from lineorder, date
+ where lo_orderdate = d_datekey
+ and d_year = 1993
+ and lo_discount between 2 - 1
+ and 2 + 1 and lo_quantity < 24;
+
+/// C++ query:
+// 1. Create index.
+// 2. Print query result.
+std::vector<s_lineorder> lineorder;
+std::vector<s_date> date;
+
+// 1. Create index.
+std::vector<s_lineorder>::iterator lo_it;
+std::vector<s_date>::iterator d_it;
+
+for (lo_it = lineorder.begin(); lo_it != lineorder.end(); ++lo_it) {
+    for (d_it = date.begin(); d_it != date.end(); ++d_it) {
+        if (lo_it->lo_orderdate == d_it->d_datekey) {
+            lo_it->d_it = d_it;
+        }
+    }
+}
+
+// 2. Print query result.
+double revenue = 0;
+for (lo_it = lineorder.begin(); lo_it != lineorder.end(); ++lo_it) {
+    if (lo_it->d_it->d_year == 1993) {
+        if (lo_it->lo_discount >= 2 - 1 && lo_it->lo_discount <= 2 + 1) {
+            if (lo_it->lo_quantity < 24) {
+                revenue += lo_it->lo_extendedprice * lo_it->lo_discount;
+            }
+        }
+    }
+}
+std::cout << "revenue = " << revenue << std::endl;
+---
+Programming and scripting languages supported by Codex:
+1.
+
+---
+
+# Create an index on the following table:
+# Table customer, columns name, customer_id, age, zip, stored in 'customer.csv'.
+# Execute the following steps:
+# 1. Read customer.csv from disk.
+# 2. Create a B+ tree index on the data.
+# 3. Write index to file on hard disk.
+# 4. Print out name of index file only.
+
+---
+# This Python program indexes the file customer.csv. The program has no input arguments.
+# Table customer, columns name, customer_id, age, zip, stored in 'customer.csv'.
+# Execute the following steps:
+# 1. Read customer.csv from disk.
+# 2. Create a B+ tree index on the data.
+# 3. Write index to file on hard disk.
+# 4. Print out name of index file only.
+
+
+---
+# This Python program indexes the file customer.csv. The program has no input arguments.
+# Table customer, columns name, customer_id, age, zip, stored in customer.csv.
+# Execute the following steps:
+# 1. Read customer.csv from disk.
+# 2. Create a B+ tree index on the data.
+# 3. Write index to file on hard disk.
+# 4. Print out name of index file only.
+

@@ -18,12 +18,13 @@ class CodeGenerator():
         self.prompts = prompts
     
     def generate(
-            self, p_type, schema, files, from_lang,
-            to_lang, task, use_examples=True, 
+            self, context, p_type, schema, files, 
+            from_lang, to_lang, task, use_examples=True, 
             tactics_p=None, strategy=None):
         """ Generate a piece of code solving specified task.
         
         Args:
+            context: text snippets for prompt prefix
             p_type: task type ('query' vs. 'transform')
             schema: JSON description of database schema
             files: names of files storing tables
@@ -62,7 +63,9 @@ class CodeGenerator():
         last_prompt = self._prompt(
             p_type, schema, files, from_lang, 
             to_lang, task, tactics_p, strategy)
-        prompt = '\n'.join(sample_parts) + '\n' + last_prompt
+        prompt = '\n'.join(context) + \
+            '\n'.join(sample_parts) + \
+            '\n' + last_prompt
         
         snippets = self.prompts[p_type][from_lang][to_lang]        
         marker = snippets['marker']

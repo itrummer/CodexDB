@@ -64,10 +64,22 @@
 			}
 		},
 		"tactics": [
+			"Iterate over all tables in the database. For each table:",
+			"Load data from hard disk.",
+			"Index the data <strategy>.",
+			"Write indexed data to disk.",
+			"Remove in-memory data structures."
 		],
 		"precedence": [
+			{"F":0, "S":3},
+			{"F":3, "S":4},
+			{"F":1, "S":2},
+			{"F":2, "S":3}
 		],
 		"strategies": [
+			"",
+			"using B+ tree indexes",
+			"using hash indexes"
 		]
 	},
 	"query": {
