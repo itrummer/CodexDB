@@ -3,21 +3,19 @@ Created on Oct 3, 2021
 
 @author: immanueltrummer
 '''
-import json
 import openai
 
 
 class CodeGenerator():
     """ Generates code using Codex. """
     
-    def __init__(self, space_path):
+    def __init__(self, prompts):
         """ Initializes search space.
         
         Args:
-            space_path: path to file describing search space
+            prompts: JSON object configuring prompts
         """
-        with open(space_path) as file:
-            self.space = json.load(file)
+        self.prompts = prompts
     
     def generate(
             self, p_type, schema, files, from_lang,
@@ -43,8 +41,11 @@ class CodeGenerator():
         
         sample_parts = []
         if use_examples:
-            sample_dbs = self.space['sample_databases']
-            from_content = self.space[p_type][from_lang]
+            sample_dbs = self.prompts['sample_databases']
+            if from_lang in self.prompts[p_type]:
+                from_content = self.prompts[p_type][from_lang]
+            else:
+                from_content = self.prompts[p_type]['from_*']
             sample_tasks = from_content['sample_tasks']
             sample_solutions = from_content[to_lang]['sample_solutions']
             
@@ -63,7 +64,7 @@ class CodeGenerator():
             to_lang, task, tactics_p, strategy)
         prompt = '\n'.join(sample_parts) + '\n' + last_prompt
         
-        snippets = self.space[p_type][from_lang][to_lang]        
+        snippets = self.prompts[p_type][from_lang][to_lang]        
         marker = snippets['marker']
         completion = self._complete(prompt, marker)
         return completion.replace(marker, '')
@@ -167,9 +168,9 @@ class CodeGenerator():
             tactics_p: assigns each tactics to priority
             strategy: high-level processing strategy
         """
-        tactics = self.space[p_type]['tactics']
-        precedence = self.space[p_type]['precedence']
-        snippets = self.space[p_type][from_lang][to_lang]
+        tactics = self.prompts[p_type]['tactics']
+        precedence = self.prompts[p_type]['precedence']
+        snippets = self.prompts[p_type][from_lang][to_lang]
         
         nr_tactics = len(tactics)
         if tactics_p is None:

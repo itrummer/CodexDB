@@ -4,6 +4,7 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import argparse
+import json
 import openai
 import sys
 from codexdb.code import CodeGenerator
@@ -26,7 +27,9 @@ if __name__ == '__main__':
     if from_lang not in ['nl', 'sql']:
         sys.exit(f'Unknown source language: {from_lang}')
     
-    code_gen = CodeGenerator(args.config)
+    with open(args.config) as file:
+        prompts = json.load(file)
+    code_gen = CodeGenerator(prompts)
     catalog = DbCatalog(args.data_dir)
     engine = ExecuteCode(catalog)
     

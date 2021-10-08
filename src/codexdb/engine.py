@@ -4,6 +4,7 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import os
+import time
 
 class ExecuteCode():
     """ Executes code in different languages. """
@@ -25,16 +26,23 @@ class ExecuteCode():
             code: execute this code
         
         Returns:
-            output generated when executing code
+            Boolean success flag, output, elapsed time in seconds
         """
+        start_s = time.time()
         if code_lang == 'bash':
-            return self._exec_bash(db_id, code)
+            success, output = self._exec_bash(db_id, code)
         elif code_lang == 'cpp':
-            return self._exec_cpp(db_id, code)
+            success, output = self._exec_cpp(db_id, code)
         elif code_lang == 'python':
-            return self._exec_python(db_id, code)
+            success, output = self._exec_python(db_id, code)
         else:
             raise ValueError(f'Unsupported language: {code_lang}')
+        total_s = time.time() - start_s
+        return success, output, total_s
+    
+    def supported_langs(self):
+        """ Returns supported languages as string list. """
+        return ['bash', 'cpp', 'python']
     
     def _exec_bash(self, db_id, code):
         """ Execute bash code.
@@ -51,9 +59,10 @@ class ExecuteCode():
         self._write_file(db_id, filename, code)
         db_dir = self.catalog.db_dir(db_id)
         os.system(f'chmod +x {db_dir}/execute.sh')
-        os.system(f'{db_dir}/execute.sh &> {db_dir}/bout.txt')
+        if os.system(f'{db_dir}/execute.sh &> {db_dir}/bout.txt') > 0:
+            return False, ''
         with open(f'{db_dir}/bout.txt') as file:
-            return file.read()
+            return True, file.read()
     
     def _exec_cpp(self, db_id, code):
         """ Execute C++ code.
@@ -70,10 +79,11 @@ class ExecuteCode():
         self._write_file(db_id, filename, code)
         db_dir = self.catalog.db_dir(db_id)
         exefile = 'execute.out'
-        os.system(f'g++ {db_dir}/{filename} -o {db_dir}/{exefile}')
-        os.system(f'{db_dir}/{exefile} &> {db_dir}/cout.txt')
+        if os.system(f'g++ {db_dir}/{filename} -o {db_dir}/{exefile}') > 0 or \
+            os.system(f'{db_dir}/{exefile} &> {db_dir}/cout.txt') > 0:
+            return False, ''
         with open(f'{db_dir}/cout.txt') as file:
-            return file.read()
+            return True, file.read()
     
     def _exec_python(self, db_id, code):
         """ Execute Python code and return generated output.
@@ -93,7 +103,9 @@ class ExecuteCode():
         python_exe = '/opt/homebrew/anaconda3/envs/literate/bin/python'
         exe_file = f'{db_dir}/{filename}'
         out_file = f'{db_dir}/pout.txt'
-        os.system(f'{python_path} {python_exe} {exe_file} &> {out_file}')
+        if os.system(
+            f'{python_path} {python_exe} {exe_file} &> {out_file}') > 0:
+            return False, ''
         with open(f'{out_file}') as file:
             return file.read()
     

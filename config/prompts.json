@@ -7,6 +7,69 @@
 			"files": ["toys.csv", "vendors.csv"]
 		}
 	],
+	"transform": {
+		"from_*": {
+			"to_python": {
+				"template": "\"\"\\nThis Python program transforms the files of the following database into anotehr format<strategy>.\n<database>\n<plan>\"\"\"\n\n--- Start of Python program ---",
+				"marker": "--- End of Python program ---",
+				"linepre": ""
+			},
+			"to_bash": {
+				"template": "# This Bash script transforms the files of the following database into another format<strategy>.\n<database>\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Transforming data ...\"",
+				"marker": "--- End of Bash script ---",
+				"linepre": "# "
+			},
+			"to_cpp": {
+				"template": "// This C++ program transforms the files of the following database into another format<strategy>.\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
+				"marker": "--- End of C++ program ---",
+				"linepre": "// "
+			}
+		},
+		"tactics": [
+			"Import libraries<strategy>.",
+			"Iterate over all tables.",
+			"For each table, load the associated file.",
+			"Transform the file into another format<strategy>.",
+			"Write new file to hard disk.",
+			"Delete in-memory data structures."],
+		"precedence": [
+			{"F":0, "S":3},
+			{"F":1, "S":3},
+			{"F":2, "S":3},
+			{"F":3, "S":4},
+			{"F":4, "S":5}
+		],
+		"strategies": [
+			"", 
+			" for efficient processing", 
+			" for higher space efficiency", 
+			" for easy parallelization"]
+	},
+	"index": {
+		"from_*": {
+			"to_python": {
+				"template": "\"\"\\nThis Python program indexes the files of the following database<strategy>.\n<database>\n<plan>\"\"\"\n\n--- Start of Python program ---",
+				"marker": "--- End of Python program ---",
+				"linepre": ""
+			},
+			"to_bash": {
+				"template": "# This Bash script indexes the files of the following database<strategy>.\n<database>\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Transforming data ...\"",
+				"marker": "--- End of Bash script ---",
+				"linepre": "# "
+			},
+			"to_cpp": {
+				"template": "// This C++ program indexes the files of the following database<strategy>.\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
+				"marker": "--- End of C++ program ---",
+				"linepre": "// "
+			}
+		},
+		"tactics": [
+		],
+		"precedence": [
+		],
+		"strategies": [
+		]
+	},
 	"query": {
 		"from_nl": {
 			"sample_tasks": [
@@ -70,7 +133,5 @@
 			" for parallel processing", 
 			" for GPU processing",
 			" for efficient processing"]
-	},
-	"transform": {
 	}
 }
