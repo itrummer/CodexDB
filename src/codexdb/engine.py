@@ -35,6 +35,8 @@ class ExecuteCode():
             success, output = self._exec_cpp(db_id, code)
         elif code_lang == 'python':
             success, output = self._exec_python(db_id, code)
+        elif code_lang == 'dummy':
+            success, output = True, ''
         else:
             raise ValueError(f'Unsupported language: {code_lang}')
         total_s = time.time() - start_s
@@ -42,7 +44,7 @@ class ExecuteCode():
     
     def supported_langs(self):
         """ Returns supported languages as string list. """
-        return ['bash', 'cpp', 'python']
+        return ['bash', 'cpp', 'python', 'dummy']
     
     def _exec_bash(self, db_id, code):
         """ Execute bash code.

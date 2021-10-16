@@ -81,7 +81,7 @@ class PromptEnv(gym.Env):
         strategies = self.prompts[p_type]['strategies']
         
         to_lang_idx = math.floor(self.nr_to_langs * action[0])
-        to_lang_idx = min(to_lang_idx, self.nr_to_langs)
+        to_lang_idx = min(to_lang_idx, self.nr_to_langs - 1)
         to_lang = self.to_langs[to_lang_idx]
         use_examples = True if action[1] > 0.5 else False
         
@@ -95,7 +95,7 @@ class PromptEnv(gym.Env):
         
         nr_strategies = len(strategies)
         strat_idx = math.floor(nr_strategies * action[-1])
-        strat_idx = min(strat_idx, nr_strategies)
+        strat_idx = min(strat_idx, nr_strategies - 1)
         strategy = strategies[strat_idx]
         
         # TODO: consider examples once available for all stages
@@ -112,10 +112,8 @@ class PromptEnv(gym.Env):
         
         if not success:
             reward = 0
-            done = True
         else:
             reward = 1
-            done = False        
             if self.cur_stage == 2:
                 # Query processing stage - compare to reference
                 ref_code = self.coder.generate(
@@ -134,6 +132,8 @@ class PromptEnv(gym.Env):
         self.cur_step += 1
         if self.cur_step >= self.reload_every:
             done = True
+        else:
+            done = False
         observation = self._observe()
         return observation, reward, done, {}
     

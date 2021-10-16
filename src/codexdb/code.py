@@ -35,10 +35,13 @@ class CodeGenerator():
             tactics_p: assigns each tactics to priority
             strategy: high-level processing strategy
         """
+        print(f'Generating code {p_type} from {from_lang} to {to_lang}')
         if from_lang == to_lang:
             return task
+        elif to_lang == 'dummy':
+            return ''
         from_lang = 'from_' + from_lang
-        to_lang = 'to_' + to_lang        
+        to_lang = 'to_' + to_lang
         
         sample_parts = []
         if use_examples:
@@ -171,6 +174,9 @@ class CodeGenerator():
             tactics_p: assigns each tactics to priority
             strategy: high-level processing strategy
         """
+        print(f'Prompt for {p_type} from {from_lang} to {to_lang}')
+        if to_lang == 'to_dummy':
+            return ''
         tactics = self.prompts[p_type]['tactics']
         precedence = self.prompts[p_type]['precedence']
         snippets = self._snippets(p_type, from_lang, to_lang)

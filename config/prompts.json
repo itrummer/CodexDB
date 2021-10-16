@@ -113,14 +113,20 @@
 			}
 		},
 		"from_pg_sql": {
-			"sample_queries": [
-				
-			],
 			"to_python": {
+				"template": "\"\"\"\nThis Python program answers the SQL query \"<task>\" on the following tables:\n<database>\n<plan>\n\"\"\"\n\n--- Start of Python program ---",
+				"marker": "--- End of Python program ---",
+				"linepre": ""
 			},
 			"to_bash": {
+				"template": "# This Bash script answers the SQL query \"<task>\" on the following tables:\n<database>\n# Answer the query \"<task>\":\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Processing query ...\"",
+				"marker": "--- End of Bash script ---",
+				"linepre": "# "
 			},
 			"to_cpp": {
+				"template": "// This C++ program answers the SQL query \"<task>\" on the following tables:\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
+				"marker": "--- End of C++ program ---",
+				"linepre": "// "
 			}
 		},
 		"tactics": [
