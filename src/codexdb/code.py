@@ -51,18 +51,31 @@ class CodeGenerator():
             else:
                 from_content = self.prompts[p_type]['from_*']
             sample_tasks = from_content['sample_tasks']
-            sample_solutions = from_content[to_lang]['sample_solutions']
+            solution_links = from_content[to_lang]['sample_solution_links']
+            sample_solutions = []
+            for l in solution_links:
+                with open(l) as file:
+                    sample_solution = file.read()
+                    sample_solutions.append(sample_solution)
             
             for sample_task, solution in zip(sample_tasks, sample_solutions):
                 sample_text = sample_task['task']
                 sample_db_id = sample_task['db_id']
                 sample_db = sample_dbs[sample_db_id]
+                sample_tables = sample_db['table_names_original']
+                sample_files = [f'{t}.csv' for t in sample_tables]
                 sample_prompt = self._prompt(
-                    p_type, sample_db, files, from_lang, 
+                    p_type, sample_db, sample_files, from_lang, 
                     to_lang, sample_text, tactics_p, strategy)
                 sample_parts.append(sample_prompt)
                 sample_parts.append(solution)
         
+        # last_prompt = self._prompt(
+            # p_type, schema, files, from_lang, 
+            # to_lang, task, tactics_p, strategy)
+        # prompt = '\n'.join(context) + \
+            # '\n'.join(sample_parts[0:2]) + \
+            # '\n' + last_prompt
         last_prompt = self._prompt(
             p_type, schema, files, from_lang, 
             to_lang, task, tactics_p, strategy)
@@ -86,9 +99,10 @@ class CodeGenerator():
             generated code, following prompt
         """
         try:
+            print(prompt)
             response = openai.Completion.create(
                 engine='davinci-codex', prompt=prompt, 
-                temperature=0, max_tokens=500,
+                temperature=0, max_tokens=2000,
                 stop=marker)
             return response['choices'][0]['text']
         except Exception as e:

@@ -1,0 +1,6 @@
+import pandas as pd
+operate_company = pd.read_csv("operate_company.csv")
+flight = pd.read_csv("flight.csv")
+operate_company_flight = pd.merge(left=operate_company, right=flight, left_on="id", right_on="company_id")
+print(operate_company_flight[["name", "Type"]])
+--- End of Python program ---

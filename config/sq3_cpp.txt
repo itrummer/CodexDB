@@ -1,0 +1,86 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+struct s_operate_company {
+	int id;
+	string name;
+	string Type;
+	string Principal_activities;
+	string Incorporated_in;
+	string Group_Equity_Shareholding;
+};
+
+struct s_flight {
+	int id;
+	int Vehicle_Flight_number;
+	string Date;
+	string Pilot;
+	double Velocity;
+	double Altitude;
+	int airport_id;
+	int company_id;
+};
+
+int main()
+{
+	ifstream operate_company_file("operate_company.csv");
+	ifstream flight_file("flight.csv");
+	operate_company_file.ignore(5000, '\n');
+	flight_file.ignore(5000, '\n');
+	vector<s_operate_company> operate_company_vector;
+	vector<s_flight> flight_vector;
+	
+	string line, field;
+	while (getline(operate_company_file, line)) {
+		stringstream ss(line);
+		struct s_operate_company operate_company;
+		getline(ss, field, ',');
+		operate_company.id=stoi(field);
+		getline(ss, field, ',');
+		operate_company.name=field;
+		getline(ss, field, ',');
+		operate_company.Type=field;
+		getline(ss, field, ',');
+		operate_company.Principal_activities=field;
+		getline(ss, field, ',');
+		operate_company.Incorporated_in=field;
+		getline(ss, field, ',');
+		operate_company.Group_Equity_Shareholding=field;
+		operate_company_vector.push_back(operate_company);
+	}
+	while (getline(flight_company_file, line)) {
+		stringstream ss(line);
+		struct s_flight flight;
+		getline(ss, field, ',');
+		flight.id=stoi(field);
+		getline(ss, field, ',');
+		flight.Vehicle_Flight_number=stoi(field);
+		getline(ss, field, ',');
+		flight.Date=field;
+		getline(ss, field, ',');
+		flight.Pilot=field;
+		getline(ss, field, ',');
+		flight.Velocity=stod(field);
+		getline(ss, field, ',');
+		flight.Altitude=stod(field);
+		getline(ss, field, ',');
+		flight.airport_id=stoi(field);
+		getline(ss, field, ',');
+		flight.company_id=stoi(field);
+		flight_vector.push_back(flight);
+	}
+	
+	map<int, s_operate_company> operate_company_by_id;
+	for (struct s_operate_company operate_company in operate_company_vector) {
+		operate_company_by_id.insert(pair<int, s_operate_company>(operate_company.id, operate_company));
+	}
+	for (struct s_flight flight in flight_vector) {
+		company_id = flight.company_id;
+		company = operate_company_by_id[company_id];
+		cout << company.name << "," << company.Type << endl;
+	}
+}
+--- End of C++ program ---

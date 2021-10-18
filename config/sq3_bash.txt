@@ -1,0 +1,2 @@
+join -1 1 -2 8 -t , <(tail -n +2 operate_company.csv | sort -k 1 -t ,) <(tail -n +2 flight.csv | sort -k 8 -t ,) | cut -d, -f2,3 -s
+--- End of Bash script ---

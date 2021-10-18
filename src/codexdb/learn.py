@@ -19,6 +19,8 @@ def result_cmp(ref_output, cmp_output):
     Returns:
         Number between 0 and 1 (1 is most similar)
     """
+    print(f'-- CodexDB output:\n{cmp_output}\n--\n')
+    print(f'-- Reference output:\n{ref_output}\n--\n')
     ref_len = len(ref_output)
     cmp_len = len(cmp_output)
     return min(ref_len, cmp_len)/(1+max(ref_len, cmp_len))
@@ -85,6 +87,10 @@ class PromptEnv(gym.Env):
         to_lang = self.to_langs[to_lang_idx]
         use_examples = True if action[1] > 0.5 else False
         
+        # TODO: remove later
+        to_lang = 'cpp'
+        use_examples = True
+        
         tactics_p = []
         nr_tactics = len(tactics)
         for tac_idx in range(nr_tactics):
@@ -101,7 +107,7 @@ class PromptEnv(gym.Env):
         # TODO: consider examples once available for all stages
         code = self.coder.generate(
             self.context, p_type, schema, files, self.from_lang, 
-            to_lang, task, False, tactics_p, strategy)
+            to_lang, task, use_examples, tactics_p, strategy)
         print(f'Generated code:\n---\n{code}\n---\n')
         approval = input('Do you approve executing this code? [y for yes]')
         if approval == 'y':
@@ -109,6 +115,7 @@ class PromptEnv(gym.Env):
                 self.db_id, to_lang, code)
         else:
             success, output, elapsed_s = False, '', 1
+        print(f'CodexDB successful: {success} in {elapsed_s}s')
         
         if not success:
             reward = 0
@@ -120,8 +127,9 @@ class PromptEnv(gym.Env):
                     [], p_type, schema, files, self.from_lang, 
                     self.ref_lang, task, use_examples, 
                     tactics_p, strategy)
-                ref_output = self.engine.execute(
+                ref_success, ref_output, ref_s = self.engine.execute(
                     self.db_id, self.ref_lang, ref_code)
+                print(f'Reference successful: {ref_success} in {ref_s}s')
                 reward = result_cmp(ref_output, output)
                 reward /= elapsed_s
             else:
@@ -139,7 +147,7 @@ class PromptEnv(gym.Env):
     
     def reset(self):
         """ Reset stage, query, and step. """
-        self.cur_stage = 0
+        self.cur_stage = 2
         self.cur_query = 0
         self.cur_step = 0
         self.context = []

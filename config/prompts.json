@@ -1,11 +1,588 @@
 {
 	"sample_databases": [
-		{
-			"db_id": "toys",
-			"column_names_original": [[0, "toy_id"], [0, "age_group"], [0, "rating"], [0, "remarks"], [0, "sold_by"], [1, "vendor_id"], [1, "vendor_name"], [1, "nr_employees"]],
-			"table_names_original": ["toys", "vendors"],
-			"files": ["toys.csv", "vendors.csv"]
-		}
+   {
+      "column_names_original": [
+         [
+            0,
+            "Perpetrator_ID"
+         ],
+         [
+            0,
+            "People_ID"
+         ],
+         [
+            0,
+            "Date"
+         ],
+         [
+            0,
+            "Year"
+         ],
+         [
+            0,
+            "Location"
+         ],
+         [
+            0,
+            "Country"
+         ],
+         [
+            0,
+            "Killed"
+         ],
+         [
+            0,
+            "Injured"
+         ],
+         [
+            1,
+            "People_ID"
+         ],
+         [
+            1,
+            "Name"
+         ],
+         [
+            1,
+            "Height"
+         ],
+         [
+            1,
+            "Weight"
+         ],
+         [
+            1,
+            "Home Town"
+         ]
+      ],
+      "column_types": [
+         "text",
+         "number",
+         "number",
+         "text",
+         "number",
+         "text",
+         "text",
+         "number",
+         "number",
+         "number",
+         "text",
+         "number",
+         "number",
+         "text"
+      ],
+      "db_id": "perpetrator",
+      "foreign_keys": [
+         [
+            2,
+            9
+         ]
+      ],
+      "primary_keys": [
+         1,
+         9
+      ],
+      "table_names_original": [
+         "perpetrator",
+         "people"
+      ],
+      "files": [
+      	"perpetrator.csv", 
+      	"people.csv"
+      ]
+   },
+   {
+      "column_names_original": [
+         [
+            0,
+            "building"
+         ],
+         [
+            0,
+            "room_number"
+         ],
+         [
+            0,
+            "capacity"
+         ],
+         [
+            1,
+            "dept_name"
+         ],
+         [
+            1,
+            "building"
+         ],
+         [
+            1,
+            "budget"
+         ],
+         [
+            2,
+            "course_id"
+         ],
+         [
+            2,
+            "title"
+         ],
+         [
+            2,
+            "dept_name"
+         ],
+         [
+            2,
+            "credits"
+         ],
+         [
+            3,
+            "ID"
+         ],
+         [
+            3,
+            "name"
+         ],
+         [
+            3,
+            "dept_name"
+         ],
+         [
+            3,
+            "salary"
+         ],
+         [
+            4,
+            "course_id"
+         ],
+         [
+            4,
+            "sec_id"
+         ],
+         [
+            4,
+            "semester"
+         ],
+         [
+            4,
+            "year"
+         ],
+         [
+            4,
+            "building"
+         ],
+         [
+            4,
+            "room_number"
+         ],
+         [
+            4,
+            "time_slot_id"
+         ],
+         [
+            5,
+            "ID"
+         ],
+         [
+            5,
+            "course_id"
+         ],
+         [
+            5,
+            "sec_id"
+         ],
+         [
+            5,
+            "semester"
+         ],
+         [
+            5,
+            "year"
+         ],
+         [
+            6,
+            "ID"
+         ],
+         [
+            6,
+            "name"
+         ],
+         [
+            6,
+            "dept_name"
+         ],
+         [
+            6,
+            "tot_cred"
+         ],
+         [
+            7,
+            "ID"
+         ],
+         [
+            7,
+            "course_id"
+         ],
+         [
+            7,
+            "sec_id"
+         ],
+         [
+            7,
+            "semester"
+         ],
+         [
+            7,
+            "year"
+         ],
+         [
+            7,
+            "grade"
+         ],
+         [
+            8,
+            "s_ID"
+         ],
+         [
+            8,
+            "i_ID"
+         ],
+         [
+            9,
+            "time_slot_id"
+         ],
+         [
+            9,
+            "day"
+         ],
+         [
+            9,
+            "start_hr"
+         ],
+         [
+            9,
+            "start_min"
+         ],
+         [
+            9,
+            "end_hr"
+         ],
+         [
+            9,
+            "end_min"
+         ],
+         [
+            10,
+            "course_id"
+         ],
+         [
+            10,
+            "prereq_id"
+         ]
+      ],
+      "column_types": [
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "text",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "text",
+         "text",
+         "number",
+         "number",
+         "number",
+         "number",
+         "text",
+         "text"
+      ],
+      "db_id": "college_2",
+      "foreign_keys": [
+         [
+            9,
+            4
+         ],
+         [
+            13,
+            4
+         ],
+         [
+            19,
+            1
+         ],
+         [
+            20,
+            2
+         ],
+         [
+            15,
+            7
+         ],
+         [
+            22,
+            11
+         ],
+         [
+            23,
+            15
+         ],
+         [
+            24,
+            16
+         ],
+         [
+            25,
+            17
+         ],
+         [
+            26,
+            18
+         ],
+         [
+            29,
+            4
+         ],
+         [
+            31,
+            27
+         ],
+         [
+            32,
+            15
+         ],
+         [
+            33,
+            16
+         ],
+         [
+            34,
+            17
+         ],
+         [
+            35,
+            18
+         ],
+         [
+            37,
+            27
+         ],
+         [
+            38,
+            11
+         ],
+         [
+            46,
+            7
+         ],
+         [
+            45,
+            7
+         ]
+      ],
+      "primary_keys": [
+         1,
+         4,
+         7,
+         11,
+         15,
+         22,
+         27,
+         31,
+         37,
+         39,
+         45
+      ],
+      "table_names_original": [
+         "classroom",
+         "department",
+         "course",
+         "instructor",
+         "section",
+         "teaches",
+         "student",
+         "takes",
+         "advisor",
+         "time_slot",
+         "prereq"
+      ],
+      "files": [
+         "classroom.csv",
+         "department.csv",
+         "course.csv",
+         "instructor.csv",
+         "section.csv",
+         "teaches.csv",
+         "student.csv",
+         "takes.csv",
+         "advisor.csv",
+         "time_slot.csv",
+         "prereq.csv"
+      ]
+   },
+   {
+      "column_names_original": [
+         [
+            0,
+            "id"
+         ],
+         [
+            0,
+            "City"
+         ],
+         [
+            0,
+            "Country"
+         ],
+         [
+            0,
+            "IATA"
+         ],
+         [
+            0,
+            "ICAO"
+         ],
+         [
+            0,
+            "name"
+         ],
+         [
+            1,
+            "id"
+         ],
+         [
+            1,
+            "name"
+         ],
+         [
+            1,
+            "Type"
+         ],
+         [
+            1,
+            "Principal_activities"
+         ],
+         [
+            1,
+            "Incorporated_in"
+         ],
+         [
+            1,
+            "Group_Equity_Shareholding"
+         ],
+         [
+            2,
+            "id"
+         ],
+         [
+            2,
+            "Vehicle_Flight_number"
+         ],
+         [
+            2,
+            "Date"
+         ],
+         [
+            2,
+            "Pilot"
+         ],
+         [
+            2,
+            "Velocity"
+         ],
+         [
+            2,
+            "Altitude"
+         ],
+         [
+            2,
+            "airport_id"
+         ],
+         [
+            2,
+            "company_id"
+         ]
+      ],
+      "column_types": [
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "text",
+         "text",
+         "number",
+         "text",
+         "text",
+         "text",
+         "text",
+         "number",
+         "number",
+         "text",
+         "text",
+         "text",
+         "number",
+         "number",
+         "number",
+         "number"
+      ],
+      "db_id": "flight_company",
+      "foreign_keys": [
+         [
+            20,
+            7
+         ],
+         [
+            19,
+            1
+         ]
+      ],
+      "primary_keys": [
+         1,
+         7,
+         13
+      ],
+      "table_names_original": [
+         "airport",
+         "operate_company",
+         "flight"
+      ],
+      "files": [
+         "airport.csv",
+         "operate_company.csv",
+         "flight.csv"
+      ]
+   }
 	],
 	"transform": {
 		"from_*": {
@@ -85,48 +662,104 @@
 	"query": {
 		"from_nl": {
 			"sample_tasks": [
-				{"task": "How many toys?", "db_id": 0}
+				{
+					"task": "How many perpetrators are there?", 
+					"db_id": 0
+				},
+				{
+					"task": "Find the buildings which have rooms with capacity more than 50.", 
+					"db_id": 1
+				},
+				{
+					"task": "What are the names and types of the companies that have ever operated a flight?", 
+					"db_id": 2
+				}
 			],
 			"to_python": {
 				"template": "\"\"\"\nThis Python program answers the query \"<task>\" on the following tables:\n<database>\n<plan>\n\"\"\"\n\n--- Start of Python program ---",
 				"marker": "--- End of Python program ---",
 				"linepre": "",
-				"sample_solutions": ["\nimport pandas as pd\n\ntoys=pd.read_csv(\"toys.csv\")\nprint(toys.shape[0])\n--- End of Python program ---"]
+				"sample_solution_links": [
+					"config/sq1_python.txt",
+					"config/sq2_python.txt",
+					"config/sq3_python.txt"
+				]
 			},
 			"to_bash": {
 				"template": "# This Bash script answers the query \"<task>\" on the following tables:\n<database>\n# Answer the query \"<task>\":\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Processing query ...\"",
 				"marker": "--- End of Bash script ---",
 				"linepre": "# ",
-				"sample_solutions": ["\ntail +2 toys.csv | wc -l\n--- End of Bash script ---"]
+				"sample_solution_links": [
+					"config/sq1_bash.txt",
+					"config/sq2_bash.txt",
+					"config/sq3_bash.txt"
+				]
 			},
 			"to_cpp": {
 				"template": "// This C++ program answers the query \"<task>\" on the following tables:\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
 				"marker": "--- End of C++ program ---",
 				"linepre": "// ",
-				"sample_solutions": ["\n#include <iostream>\n#include <fstream>\n#include <sstream>\n#include <vector>\nusing namespace std;\n\nstruct s_toys {\n\tstring toy_id;\n\tstring age_group;\n\tdouble rating;\n\tstring remarks;\n\tstring sold_by;\n};\n\nint main()\n{\n\tifstream toys_file(\"toys.csv\");\n\ttoys_file.ignore(5000, '\\n');\n\n\tvector<s_toys> toys_vector;\n\tstring line, field;\n\twhile (getline(toys_file, line)) {\n\t\tstringstream ss(line);\n\t\tstruct s_toys toys;\n\t\tgetline(ss, field, ',');\n\t\ttoys.toy_id=field;\n\n\t\tgetline(ss, field, ',');\n\t\ttoys.age_group=field;\n\n\t\tgetline(ss, field, ',');\n\t\ttoys.rating=stod(field);\n\n\t\tgetline(ss, field, ',');\ntoys.remarks=field;\n\n\t\ttoys_vector.push_back(toys);\n\t}\n\n\tcout << toys_vector.size() << endl;\n}\n\n--- End of C++ program ---"]
+				"sample_solution_links": [
+					"config/sq1_cpp.txt",
+					"config/sq2_cpp.txt",
+					"config/sq3_cpp.txt"
+				]
 			},
 			"to_pg_sql": {
 				"template": "##### Translate this query into SQL: <task>\n<database>\n--- Start of SQL query ---\nSELECT ",
 				"marker": "--- End of SQL query ---",
 				"linepre": "# ",
-				"sample_solutions": ["\nselect count(*) from toys;\n--- End of SQL query ---"]
+				"sample_solution_links": [
+					"config/sq1_sql.txt",
+					"config/sq2_sql.txt",
+					"config/sq3_sql.txt"
+				]
 			}
 		},
 		"from_pg_sql": {
+			"sample_tasks": [
+				{
+					"task": "SELECT count(*) FROM perpetrator",
+					"db_id": 0
+				},
+				{
+					"task": "SELECT DISTINCT building FROM classroom WHERE capacity  >  50",
+					"db_id": 1
+				},
+				{
+					"task": "SELECT T1.name ,  T1.type FROM operate_company AS T1 JOIN flight AS t2 ON T1.id  =  T2.company_id",
+					"db_id": 2
+				}
+			],
 			"to_python": {
 				"template": "\"\"\"\nThis Python program answers the SQL query \"<task>\" on the following tables:\n<database>\n<plan>\n\"\"\"\n\n--- Start of Python program ---",
 				"marker": "--- End of Python program ---",
-				"linepre": ""
+				"linepre": "",
+				"sample_solution_links": [
+					"config/sq1_python.txt",
+					"config/sq2_python.txt",
+					"config/sq3_python.txt"
+				]
 			},
 			"to_bash": {
 				"template": "# This Bash script answers the SQL query \"<task>\" on the following tables:\n<database>\n# Answer the query \"<task>\":\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Processing query ...\"",
 				"marker": "--- End of Bash script ---",
-				"linepre": "# "
+				"linepre": "# ",
+				"sample_solution_links": [
+					"config/sq1_bash.txt",
+					"config/sq2_bash.txt",
+					"config/sq3_bash.txt"
+				]
 			},
 			"to_cpp": {
 				"template": "// This C++ program answers the SQL query \"<task>\" on the following tables:\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
 				"marker": "--- End of C++ program ---",
-				"linepre": "// "
+				"linepre": "// ",
+				"sample_solution_links": [
+					"config/sq1_cpp.txt",
+					"config/sq2_cpp.txt",
+					"config/sq3_cpp.txt"
+				]
 			}
 		},
 		"tactics": [

@@ -35,6 +35,8 @@ class ExecuteCode():
             success, output = self._exec_cpp(db_id, code)
         elif code_lang == 'python':
             success, output = self._exec_python(db_id, code)
+        elif code_lang == 'pg_sql':
+            success, output = self._exec_psql(db_id, code)
         elif code_lang == 'dummy':
             success, output = True, ''
         else:
@@ -54,7 +56,7 @@ class ExecuteCode():
             code: execute this code
         
         Returns:
-            Output of executed code
+            Success flag and output of executed code
         """
         filename = 'execute.sh'
         code = self._expand_paths(db_id, code)
@@ -74,7 +76,7 @@ class ExecuteCode():
             code: C++ code to execute
         
         Returns:
-            output of executed code
+            Success flag and output of executed code
         """
         filename = 'execute.cpp'
         code = self._expand_paths(db_id, code)
@@ -87,6 +89,24 @@ class ExecuteCode():
         with open(f'{db_dir}/cout.txt') as file:
             return True, file.read()
     
+    def _exec_psql(self, db_id, code):
+        """ Execute Postgres SQL query. 
+        
+        Args:
+            db_id: database identifier
+            code: SQL query to execute
+        
+        Returns:
+            Success flag and output of generated code
+        """
+        self._write_file(db_id, 'sql.txt', code)
+        db_dir = self.catalog.db_dir(db_id)
+        psql_path = '/opt/homebrew/bin/psql'
+        if os.system(f'{psql_path} -f {db_dir}/sql.txt {db_id} > {db_dir}/output.txt'):
+            return False, ''
+        with open(f'{db_dir}/output.txt') as file:
+            return True, file.read()
+    
     def _exec_python(self, db_id, code):
         """ Execute Python code and return generated output.
         
@@ -95,7 +115,7 @@ class ExecuteCode():
             code: Python code to execute
         
         Returns:
-            output generated when executing code
+            Success flkag and output generated when executing code
         """
         filename = 'execute.py'
         db_dir = self.catalog.db_dir(db_id)
@@ -109,7 +129,7 @@ class ExecuteCode():
             f'{python_path} {python_exe} {exe_file} &> {out_file}') > 0:
             return False, ''
         with open(f'{out_file}') as file:
-            return file.read()
+            return True, file.read()
     
     def _expand_paths(self, db_id, code):
         """ Expand relative paths to data files in code.

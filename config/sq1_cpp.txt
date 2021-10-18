@@ -1,0 +1,47 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+struct s_perpetrator {
+	string Perpetrator_ID;
+	int People_ID;
+	int Date;
+	string Year;
+	int Location;
+	string Country;
+	int Killed;
+	int Injured;
+};
+
+int main()
+{
+	ifstream perpetrator_file("perpetrator.csv");
+	perpetrator_file.ignore(5000, '\n');
+	vector<s_perpetrator> perpetrator_vector;
+	string line, field;
+	while (getline(perpetrator_file, line)) {
+		stringstream ss(line);
+		struct s_perpetrator perpetrator;
+		getline(ss, field, ',');
+		perpetrator.Perpetrator_ID=field;
+		getline(ss, field, ',');
+		perpetrator.People_ID=stoi(field);
+		getline(ss, field, ',');
+		perpetrator.Date=stoi(field);
+		getline(ss, field, ',');
+		perpetrator.Year=field;
+		getline(ss, field, ',');
+		perpetrator.Location=field;
+		getline(ss, field, ',');
+		perpetrator.Country=field;
+		getline(ss, field, ',');
+		perpetrator.Killed=stoi(field);
+		getline(ss, field, ',');
+		perpetrator.Injured=stoi(field);
+		perpetrator_vector.push_back(perpetrator);
+	}
+	cout << perpetrator_vector.size() << endl;
+}
+--- End of C++ program ---

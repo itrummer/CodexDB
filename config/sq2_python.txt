@@ -1,0 +1,4 @@
+import pandas as pd
+classroom = pd.read_csv("classroom.csv").query("capacity > 50")
+print(len(classroom.groupby("building")))
+--- End of Python program ---

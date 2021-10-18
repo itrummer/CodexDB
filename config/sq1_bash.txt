@@ -1,0 +1,2 @@
+wc -l perpetrator.csv | awk '{print $1-1}'
+--- End of Bash script ---

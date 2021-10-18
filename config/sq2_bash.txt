@@ -1,0 +1,2 @@
+tail -n +2 classroom.csv | cut -f1 -d, | sort | uniq | wc -l | xargs
+--- End of Bash script ---

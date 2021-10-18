@@ -1,0 +1,36 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+struct s_classroom {
+	string building,
+	string room_number,
+	int capacity
+};
+
+int main()
+{
+	ifstream classroom_file("classroom.csv");
+	classroom_file.ignore(5000, '\n');
+	vector<string> building_vector;
+	string line, field;
+	while (getline(classroom_file, line)) {
+		stringstream ss(line);
+		struct s_classroom classroom;
+		getline(ss, field, ',');
+		classroom.building=field;
+		getline(ss, field, ',');
+		classroom.room_number=field;
+		getline(ss, field, ',');
+		classroom.capacity=stoi(field);
+		
+		if (capacity > 50) {
+			building_vector.push_back(classroom.building);
+		}
+	}
+	sort(building_vector.begin(), building_vector.end())
+	cout << unique(building_vector.begin(), building_vector.end()) << endl;
+}
+--- End of C++ program ---
