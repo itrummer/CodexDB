@@ -137,7 +137,7 @@ class ExecuteCode():
         filename = 'execute.py'
         db_dir = self.catalog.db_dir(db_id)
         code = self._expand_paths(db_id, code)
-        self._write_file(db_id, filename, code)
+        self._write_file(filename, code)
         pyt_cmd = f'PYTHONPATH={self.tmp_dir} {self.python_path}'
         exe_file = f'{db_dir}/{filename}'
         out_file = f'{db_dir}/pout.txt'
