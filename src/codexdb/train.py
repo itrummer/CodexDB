@@ -42,7 +42,7 @@ if __name__ == '__main__':
     with open(args.test_path) as file:
         test_cases = json.load(file)
         env = codexdb.learn.PromptEnv(
-            catalog, args.db, prompts, 
-            from_lang, 'pg_sql', test_cases)
+            catalog, prompts, from_lang, 
+            'pg_sql', test_cases)
         model = A2C('MlpPolicy', env, verbose=1)
         model.learn(total_timesteps=50)
