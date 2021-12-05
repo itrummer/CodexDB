@@ -68,7 +68,7 @@ def get_result(spider_dir, query_json):
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('key', type=str, help='OpenAI Key')
+    parser.add_argument('spider', type=str, help='Path to SPIDER benchmark')
     args = parser.parse_args()
         
     tables_path = f'{args.spider}/tables.json'
