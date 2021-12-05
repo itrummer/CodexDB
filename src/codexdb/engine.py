@@ -10,12 +10,16 @@ class ExecuteCode():
     """ Executes code in different languages. """
     
     def __init__(self, catalog):
-        """ Initialize with database catalog.
+        """ Initialize with database catalog and paths.
         
         Args:
             catalog: informs on database schema and file locations
         """
         self.catalog = catalog
+        self.cpp_path = os.environ['CODEXDB_CPP']
+        self.psql_path = os.environ['CODEXDB_PSQL']
+        self.python_path = os.environ['CODEXDB_PYTHON']
+        self.tmp_dir = os.environ['CODEXDB_TMP']
     
     def execute(self, db_id, code_lang, code):
         """ Execute code written in specified language.
@@ -28,6 +32,7 @@ class ExecuteCode():
         Returns:
             Boolean success flag, output, elapsed time in seconds
         """
+        self._copy_db(db_id)
         start_s = time.time()
         if code_lang == 'bash':
             success, output = self._exec_bash(db_id, code)
@@ -48,6 +53,17 @@ class ExecuteCode():
         """ Returns supported languages as string list. """
         return ['bash', 'cpp', 'python', 'dummy']
     
+    def _copy_db(self, db_id):
+        """ Copies data to a temporary directory.
+        
+        Args:
+            db_id: database ID
+        """
+        src_dir = self.catalog.db_dir(db_id)
+        for tbl_file in self.catalog.files(db_id):
+            cmd = f'sudo cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
+            os.system(cmd)
+    
     def _exec_bash(self, db_id, code):
         """ Execute bash code.
         
@@ -60,12 +76,12 @@ class ExecuteCode():
         """
         filename = 'execute.sh'
         code = self._expand_paths(db_id, code)
-        self._write_file(db_id, filename, code)
-        db_dir = self.catalog.db_dir(db_id)
-        os.system(f'chmod +x {db_dir}/execute.sh')
-        if os.system(f'{db_dir}/execute.sh &> {db_dir}/bout.txt') > 0:
+        self._write_file(filename, code)
+        sh_path = f'{self.tmp_dir}/execute.sh'
+        os.system(f'chmod +x {sh_path}')
+        if os.system(f'{sh_path} &> {self.tmp_dir}/bout.txt') > 0:
             return False, ''
-        with open(f'{db_dir}/bout.txt') as file:
+        with open(f'{self.tmp_dir}/bout.txt') as file:
             return True, file.read()
     
     def _exec_cpp(self, db_id, code):
@@ -80,13 +96,14 @@ class ExecuteCode():
         """
         filename = 'execute.cpp'
         code = self._expand_paths(db_id, code)
-        self._write_file(db_id, filename, code)
-        db_dir = self.catalog.db_dir(db_id)
-        exefile = 'execute.out'
-        if os.system(f'g++ {db_dir}/{filename} -o {db_dir}/{exefile}') > 0 or \
-            os.system(f'{db_dir}/{exefile} &> {db_dir}/cout.txt') > 0:
+        self._write_file(filename, code)
+        src_path = f'{self.tmp_dir}/{filename}'
+        exe_path = f'{self.tmp_dir}/execute.out'
+        comp_cmd = f'{self.cpp_path} {src_path} -o {exe_path}'
+        exe_cmd = f'{exe_path} &> {self.tmp_dir}/cout.txt'
+        if os.system(comp_cmd) > 0 or os.system(exe_cmd) > 0:
             return False, ''
-        with open(f'{db_dir}/cout.txt') as file:
+        with open(f'{self.tmp_dir}/cout.txt') as file:
             return True, file.read()
     
     def _exec_psql(self, db_id, code):
@@ -99,12 +116,12 @@ class ExecuteCode():
         Returns:
             Success flag and output of generated code
         """
-        self._write_file(db_id, 'sql.txt', code)
-        db_dir = self.catalog.db_dir(db_id)
-        psql_path = '/opt/homebrew/bin/psql'
-        if os.system(f'{psql_path} -f {db_dir}/sql.txt {db_id} > {db_dir}/output.txt'):
+        self._write_file('sql.txt', code)
+        sql_path = f'{self.tmp_dir}/sql.txt'
+        out_path = f'{self.tmp_dir}/output.txt'
+        if os.system(f'{self.psql_path} -f {sql_path} {db_id} > {out_path}'):
             return False, ''
-        with open(f'{db_dir}/output.txt') as file:
+        with open(out_path) as file:
             return True, file.read()
     
     def _exec_python(self, db_id, code):
@@ -115,18 +132,17 @@ class ExecuteCode():
             code: Python code to execute
         
         Returns:
-            Success flkag and output generated when executing code
+            Success flag and output generated when executing code
         """
         filename = 'execute.py'
         db_dir = self.catalog.db_dir(db_id)
         code = self._expand_paths(db_id, code)
         self._write_file(db_id, filename, code)
-        python_path = f'PYTHONPATH={db_dir}'
-        python_exe = '/opt/homebrew/anaconda3/envs/literate/bin/python'
+        pyt_cmd = f'PYTHONPATH={self.tmp_dir} {self.python_path}'
         exe_file = f'{db_dir}/{filename}'
         out_file = f'{db_dir}/pout.txt'
         if os.system(
-            f'{python_path} {python_exe} {exe_file} &> {out_file}') > 0:
+            f'{pyt_cmd} {exe_file} &> {out_file}') > 0:
             return False, ''
         with open(f'{out_file}') as file:
             return True, file.read()
@@ -141,14 +157,13 @@ class ExecuteCode():
         Returns:
             code after expanding paths
         """
-        db_dir = self.catalog.db_dir(db_id)
         for file in self.catalog.files(db_id):
-            full_path = f'{db_dir}/{file}'
+            full_path = f'{self.tmp_dir}/{file}'
             code = code.replace(file, full_path)
         return code
     
-    def _write_file(self, db_id, filename, code):
-        """ Write code into file in database directory. 
+    def _write_file(self, filename, code):
+        """ Write code into file in temporary directory. 
         
         Args:
             db_id: database ID
@@ -156,6 +171,6 @@ class ExecuteCode():
             code: write code into this file
             
         """
-        file_path = f'{self.catalog.db_dir(db_id)}/{filename}'
+        file_path = f'{self.tmp_dir}/{filename}'
         with open(file_path, 'w') as file:
             file.write(code)
