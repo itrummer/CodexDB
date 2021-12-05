@@ -45,4 +45,4 @@ if __name__ == '__main__':
             catalog, prompts, from_lang, 
             'pg_sql', test_cases)
         model = A2C('MlpPolicy', env, verbose=1)
-        model.learn(total_timesteps=50)
+        model.learn(total_timesteps=200)

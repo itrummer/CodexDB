@@ -135,12 +135,11 @@ class ExecuteCode():
             Success flag and output generated when executing code
         """
         filename = 'execute.py'
-        db_dir = self.catalog.db_dir(db_id)
         code = self._expand_paths(db_id, code)
         self._write_file(filename, code)
         pyt_cmd = f'PYTHONPATH={self.tmp_dir} {self.python_path}'
-        exe_file = f'{db_dir}/{filename}'
-        out_file = f'{db_dir}/pout.txt'
+        exe_file = f'{self.tmp_dir}/{filename}'
+        out_file = f'{self.tmp_dir}/pout.txt'
         if os.system(
             f'{pyt_cmd} {exe_file} &> {out_file}') > 0:
             return False, ''

@@ -102,7 +102,7 @@ class CodeGenerator():
             print(prompt)
             response = openai.Completion.create(
                 engine='davinci-codex', prompt=prompt, 
-                temperature=0, max_tokens=2000,
+                temperature=0, max_tokens=400,
                 stop=marker)
             return response['choices'][0]['text']
         except Exception as e:
