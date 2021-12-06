@@ -63,7 +63,7 @@ class ExecuteCode():
         """
         src_dir = self.catalog.db_dir(db_id)
         for tbl_file in self.catalog.files(db_id):
-            cmd = f'cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
+            cmd = f'sudo cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
             os.system(cmd)
     
     def _exec_bash(self, db_id, code):
