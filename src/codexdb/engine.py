@@ -4,6 +4,7 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import os
+import sys
 import time
 
 class ExecuteCode():
@@ -147,6 +148,8 @@ class ExecuteCode():
             with open(out_file) as file:
                 output = file.read()
         except:
+            e = sys.exc_info()[0]
+            print(f'Exception: {e}')
             output = ''
         print(f'Codex output: {output}')
         return success, output
