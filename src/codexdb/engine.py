@@ -140,11 +140,15 @@ class ExecuteCode():
         pyt_cmd = f'PYTHONPATH="{self.tmp_dir}" {self.python_path}'
         exe_file = f'{self.tmp_dir}/{filename}'
         out_file = f'{self.tmp_dir}/pout.txt'
-        if os.system(
-            f'{pyt_cmd} {exe_file} &> {out_file}') > 0:
-            return False, ''
-        with open(f'{out_file}') as file:
-            return True, file.read()
+        exe_cmd = f'{pyt_cmd} {exe_file} &> {out_file}'
+        print(f'Executing {exe_cmd}')
+        success = False if os.system(exe_cmd) > 0 else True
+        try:
+            with open(out_file) as file:
+                output = file.read()
+        except:
+            output = ''
+        return success, output
     
     def _expand_paths(self, db_id, code):
         """ Expand relative paths to data files in code.
