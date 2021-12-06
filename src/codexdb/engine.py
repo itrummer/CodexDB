@@ -4,6 +4,7 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import os
+import subprocess
 import sys
 import time
 
@@ -139,13 +140,16 @@ class ExecuteCode():
         code = self._expand_paths(db_id, code)
         self._write_file(filename, code)
         pyt_cmd = f'PYTHONPATH="{self.tmp_dir}" {self.python_path}'
-        exe_file = f'{self.tmp_dir}/{filename}'
-        out_file = f'{self.tmp_dir}/pout.txt'
-        exe_cmd = f'{pyt_cmd} {exe_file} &> {out_file}'
+        exe_path = f'{self.tmp_dir}/{filename}'
+        out_path = f'{self.tmp_dir}/pout.txt'
+        exe_cmd = f'{pyt_cmd} {exe_path} &> {out_path}'
         print(f'Executing {exe_cmd}')
-        success = False if os.system(exe_cmd) > 0 else True
+        with open(out_path, 'w') as out_file:
+            sub_comp = subprocess.run(
+                [self.python_path, exe_path], stdout=out_file)
+            success = False if sub_comp.returncode > 0 else True
         try:
-            with open(out_file) as file:
+            with open(out_path) as file:
                 output = file.read()
         except:
             e = sys.exc_info()[0]
