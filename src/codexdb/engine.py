@@ -148,6 +148,7 @@ class ExecuteCode():
                 output = file.read()
         except:
             output = ''
+        print(f'Codex output: {output}')
         return success, output
     
     def _expand_paths(self, db_id, code):
