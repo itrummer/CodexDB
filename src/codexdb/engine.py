@@ -61,7 +61,7 @@ class ExecuteCode():
         """
         src_dir = self.catalog.db_dir(db_id)
         for tbl_file in self.catalog.files(db_id):
-            cmd = f'sudo cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
+            cmd = f'cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
             os.system(cmd)
     
     def _exec_bash(self, db_id, code):
@@ -137,7 +137,7 @@ class ExecuteCode():
         filename = 'execute.py'
         code = self._expand_paths(db_id, code)
         self._write_file(filename, code)
-        pyt_cmd = f'PYTHONPATH={self.tmp_dir} {self.python_path}'
+        pyt_cmd = f'PYTHONPATH="{self.tmp_dir}" {self.python_path}'
         exe_file = f'{self.tmp_dir}/{filename}'
         out_file = f'{self.tmp_dir}/pout.txt'
         if os.system(
@@ -157,8 +157,10 @@ class ExecuteCode():
             code after expanding paths
         """
         for file in self.catalog.files(db_id):
-            full_path = f'{self.tmp_dir}/{file}'
-            code = code.replace(file, full_path)
+            for quote in ['"', "'"]:
+                file_path = f'{quote}{file}{quote}'
+                full_path = f'{quote}{self.tmp_dir}/{file}{quote}'
+                code = code.replace(file_path, full_path)
         return code
     
     def _write_file(self, filename, code):

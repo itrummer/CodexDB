@@ -68,6 +68,8 @@ class PromptEnv(gym.Env):
         to_lang = self.to_langs[to_lang_idx]
         use_examples = True if action[1] > 0.5 else False
         
+        to_lang = 'python'
+        
         tactics_p = []
         nr_tactics = len(tactics)
         for tac_idx in range(nr_tactics):
