@@ -139,11 +139,8 @@ class ExecuteCode():
         filename = 'execute.py'
         code = self._expand_paths(db_id, code)
         self._write_file(filename, code)
-        pyt_cmd = f'PYTHONPATH="{self.tmp_dir}" {self.python_path}'
         exe_path = f'{self.tmp_dir}/{filename}'
         out_path = f'{self.tmp_dir}/pout.txt'
-        exe_cmd = f'{pyt_cmd} {exe_path} &> {out_path}'
-        print(f'Executing {exe_cmd}')
         with open(out_path, 'w') as out_file:
             sub_comp = subprocess.run(
                 [self.python_path, exe_path], stdout=out_file)
@@ -155,7 +152,6 @@ class ExecuteCode():
             e = sys.exc_info()[0]
             print(f'Exception: {e}')
             output = ''
-        print(f'Codex output: {output}')
         return success, output
     
     def _expand_paths(self, db_id, code):
