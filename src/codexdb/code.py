@@ -171,6 +171,10 @@ class CodeGenerator():
             used.add(use)
             if tactics_p[use] > 0:
                 ordered_ts.append(tactics[use])
+        
+        # attach default steps
+        ordered_ts = ['Load data for all relevant tables.'] + ordered_ts
+        ordered_ts = ordered_ts + ["Write query results to file 'result.csv'."]
         return ordered_ts
     
     def _prompt(

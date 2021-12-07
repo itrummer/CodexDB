@@ -24,14 +24,10 @@
 		},
 		"tactics": [
 			"Import the Pandas library.",
-			"Load data for all relevant tables.",
-			"Calculate the answer to the query.",
-			"Write query results to file 'result.csv'."
+			"Calculate the answer to the query."
 		],
 		"precedence": [
-			{"F":0, "S":1},
-			{"F":1, "S":2},
-			{"F":2, "S":3}
+			{"F":0, "S":1}
 		],
 		"strategies": [
 			"", 
