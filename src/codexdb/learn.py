@@ -93,7 +93,8 @@ class PromptEnv(gym.Env):
             db_id, to_lang, code)
         print(f'CodexDB successful: {success} in {elapsed_s}s')
         
-        if success and self.cur_stage < 2:
+        stage_name = self.stages[self.cur_stage]
+        if success and not (stage_name == 'query'):
             self.context.append(code)
         reward = self._calculate_reward(
             success, elapsed_s, output, 
