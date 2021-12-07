@@ -187,9 +187,11 @@ class PromptEnv(gym.Env):
         """
         print(f'-- CodexDB output:\n{cmp_output}\n--\n')
         print(f'-- Reference output:\n{ref_output}\n--\n')
-        diffs = ref_output.compare(cmp_output, align_axis=0)
-        print(f'-- Differences:\n{diffs}\n--\n')
-        # ref_len = len(ref_output)
-        # cmp_len = len(cmp_output)
-        # return min(ref_len, cmp_len)/(1+max(ref_len, cmp_len))
-        return diffs.shape[0]
+        ref_len = ref_output.shape[0]
+        cmp_len = ref_output.shape[0]
+        if not (ref_len == cmp_len):
+            return 0
+        else:
+            diffs = ref_output.compare(cmp_output, align_axis=0)
+            print(f'-- Differences:\n{diffs}\n--\n')
+            return 1.0/diffs.shape[0]
