@@ -189,9 +189,12 @@ class PromptEnv(gym.Env):
         print(f'-- Reference output:\n{ref_output}\n--\n')
         ref_len = ref_output.shape[0]
         cmp_len = cmp_output.shape[0]
-        if not (ref_len == cmp_len):
-            return 0
-        else:
+        print(f'ref_len: {ref_len}; cmp_len: {cmp_len}')
+        if ref_len == cmp_len:
+            ref_output.reindex()
+            cmp_output.reindex()
             diffs = ref_output.compare(cmp_output, align_axis=0)
             print(f'-- Differences:\n{diffs}\n--\n')
             return 1.0/diffs.shape[0]
+        else:
+            return 0
