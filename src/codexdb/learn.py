@@ -88,7 +88,7 @@ class PromptEnv(gym.Env):
         code = self.coder.generate(
             self.context, p_type, schema, files, self.from_lang, 
             to_lang, task, use_examples, tactics_p, strategy)
-        print(f'Generated code:\n---\n{code}\n---\n')
+        print(f'Generated code:\n-------\n{code}\n-------\n')
         success, output, elapsed_s = self.engine.execute(
             db_id, to_lang, code)
         print(f'CodexDB successful: {success} in {elapsed_s}s')
