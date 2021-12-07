@@ -8,6 +8,7 @@ import codexdb.engine
 import gym.spaces
 import math
 import numpy as np
+import pandas as pd
 
 class PromptEnv(gym.Env):
     """ Learn to generate optimal prompts for data processing. """
@@ -27,7 +28,7 @@ class PromptEnv(gym.Env):
         """
         self.catalog = catalog
         self.prompts = prompts
-        self.stages = ['transform', 'index', 'query']
+        self.stages = ['query']
         self.nr_stages = len(self.stages)
         self.from_lang = from_lang
         self.ref_lang = ref_lang
@@ -110,7 +111,7 @@ class PromptEnv(gym.Env):
     
     def reset(self):
         """ Reset stage, query, and step. """
-        self.cur_stage = 2
+        self.cur_stage = 0
         self.cur_query = 0
         self.cur_step = 0
         self.context = []
@@ -153,7 +154,7 @@ class PromptEnv(gym.Env):
             reward = 1
             cur_test = self.test_cases[self.cur_query]
             if 'results' in cur_test:
-                ref_output = cur_test['results']
+                ref_output = pd.DataFrame(cur_test['results'])
             else:
                 db_id = cur_test['db_id']
                 ref_code = self.coder.generate(
@@ -186,6 +187,9 @@ class PromptEnv(gym.Env):
         """
         print(f'-- CodexDB output:\n{cmp_output}\n--\n')
         print(f'-- Reference output:\n{ref_output}\n--\n')
-        ref_len = len(ref_output)
-        cmp_len = len(cmp_output)
-        return min(ref_len, cmp_len)/(1+max(ref_len, cmp_len))
+        diffs = ref_output.compare(cmp_output, align_axis=0)
+        print(f'-- Differences:\n{diffs}\n--\n')
+        # ref_len = len(ref_output)
+        # cmp_len = len(cmp_output)
+        # return min(ref_len, cmp_len)/(1+max(ref_len, cmp_len))
+        return diffs.shape[0]

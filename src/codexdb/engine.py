@@ -4,6 +4,7 @@ Created on Oct 3, 2021
 @author: immanueltrummer
 '''
 import os
+import pandas as pd
 import subprocess
 import sys
 import time
@@ -140,18 +141,15 @@ class ExecuteCode():
         code = self._expand_paths(db_id, code)
         self._write_file(filename, code)
         exe_path = f'{self.tmp_dir}/{filename}'
-        out_path = f'{self.tmp_dir}/pout.txt'
-        with open(out_path, 'w') as out_file:
-            sub_comp = subprocess.run(
-                [self.python_path, exe_path], stdout=out_file)
-            success = False if sub_comp.returncode > 0 else True
+        out_path = f'{self.tmp_dir}/result.csv'
+        sub_comp = subprocess.run([self.python_path, exe_path])
+        success = False if sub_comp.returncode > 0 else True
         try:
-            with open(out_path) as file:
-                output = file.read()
+            output = pd.read_csv(out_path)
         except:
             e = sys.exc_info()[0]
             print(f'Exception: {e}')
-            output = ''
+            output = pd.DataFrame([[]])
         return success, output
     
     def _expand_paths(self, db_id, code):
