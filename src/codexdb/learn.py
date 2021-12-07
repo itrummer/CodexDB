@@ -188,7 +188,7 @@ class PromptEnv(gym.Env):
         print(f'-- CodexDB output:\n{cmp_output}\n--\n')
         print(f'-- Reference output:\n{ref_output}\n--\n')
         ref_len = ref_output.shape[0]
-        cmp_len = ref_output.shape[0]
+        cmp_len = cmp_output.shape[0]
         if not (ref_len == cmp_len):
             return 0
         else:
