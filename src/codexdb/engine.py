@@ -179,7 +179,7 @@ class ExecuteCode():
                 full_path = f'{quote}{self.tmp_dir}/{file}{quote}'
                 code = code.replace(file_path, full_path)
         
-        prefix = f'import os\nos.chdir({self.tmp_dir})\n'
+        prefix = f"import os\nos.chdir('{self.tmp_dir}')\n"
         return prefix + code
     
     def _write_file(self, filename, code):
