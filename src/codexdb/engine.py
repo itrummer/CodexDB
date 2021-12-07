@@ -35,6 +35,7 @@ class ExecuteCode():
         Returns:
             Boolean success flag, output, elapsed time in seconds
         """
+        self._clean()
         self._copy_db(db_id)
         start_s = time.time()
         if code_lang == 'bash':
@@ -55,6 +56,16 @@ class ExecuteCode():
     def supported_langs(self):
         """ Returns supported languages as string list. """
         return ['bash', 'cpp', 'python', 'dummy']
+    
+    def _clean(self):
+        """ Cleans up working directory before execution. 
+        
+        The result file may have been generated either as
+        file or as directory. This handles multiple cases.
+        """
+        subprocess.run(['rm', f'{self.tmp_dir}/result.csv/*'])
+        subprocess.run(['rm', '-d', 'f{self.tmp_dir}/result.csv'])
+        subprocess.run(['rm', f'{self.tmp_dir}/result.csv'])
     
     def _copy_db(self, db_id):
         """ Copies data to a temporary directory.
@@ -167,7 +178,9 @@ class ExecuteCode():
                 file_path = f'{quote}{file}{quote}'
                 full_path = f'{quote}{self.tmp_dir}/{file}{quote}'
                 code = code.replace(file_path, full_path)
-        return code
+        
+        prefix = f'import os\nos.chdir({self.tmp_dir})\n'
+        return prefix + code
     
     def _write_file(self, filename, code):
         """ Write code into file in temporary directory. 
