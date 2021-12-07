@@ -99,6 +99,7 @@ class CodeGenerator():
             generated code, following prompt
         """
         try:
+            print(f'\nPrompt:\n*******\n{prompt}\n*******')
             response = openai.Completion.create(
                 engine='davinci-codex', prompt=prompt, 
                 temperature=0, max_tokens=400,
