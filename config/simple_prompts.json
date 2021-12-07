@@ -1,0 +1,47 @@
+{
+	"query": {
+		"from_nl": {
+			"to_python": {
+				"template": "\"\"\"\nThis Python program answers the query \"<task>\" on the following tables:\n<database>\n<plan>\n\"\"\"\n\n--- Start of Python program ---",
+				"marker": "--- End of Python program ---",
+				"linepre": ""
+			},
+			"to_bash": {
+				"template": "# This Bash script answers the query \"<task>\" on the following tables:\n<database>\n# Answer the query \"<task>\":\n<plan>\n\n--- Start of Bash script ---\n#!/bin/bash\n\necho \"Processing query ...\"",
+				"marker": "--- End of Bash script ---",
+				"linepre": "# "
+			},
+			"to_cpp": {
+				"template": "// This C++ program answers the query \"<task>\" on the following tables:\n<database>\n<plan>\n\n--- Start of C++ program ---\n",
+				"marker": "--- End of C++ program ---",
+				"linepre": "// "
+			},
+			"to_pg_sql": {
+				"template": "##### Translate this query into SQL: <task>\n<database>\n--- Start of SQL query ---\nSELECT ",
+				"marker": "--- End of SQL query ---",
+				"linepre": "# "
+			}
+		},
+		"tactics": [
+			"Import the Pandas library.",
+			"Import the Dask library.",
+			"Import the Vaex library.",
+			"Import the Modin library.",
+			"Load data for all relevant tables.",
+			"Calculate the answer to the query.",
+			"Write query results to file 'result.csv'."
+		],
+		"precedence": [
+			{"F":0, "S":4},
+			{"F":1, "S":4},
+			{"F":2, "S":4},
+			{"F":3, "S":4},
+			{"F":4, "S":5},
+			{"F":5, "S":6}
+		],
+		"strategies": [
+			"", 
+			" for parallel processing", 
+			" for efficient processing"]
+	}
+}
