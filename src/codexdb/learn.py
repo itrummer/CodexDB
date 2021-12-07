@@ -190,10 +190,12 @@ class PromptEnv(gym.Env):
         print(f'-- Reference output:\n{ref_output}\n--\n')
         ref_output.reindex()
         cmp_output.reindex()
+        ref_output.columns = [0] * ref_output.shape[1]
+        cmp_output.columns = [0] * cmp_output.shape[1]
         try:
             diffs = ref_output.compare(cmp_output, align_axis=0)
             print(f'-- Differences:\n{diffs}\n--\n')
-            return 1.0/diffs.shape[0]
+            return 1.0/(diffs.shape[0]+1)
         except:
             print('(Incomparable)')
             return 0
