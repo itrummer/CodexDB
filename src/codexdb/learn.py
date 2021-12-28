@@ -41,7 +41,9 @@ class PromptEnv(gym.Env):
         self.nr_diffs = -1
         self.log_path = log_path
         with open(log_path, 'w') as file:
-            file.write('executed\toutsize\tsamedim\tnrdiffs\tsecs\treward\n')
+            file.write(
+                'action\texecuted\toutsize\t' \
+                'samedim\tnrdiffs\tsecs\treward\n')
         
         self.coder = codexdb.code.CodeGenerator(prompts)
         self.engine = codexdb.engine.ExecuteCode(catalog)
@@ -120,6 +122,7 @@ class PromptEnv(gym.Env):
         if self.log_path is not None:
             with open(self.log_path, 'a') as file:
                 file.write(
+                    f'"{str(action)}\t"' \
                     f'{success}\t{len(output)}\t{self.comparable}\t' \
                     f'{self.nr_diffs}\t{elapsed_s}\t{reward}\n')
         
