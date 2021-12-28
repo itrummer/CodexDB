@@ -15,8 +15,23 @@ import sys
 
 from stable_baselines3 import DQN
 from stable_baselines3 import A2C
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
+
+class TensorboardCallback(BaseCallback):
+    """
+    Custom callback for plotting additional values in tensorboard.
+    """
+
+    def __init__(self, verbose=0):
+        super(TensorboardCallback, self).__init__(verbose)
+
+    def _on_step(self) -> bool:
+        # Log scalar value (here a random variable)
+        value = 77
+        self.logger.record('random_value', value)
+        return True
 
 if __name__ == '__main__':
     
@@ -46,4 +61,4 @@ if __name__ == '__main__':
             catalog, prompts, from_lang, 
             'pg_sql', test_cases))
         model = A2C('MlpPolicy', env, verbose=1, tensorboard_log='./tb_logs')
-        model.learn(total_timesteps=200)
+        model.learn(total_timesteps=200, callback=TensorboardCallback())
