@@ -16,6 +16,7 @@ import sys
 from stable_baselines3 import DQN
 from stable_baselines3 import A2C
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.monitor import Monitor
 
 if __name__ == '__main__':
     
@@ -41,8 +42,8 @@ if __name__ == '__main__':
     
     with open(args.test_path) as file:
         test_cases = json.load(file)
-        env = codexdb.learn.PromptEnv(
+        env = Monitor(codexdb.learn.PromptEnv(
             catalog, prompts, from_lang, 
-            'pg_sql', test_cases)
+            'pg_sql', test_cases))
         model = A2C('MlpPolicy', env, verbose=1, tensorboard_log='./tb_logs')
         model.learn(total_timesteps=200)
