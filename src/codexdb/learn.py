@@ -38,7 +38,7 @@ class PromptEnv(gym.Env):
         self.reload_every = reload_every
         self.log_path = log_path
         with open(log_path, 'w') as file:
-            file.write('reward\n')
+            file.write('reward,success,secs,comparable,nrdiffs\n')
         
         self.coder = codexdb.code.CodeGenerator(prompts)
         self.engine = codexdb.engine.ExecuteCode(catalog)
@@ -116,7 +116,9 @@ class PromptEnv(gym.Env):
         
         if self.log_path is not None:
             with open(self.log_path, 'a') as file:
-                file.write(f'{reward}\n')
+                file.write(
+                    f'{reward},{success},{elapsed_s},' \
+                    f'{self.comparable},{self.nr_diffs}\n')
         
         return observation, reward, done, {}
     
@@ -205,9 +207,13 @@ class PromptEnv(gym.Env):
         try:
             diffs = ref_output.compare(cmp_output, align_axis=0)
             print(f'-- Differences:\n{diffs}\n--\n')
-            return 1.0/(diffs.shape[0]+1)
+            nr_diffs = diffs.shape[0]
+            self.comparable = True
+            self.nr_diffs = nr_diffs
+            return 1.0/(nr_diffs+1)
         except:
             print('(Incomparable)')
+            self.comparable = False
             return 0
         #
         # ref_len = ref_output.shape[0]

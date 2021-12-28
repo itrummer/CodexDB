@@ -25,7 +25,10 @@ if __name__ == '__main__':
     parser.add_argument('test_path', type=str, help='Path to test case file')
     parser.add_argument('from_lang', type=str, help='Source language (NL vs SQL)')
     parser.add_argument('config', type=str, help='Path to configuration file')
+    parser.add_argument('nr_steps', type=int, help='The number of learning steps')
+    parser.add_argument('model_in', type=str, help='Path to input model')
     parser.add_argument('log_path', type=str, help='Path to logging file if any')
+    parser.add_argument('model_out', type=str, help='Path to output model')
     args = parser.parse_args()
     
     os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -49,5 +52,14 @@ if __name__ == '__main__':
             catalog, prompts, from_lang, 
             'pg_sql', test_cases, 
             log_path=log_path)
-        model = A2C('MlpPolicy', env, verbose=1)
-        model.learn(total_timesteps=200)
+        
+        if args.model_in:
+            print(f'Loading model from {args.model_in} ...')
+            model = A2C.load(args.model_in, env, verbose=1)
+        else:
+            print('Initializing new model ...')
+            model = A2C('MlpPolicy', env, verbose=1)
+        
+        model.learn(total_timesteps=args.nr_steps)
+        if args.model_out:
+            model.save(args.model_out)
