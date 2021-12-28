@@ -36,6 +36,9 @@ class PromptEnv(gym.Env):
         self.test_cases = test_cases
         self.nr_queries = len(test_cases)
         self.reload_every = reload_every
+        
+        self.comparable = False
+        self.nr_diffs = -1
         self.log_path = log_path
         with open(log_path, 'w') as file:
             file.write('reward,success,secs,comparable,nrdiffs\n')
