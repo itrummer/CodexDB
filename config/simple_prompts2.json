@@ -23,15 +23,16 @@
 			}
 		},
 		"tactics": [
-			"Import the Pandas library.",
+			"Filter tables using query predicates.",
+			"Perform joins as needed for query.",
+			"Aggregate data as specified in query.",
 			"Calculate the answer to the query."
 		],
 		"precedence": [
-			{"F":0, "S":1}
+			{"F":0, "S":1},
+			{"F":1, "S":2},
+			{"F":2, "S":3}
 		],
-		"strategies": [
-			"", 
-			" for parallel processing", 
-			" for efficient processing"]
+		"strategies": [""]
 	}
 }
