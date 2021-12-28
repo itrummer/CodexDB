@@ -64,7 +64,7 @@ class ExecuteCode():
         file or as directory. This handles multiple cases.
         """
         subprocess.run(['rm', f'{self.tmp_dir}/result.csv/*'])
-        subprocess.run(['rm', '-d', 'f{self.tmp_dir}/result.csv'])
+        subprocess.run(['rm', '-d', f'{self.tmp_dir}/result.csv'])
         subprocess.run(['rm', f'{self.tmp_dir}/result.csv'])
     
     def _copy_db(self, db_id):
