@@ -15,23 +15,7 @@ import sys
 
 from stable_baselines3 import DQN
 from stable_baselines3 import A2C
-from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.monitor import Monitor
-
-class TensorboardCallback(BaseCallback):
-    """
-    Custom callback for plotting additional values in tensorboard.
-    """
-
-    def __init__(self, verbose=0):
-        super(TensorboardCallback, self).__init__(verbose)
-
-    def _on_step(self) -> bool:
-        # Log scalar value (here a random variable)
-        value = 77
-        self.logger.record('random_value', value)
-        return True
 
 if __name__ == '__main__':
     
@@ -41,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('test_path', type=str, help='Path to test case file')
     parser.add_argument('from_lang', type=str, help='Source language (NL vs SQL)')
     parser.add_argument('config', type=str, help='Path to configuration file')
+    parser.add_argument('log_path', type=str, help='Path to logging file if any')
     args = parser.parse_args()
     
     os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -48,6 +33,9 @@ if __name__ == '__main__':
     from_lang = args.from_lang.lower()
     if from_lang not in ['nl', 'pg_sql']:
         sys.exit(f'Unknown source language: {from_lang}')
+    log_path = None
+    if args.log_path:
+        log_path = args.log_path
     
     with open(args.config) as file:
         prompts = json.load(file)
@@ -57,8 +45,9 @@ if __name__ == '__main__':
     
     with open(args.test_path) as file:
         test_cases = json.load(file)
-        env = Monitor(codexdb.learn.PromptEnv(
+        env = codexdb.learn.PromptEnv(
             catalog, prompts, from_lang, 
-            'pg_sql', test_cases))
-        model = A2C('MlpPolicy', env, verbose=1, tensorboard_log='./tb_logs')
-        model.learn(total_timesteps=200, callback=TensorboardCallback())
+            'pg_sql', test_cases, 
+            log_path=log_path)
+        model = A2C('MlpPolicy', env, verbose=1)
+        model.learn(total_timesteps=200)

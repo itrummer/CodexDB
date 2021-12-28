@@ -15,7 +15,7 @@ class PromptEnv(gym.Env):
     
     def __init__(
             self, catalog, prompts, from_lang, ref_lang, 
-            test_cases, reload_every=float('inf')):
+            test_cases, reload_every=float('inf'), log_path=None):
         """ Initialize for given search space.
         
         Args:
@@ -25,6 +25,7 @@ class PromptEnv(gym.Env):
             ref_lang: reference results use this target language
             test_cases: questions, optionally with associated results
             reload_every: reload data after so many steps
+            log_path: log results to this file
         """
         self.catalog = catalog
         self.prompts = prompts
@@ -35,6 +36,10 @@ class PromptEnv(gym.Env):
         self.test_cases = test_cases
         self.nr_queries = len(test_cases)
         self.reload_every = reload_every
+        self.log_path = log_path
+        with open(log_path, 'w') as file:
+            file.write('reward\n')
+        
         self.coder = codexdb.code.CodeGenerator(prompts)
         self.engine = codexdb.engine.ExecuteCode(catalog)
         self.to_langs = self.engine.supported_langs()
@@ -108,6 +113,11 @@ class PromptEnv(gym.Env):
         else:
             done = False
         observation = self._observe()
+        
+        if self.log_path is not None:
+            with open(self.log_path, 'a') as file:
+                file.write(f'{reward}\n')
+        
         return observation, reward, done, {}
     
     def reset(self):
