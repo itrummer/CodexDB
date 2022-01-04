@@ -38,11 +38,12 @@ def db_info(schema, files):
     return lines
 
 
-def generate_code(prompt):
+def generate_code(prompt, temperature):
     """ Generate code by completing given prompt. 
     
     Args:
         prompt: initiate generation with this prompt
+        temperature: degree of randomization in generation
     
     Returns:
         generated code, following prompt
@@ -51,7 +52,7 @@ def generate_code(prompt):
         print(f'\nPrompt:\n*******\n{prompt}\n*******')
         response = openai.Completion.create(
             engine='davinci-codex', prompt=prompt, 
-            temperature=0, max_tokens=400,
+            temperature=temperature, max_tokens=400,
             stop='--- End of Python program ---')
         return response['choices'][0]['text']
     except Exception as e:
@@ -123,7 +124,7 @@ def get_plan(sql):
     
     selects = ast.args['expressions']
     selects_sql = ', '.join([s.sql() for s in selects])
-    out_parts.append(f'Calculate {selects_sql} (discard other columns).')
+    out_parts.append(f'Calculate {selects_sql}.')
     
     out_parts.append("Write query result to 'result.csv' (with header row).")
     out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
@@ -182,16 +183,19 @@ if __name__ == '__main__':
             question = cur_test['question']
             query = cur_test['query']
             
-            prompt = get_prompt(schema, files, question, query)
-            print(prompt)
-            
-            code = generate_code(prompt)
-            print(f'Generated code:\n-------\n{code}\n-------\n')
-            success, output, elapsed_s = engine.execute(db_id, 'python', code)
-            print(f'CodexDB successful: {success} in {elapsed_s}s')
-            
-            ref_output = pd.DataFrame(cur_test['results'])
-            comparable, nr_diffs, similarity = result_cmp(ref_output, output)
+            for try_idx in range(5):
+                print(f'Starting try number {try_idx} ...')
+                prompt = get_prompt(schema, files, question, query)
+                temperature = try_idx * 0.1
+                code = generate_code(prompt, temperature)
+                print(f'Generated code:\n-------\n{code}\n-------\n')
+                success, output, elapsed_s = engine.execute(db_id, 'python', code)
+                print(f'CodexDB successful: {success} in {elapsed_s}s')                
+                ref_output = pd.DataFrame(cur_test['results'])
+                comparable, nr_diffs, similarity = result_cmp(ref_output, output)
+                if similarity > 0:
+                    break
+                
             log_file.write(
                 f'{success}\t{len(output)}\t{comparable}\t' +\
                 f'{nr_diffs}\t{similarity}\t{elapsed_s}\n')
