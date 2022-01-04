@@ -76,6 +76,7 @@ def get_prompt(schema, files, question, query):
         f'"""\nThis Python program answers the query "{question}" ' +\
         f'on the following tables:')
     prompt_parts += db_info(schema, files)
+    prompt_parts.append('The first line in each file is the header column.')
     prompt_parts.append(f'SQL query: {query}')
     prompt_parts += get_plan(query)
     prompt_parts.append('"""')
