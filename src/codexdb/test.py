@@ -125,7 +125,7 @@ def get_plan(sql):
     selects_sql = ', '.join([s.sql() for s in selects])
     out_parts.append(f'Calculate {selects_sql} (discard other columns).')
     
-    out_parts.append("Write query result to 'result.csv'.")
+    out_parts.append("Write query result to 'result.csv' (with header row).")
     out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
     return out_parts
 
