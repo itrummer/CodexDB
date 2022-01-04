@@ -54,9 +54,9 @@ def get_prompt(schema, files, question, query):
         f'"""\nThis Python program answers the query "{question}" ' +\
         f'on the following tables:')
     prompt_parts += db_info(schema, files)
+    prompt_parts.append(f'SQL query: {query}')
     prompt_parts.append('1. Read data for relevant tables.')
     prompt_parts.append('2. Write query result to "result.csv".')
-    prompt_parts.append(f'SQL query: {query}')
     prompt_parts.append('"""')
     prompt_parts.append('')
     prompt_parts.append('--- Start of Python program ---')
