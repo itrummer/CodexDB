@@ -155,11 +155,14 @@ class ExecuteCode():
         out_path = f'{self.tmp_dir}/result.csv'
         sub_comp = subprocess.run([self.python_path, exe_path])
         success = False if sub_comp.returncode > 0 else True
+        if not success:
+            print(f'Python stdout: {sub_comp.stdout}')
+            print(f'Python stderr: {sub_comp.stderr}')
         try:
             output = pd.read_csv(out_path)
         except:
             e = sys.exc_info()[0]
-            print(f'Exception: {e}')
+            print(f'Exception while reading result file: {e}')
             output = pd.DataFrame([[]])
         return success, output
     
