@@ -123,7 +123,7 @@ def get_plan(sql):
     
     selects = ast.args['expressions']
     selects_sql = ', '.join([s.sql() for s in selects])
-    out_parts.append(f'Calculate {selects_sql}.')
+    out_parts.append(f'Select the following columns: {selects_sql}.')
     
     out_parts.append("Write query result to 'result.csv'.")
     out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
