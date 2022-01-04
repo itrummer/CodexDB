@@ -84,7 +84,7 @@ def generate_code(prompt):
         return ''
 
 
-def result_cmp(self, ref_output, cmp_output):
+def result_cmp(ref_output, cmp_output):
     """ Compares query result output against reference.
     
     Args:
