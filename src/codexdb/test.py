@@ -56,7 +56,7 @@ def get_prompt(schema, files, question, query):
     prompt_parts += db_info(schema, files)
     prompt_parts.append('1. Read data for relevant tables.')
     prompt_parts.append('2. Process the query efficiently.')
-    prompt_parts.append('3. Write query result to "result.csv".')
+    prompt_parts.append('3. Write query result to "results.csv".')
     prompt_parts.append('"""')
     prompt_parts.append('')
     prompt_parts.append('--- Start of Python program ---')
