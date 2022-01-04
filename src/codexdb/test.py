@@ -10,6 +10,7 @@ import json
 import os
 import openai
 import pandas as pd
+import sqlglot
 
 
 def db_info(schema, files):
@@ -37,33 +38,6 @@ def db_info(schema, files):
     return lines
 
 
-def get_prompt(schema, files, question, query):
-    """ Generate prompt for processing specific query. 
-    
-    Args:
-        schema: description of database schema
-        files: location of data files for tables
-        question: natural language query
-        query: SQL translation of query
-    
-    Returns:
-        Prompt generating code for executing query
-    """
-    prompt_parts = []
-    prompt_parts.append(
-        f'"""\nThis Python program answers the query "{question}" ' +\
-        f'on the following tables:')
-    prompt_parts += db_info(schema, files)
-    prompt_parts.append(f'SQL query: {query}')
-    prompt_parts.append('1. Import pandas library.')
-    prompt_parts.append('2. Read data for relevant tables.')
-    prompt_parts.append('3. Write query result to "result.csv".')
-    prompt_parts.append('"""')
-    prompt_parts.append('')
-    prompt_parts.append('--- Start of Python program ---')
-    return '\n'.join(prompt_parts)
-
-
 def generate_code(prompt):
     """ Generate code by completing given prompt. 
     
@@ -83,6 +57,76 @@ def generate_code(prompt):
     except Exception as e:
         print(f'Error querying Codex: {e}')
         return ''
+
+
+def get_prompt(schema, files, question, query):
+    """ Generate prompt for processing specific query. 
+    
+    Args:
+        schema: description of database schema
+        files: location of data files for tables
+        question: natural language query
+        query: SQL translation of query
+    
+    Returns:
+        Prompt generating code for executing query
+    """
+    prompt_parts = []
+    prompt_parts.append(
+        f'"""\nThis Python program answers the query "{question}" ' +\
+        f'on the following tables:')
+    prompt_parts += db_info(schema, files)
+    prompt_parts.append(f'SQL query: {query}')
+    prompt_parts += get_plan(query)
+    prompt_parts.append('"""')
+    prompt_parts.append('')
+    prompt_parts.append('--- Start of Python program ---')
+    return '\n'.join(prompt_parts)
+
+
+def get_plan(sql):
+    """ Generate natural language query plan. 
+    
+    Args:
+        sql: the SQL query to process
+    
+    Returns:
+        list of plan steps (in order)
+    """
+    tokenizer = sqlglot.tokens.Tokenizer()
+    parser = sqlglot.parser.Parser()
+    tokens = tokenizer.tokenize(sql)
+    ast = parser.parse(tokens)[0]
+    
+    tables = []
+    for table_expr in ast.find_all(sqlglot.expressions.Table):
+        table_name = table_expr.args['this'].args['this']
+        tables.append(table_name)
+    
+    out_parts = []
+    out_parts.append(f'Load data for table {tables[0]}.')
+    for table in tables[2:]:
+        out_parts.append(f'Join with table {table}.')
+    
+    where = ast.args['where']
+    if where is not None:
+        out_parts.append(f'Filter using {where.sql()}.')
+    
+    group_by = ast.args['group']
+    if group_by is not None:
+        out_parts.append(f'Group data via {group_by.sql()}.')
+    
+    order_by = ast.args['order']
+    if order_by is not None:
+        out_parts.append(f'Sort according to {order_by.sql()}.')
+    
+    selects = ast.args['expressions']
+    selects_sql = ', '.join([s.sql() for s in selects])
+    out_parts.append(f'Calculate {selects_sql}.')
+    
+    out_parts.append("Write query result to 'result.csv'.")
+    out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
+    return out_parts
 
 
 def result_cmp(ref_output, cmp_output):
@@ -138,6 +182,8 @@ if __name__ == '__main__':
             query = cur_test['query']
             
             prompt = get_prompt(schema, files, question, query)
+            print(prompt)
+            
             code = generate_code(prompt)
             print(f'Generated code:\n-------\n{code}\n-------\n')
             success, output, elapsed_s = engine.execute(db_id, 'python', code)
