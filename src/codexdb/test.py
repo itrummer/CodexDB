@@ -51,11 +51,12 @@ def get_prompt(schema, files, question, query):
     """
     prompt_parts = []
     prompt_parts.append(
-        f'"""\nThis Python program answers the query "{query}" ' +\
+        f'"""\nThis Python program answers the query "{question}" ' +\
         f'on the following tables:')
     prompt_parts += db_info(schema, files)
     prompt_parts.append('1. Read data for relevant tables.')
     prompt_parts.append('2. Write query result to "results.csv".')
+    prompt_parts.append(f'SQL query: {query}')
     prompt_parts.append('"""')
     prompt_parts.append('')
     prompt_parts.append('--- Start of Python program ---')
@@ -126,6 +127,7 @@ if __name__ == '__main__':
     engine = codexdb.engine.ExecuteCode(catalog)
 
     with open('sql_log', 'w') as log_file:
+        log_file.write('executed\tsize\tcompare\tnrdiffs\tsimilarity\tsecs\n')
         for i in range(20):
             cur_test = test_cases[i]
             db_id = cur_test['db_id']
