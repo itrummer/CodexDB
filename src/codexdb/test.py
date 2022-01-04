@@ -4,7 +4,8 @@ Created on Jan 3, 2022
 @author: immanueltrummer
 '''
 import argparse
-import codexdb
+import codexdb.catalog
+import codexdb.engine
 import json
 import os
 import openai
