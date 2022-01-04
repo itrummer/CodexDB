@@ -105,7 +105,7 @@ def get_plan(sql):
         tables.append(table_name)
     
     out_parts = []
-    out_parts.append(f'Load data for table {tables[0]}.')
+    out_parts.append(f'Load data for table {tables[0]} (skip header row).')
     for table in tables[2:]:
         out_parts.append(f'Join with table {table}.')
     
@@ -123,7 +123,7 @@ def get_plan(sql):
     
     selects = ast.args['expressions']
     selects_sql = ', '.join([s.sql() for s in selects])
-    out_parts.append(f'Select the following columns: {selects_sql}.')
+    out_parts.append(f'Calculate {selects_sql} (discard other columns).')
     
     out_parts.append("Write query result to 'result.csv'.")
     out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
