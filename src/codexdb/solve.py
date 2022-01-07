@@ -60,7 +60,7 @@ def generate_code(prompt, temperature):
         return ''
 
 
-def get_prompt(schema, files, question, query):
+def get_prompt(schema, files, question, query, training):
     """ Generate prompt for processing specific query. 
     
     Args:
@@ -68,6 +68,7 @@ def get_prompt(schema, files, question, query):
         files: location of data files for tables
         question: natural language query
         query: SQL translation of query
+        training: whether to generate (detailed) training prompt
     
     Returns:
         Prompt generating code for executing query
@@ -78,8 +79,9 @@ def get_prompt(schema, files, question, query):
         f'on the following tables:')
     prompt_parts += db_info(schema, files)
     prompt_parts.append('The first line in each file is the header column.')
-    prompt_parts.append(f'SQL query: {query}')
-    prompt_parts += get_plan(query)
+    if training:
+        prompt_parts.append(f'SQL query: {query}')
+        prompt_parts += get_plan(query)
     prompt_parts.append('"""')
     prompt_parts.append('')
     prompt_parts.append('--- Start of Python program ---')
@@ -157,12 +159,56 @@ def result_cmp(ref_output, cmp_output):
         return False, -1, 0
 
 
+def solve(catalog, test_case, max_tries):
+    """ Solve given test case by generating code.
+    
+    Args:
+        catalog: informs on database schemata
+        test_case: a natural language query
+        max_tries: maximal number of tries
+    
+    Returns:
+        dictionary with best generated code and statistics
+    """
+    db_id = test_case['db_id']
+    schema = catalog.schema(db_id)
+    files = catalog.files(db_id)
+    question = test_case['question']
+    query = test_case['query']
+    
+    for try_idx in range(max_tries):
+        print(f'Starting try number {try_idx} ...')
+        prompt = get_prompt(schema, files, question, query, True)
+        temperature = try_idx * 0.03
+        code = generate_code(prompt, temperature)
+        print(f'Generated code:\n-------\n{code}\n-------\n')
+        success, output, elapsed_s = engine.execute(db_id, 'python', code)
+        print(f'CodexDB successful: {success} in {elapsed_s}s')                
+        ref_output = pd.DataFrame(test_case['results'])
+        comparable, nr_diffs, similarity = result_cmp(ref_output, output)
+        if similarity >= 1.0:
+            break
+
+    nr_tries = try_idx + 1
+    result = {
+        'nr_tries':nr_tries,
+        'executed':success, 'comparable':comparable, 'nr_diffs':nr_diffs,
+        'similarity':similarity, 'outsize':len(output), 'secs':elapsed_s,
+        'db':db_id, 'question':question, 'query':query}
+    if similarity >= 1.0:
+        result['prompt'] = get_prompt(schema, files, question, query, False)
+        result['code'] = code
+    return result
+
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('ai_key', type=str, help='Key for OpenAI access')
     parser.add_argument('data_dir', type=str, help='Data directory')
     parser.add_argument('test_path', type=str, help='Path to test case file')
+    parser.add_argument('nr_tests', type=int, help='Number of test cases')
+    parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     args = parser.parse_args()
     
     os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -173,29 +219,11 @@ if __name__ == '__main__':
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
 
-    with open('sql_log', 'w') as log_file:
-        log_file.write('executed\tsize\tcompare\tnrdiffs\tsimilarity\tsecs\n')
-        for i in range(20):
-            cur_test = test_cases[i]
-            db_id = cur_test['db_id']
-            schema = catalog.schema(db_id)
-            files = catalog.files(db_id)
-            question = cur_test['question']
-            query = cur_test['query']
-            
-            for try_idx in range(5):
-                print(f'Starting try number {try_idx} ...')
-                prompt = get_prompt(schema, files, question, query)
-                temperature = try_idx * 0.1
-                code = generate_code(prompt, temperature)
-                print(f'Generated code:\n-------\n{code}\n-------\n')
-                success, output, elapsed_s = engine.execute(db_id, 'python', code)
-                print(f'CodexDB successful: {success} in {elapsed_s}s')                
-                ref_output = pd.DataFrame(cur_test['results'])
-                comparable, nr_diffs, similarity = result_cmp(ref_output, output)
-                if similarity > 0:
-                    break
-                
-            log_file.write(
-                f'{success}\t{len(output)}\t{comparable}\t' +\
-                f'{nr_diffs}\t{similarity}\t{elapsed_s}\n')
+    results = []
+    for i in range(args.nr_tests):
+        test_case = test_cases[i]
+        result = solve(catalog, test_case, args.max_tries)
+        print(result)
+
+    with open('results.json', 'w') as results_file:
+        json.dump(results, results_file)
