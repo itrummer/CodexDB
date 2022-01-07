@@ -224,6 +224,7 @@ if __name__ == '__main__':
         test_case = test_cases[i]
         result = solve(catalog, test_case, args.max_tries)
         print(result)
+        results.append(result)
 
     with open('results.json', 'w') as results_file:
         json.dump(results, results_file)
