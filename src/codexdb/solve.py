@@ -221,6 +221,7 @@ if __name__ == '__main__':
 
     results = []
     for i in range(args.nr_tests):
+        print(f'Starting test case nr. {i} ...')
         test_case = test_cases[i]
         result = solve(catalog, test_case, args.max_tries)
         print(result)
