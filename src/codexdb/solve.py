@@ -124,9 +124,10 @@ def get_plan(sql):
     if order_by is not None:
         out_parts.append(f'Sort according to {order_by.sql()}.')
     
-    selects = ast.args['expressions']
-    selects_sql = ', '.join([s.sql() for s in selects])
-    out_parts.append(f'Calculate {selects_sql}.')
+    selects = ast.args['expressions'] if 'expressions' in ast.args else None
+    if selects is not None:
+        selects_sql = ', '.join([s.sql() for s in selects])
+        out_parts.append(f'Calculate {selects_sql}.')
     
     out_parts.append("Write query result to 'result.csv' (with header row).")
     out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
@@ -175,6 +176,7 @@ def solve(catalog, test_case, max_tries):
     files = catalog.files(db_id)
     question = test_case['question']
     query = test_case['query']
+    print(f'Treating query {query}, question {question}.')
     
     for try_idx in range(max_tries):
         print(f'Starting try number {try_idx} ...')
