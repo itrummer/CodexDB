@@ -112,15 +112,15 @@ def get_plan(sql):
     for table in tables[2:]:
         out_parts.append(f'Join with table {table}.')
     
-    where = ast.args['where']
+    where = ast.args['where'] if 'where' in ast.args else None
     if where is not None:
         out_parts.append(f'Filter using {where.sql()}.')
     
-    group_by = ast.args['group']
+    group_by = ast.args['group'] if 'group' in ast.args else None
     if group_by is not None:
         out_parts.append(f'Group data via {group_by.sql()}.')
     
-    order_by = ast.args['order']
+    order_by = ast.args['order'] if 'order' in ast.args else None
     if order_by is not None:
         out_parts.append(f'Sort according to {order_by.sql()}.')
     
