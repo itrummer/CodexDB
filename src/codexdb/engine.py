@@ -24,13 +24,14 @@ class ExecuteCode():
         self.python_path = os.environ['CODEXDB_PYTHON']
         self.tmp_dir = os.environ['CODEXDB_TMP']
     
-    def execute(self, db_id, code_lang, code):
+    def execute(self, db_id, code_lang, code, timeout_s):
         """ Execute code written in specified language.
         
         Args:
             db_id: code references data in this database
             code_lang: code is written in this language
             code: execute this code
+            timeout_s: execution timeout in seconds
         
         Returns:
             Boolean success flag, output, elapsed time in seconds
@@ -43,7 +44,7 @@ class ExecuteCode():
         elif code_lang == 'cpp':
             success, output = self._exec_cpp(db_id, code)
         elif code_lang == 'python':
-            success, output = self._exec_python(db_id, code)
+            success, output = self._exec_python(db_id, code, timeout_s)
         elif code_lang == 'pg_sql':
             success, output = self._exec_psql(db_id, code)
         elif code_lang == 'dummy':
@@ -138,12 +139,13 @@ class ExecuteCode():
         with open(out_path) as file:
             return True, file.read()
     
-    def _exec_python(self, db_id, code):
+    def _exec_python(self, db_id, code, timeout_s):
         """ Execute Python code and return generated output.
         
         Args:
             db_id: database identifier
             code: Python code to execute
+            timeout_s: execution timeout in seconds
         
         Returns:
             Success flag and output generated when executing code
@@ -153,7 +155,8 @@ class ExecuteCode():
         self._write_file(filename, code)
         exe_path = f'{self.tmp_dir}/{filename}'
         out_path = f'{self.tmp_dir}/result.csv'
-        sub_comp = subprocess.run([self.python_path, exe_path])
+        cmd_parts = ['timeout', timeout_s, self.python_path, exe_path]
+        sub_comp = subprocess.run(cmd_parts)
         success = False if sub_comp.returncode > 0 else True
         if not success:
             print(f'Python stdout: {sub_comp.stdout}')
