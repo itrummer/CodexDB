@@ -184,7 +184,7 @@ def solve(catalog, test_case, max_tries):
         temperature = try_idx * 0.03
         code = generate_code(prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
-        success, output, elapsed_s = engine.execute(db_id, 'python', code)
+        success, output, elapsed_s = engine.execute(db_id, 'python', code, 30)
         print(f'CodexDB successful: {success} in {elapsed_s}s')                
         ref_output = pd.DataFrame(test_case['results'])
         comparable, nr_diffs, similarity = result_cmp(ref_output, output)
