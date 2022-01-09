@@ -155,7 +155,7 @@ class ExecuteCode():
         self._write_file(filename, code)
         exe_path = f'{self.tmp_dir}/{filename}'
         out_path = f'{self.tmp_dir}/result.csv'
-        cmd_parts = ['timeout', timeout_s, self.python_path, exe_path]
+        cmd_parts = ['timeout', str(timeout_s), self.python_path, exe_path]
         sub_comp = subprocess.run(cmd_parts)
         success = False if sub_comp.returncode > 0 else True
         if not success:
