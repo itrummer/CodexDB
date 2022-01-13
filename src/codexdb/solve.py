@@ -87,9 +87,9 @@ def get_prompt(schema, files, question, query, prompt_style):
         prompt_parts.append(f'SQL query: {query}')
         prompt_parts += get_plan(query)
     else:
-        prompt_parts.append('Import pandas library.')
-        prompt_parts.append('Calculate query result.')
-        prompt_parts.append("Write result to 'result.csv'.")
+        prompt_parts.append('1. Import pandas library.')
+        prompt_parts.append('2. Calculate query result.')
+        prompt_parts.append("3. Write result to 'result.csv'.")
     prompt_parts.append('"""')
     # prompt_parts.append('')
     # prompt_parts.append('--- Start of Python program ---')
