@@ -53,7 +53,7 @@ def generate_code(model_id, prompt, temperature):
     try:
         print(f'\nPrompt:\n*******\n{prompt}\n*******')
         response = openai.Completion.create(
-            engine=model_id, prompt=prompt, 
+            model=model_id, prompt=prompt, 
             temperature=temperature, max_tokens=400,
             stop='--- End of Python program ---')
         return response['choices'][0]['text']
