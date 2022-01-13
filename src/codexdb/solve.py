@@ -61,7 +61,7 @@ def generate_code(model_id, prompt, temperature):
         return ''
 
 
-def get_prompt(schema, files, question, query, training):
+def get_prompt(schema, files, question, query, prompt_style):
     """ Generate prompt for processing specific query. 
     
     Args:
@@ -69,7 +69,7 @@ def get_prompt(schema, files, question, query, training):
         files: location of data files for tables
         question: natural language query
         query: SQL translation of query
-        training: whether to generate (detailed) training prompt
+        prompt_style: describes style of generated prompt
     
     Returns:
         Prompt generating code for executing query
@@ -80,7 +80,7 @@ def get_prompt(schema, files, question, query, training):
         f'on the following tables:')
     prompt_parts += db_info(schema, files)
     prompt_parts.append('The first line in each file is the header column.')
-    if training:
+    if prompt_style == 'train':
         prompt_parts.append(f'SQL query: {query}')
         prompt_parts += get_plan(query)
     prompt_parts.append('"""')
@@ -161,12 +161,13 @@ def result_cmp(ref_output, cmp_output):
         return False, -1, 0
 
 
-def solve(catalog, model_id, test_case, max_tries):
+def solve(catalog, model_id, prompt_style, test_case, max_tries):
     """ Solve given test case by generating code.
     
     Args:
         catalog: informs on database schemata
         model_id: ID of OpenAI model
+        prompt_style: style of generated prompt
         test_case: a natural language query
         max_tries: maximal number of tries
     
@@ -182,7 +183,7 @@ def solve(catalog, model_id, test_case, max_tries):
     
     for try_idx in range(max_tries):
         print(f'Starting try number {try_idx} ...')
-        prompt = get_prompt(schema, files, question, query, True)
+        prompt = get_prompt(schema, files, question, query, prompt_style)
         temperature = try_idx * 0.03
         code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
@@ -212,6 +213,7 @@ if __name__ == '__main__':
     parser.add_argument('data_dir', type=str, help='Data directory')
     parser.add_argument('test_path', type=str, help='Path to test case file')
     parser.add_argument('model_id', type=str, help='ID of OpenAI model')
+    parser.add_argument('prompt_style', type=str, help='Style of prompt')
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     args = parser.parse_args()
@@ -220,6 +222,9 @@ if __name__ == '__main__':
     openai.api_key = args.ai_key
     with open(args.test_path) as file:
         test_cases = json.load(file)
+    if args.prompt_style not in ['train', 'test']:
+        print(f'Unknown prompt style: {args.prompt_style}!')
+        return
 
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
@@ -228,7 +233,9 @@ if __name__ == '__main__':
     for i in range(args.nr_tests):
         print(f'Starting test case nr. {i} ...')
         test_case = test_cases[i]
-        result = solve(catalog, args.model_id, test_case, args.max_tries)
+        result = solve(
+            catalog, args.model_id, args.prompt_style,
+            test_case, args.max_tries)
         print(result)
         results.append(result)
 
