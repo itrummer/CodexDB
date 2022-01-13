@@ -38,10 +38,11 @@ def db_info(schema, files):
     return lines
 
 
-def generate_code(prompt, temperature):
+def generate_code(model_id, prompt, temperature):
     """ Generate code by completing given prompt. 
     
     Args:
+        model_id: ID of OpenAI model for generation
         prompt: initiate generation with this prompt
         temperature: degree of randomization in generation
     
@@ -51,12 +52,12 @@ def generate_code(prompt, temperature):
     try:
         print(f'\nPrompt:\n*******\n{prompt}\n*******')
         response = openai.Completion.create(
-            engine='davinci-codex', prompt=prompt, 
+            engine=model_id, prompt=prompt, 
             temperature=temperature, max_tokens=400,
             stop='--- End of Python program ---')
         return response['choices'][0]['text']
     except Exception as e:
-        print(f'Error querying Codex: {e}')
+        print(f'Error querying OpenAI (model: {model_id}): {e}')
         return ''
 
 
@@ -160,11 +161,12 @@ def result_cmp(ref_output, cmp_output):
         return False, -1, 0
 
 
-def solve(catalog, test_case, max_tries):
+def solve(catalog, model_id, test_case, max_tries):
     """ Solve given test case by generating code.
     
     Args:
         catalog: informs on database schemata
+        model_id: ID of OpenAI model
         test_case: a natural language query
         max_tries: maximal number of tries
     
@@ -182,7 +184,7 @@ def solve(catalog, test_case, max_tries):
         print(f'Starting try number {try_idx} ...')
         prompt = get_prompt(schema, files, question, query, True)
         temperature = try_idx * 0.03
-        code = generate_code(prompt, temperature)
+        code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
         success, output, elapsed_s = engine.execute(db_id, 'python', code, 30)
         print(f'CodexDB successful: {success} in {elapsed_s}s')                
@@ -209,6 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('ai_key', type=str, help='Key for OpenAI access')
     parser.add_argument('data_dir', type=str, help='Data directory')
     parser.add_argument('test_path', type=str, help='Path to test case file')
+    parser.add_argument('model_id', type=str, help='ID of OpenAI model')
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     args = parser.parse_args()
@@ -225,7 +228,7 @@ if __name__ == '__main__':
     for i in range(args.nr_tests):
         print(f'Starting test case nr. {i} ...')
         test_case = test_cases[i]
-        result = solve(catalog, test_case, args.max_tries)
+        result = solve(catalog, args.model_id, test_case, args.max_tries)
         print(result)
         results.append(result)
 
