@@ -11,6 +11,7 @@ import os
 import openai
 import pandas as pd
 import sqlglot
+import sys
 
 
 def db_info(schema, files):
@@ -224,7 +225,7 @@ if __name__ == '__main__':
         test_cases = json.load(file)
     if args.prompt_style not in ['train', 'test']:
         print(f'Unknown prompt style: {args.prompt_style}!')
-        return
+        sys.exit(1)
 
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
