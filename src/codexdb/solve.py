@@ -12,6 +12,7 @@ import openai
 import pandas as pd
 import sqlglot
 import sys
+import time
 
 
 def db_info(schema, files):
@@ -80,13 +81,13 @@ def get_prompt(schema, files, question, query, prompt_style):
         f'"""\nThis Python program answers the query "{question}" ' +\
         f'on the following tables:')
     prompt_parts += db_info(schema, files)
-    prompt_parts.append('The first line in each file is the header column.')
+    # prompt_parts.append('The first line in each file is the header column.')
     if prompt_style == 'train':
         prompt_parts.append(f'SQL query: {query}')
         prompt_parts += get_plan(query)
     prompt_parts.append('"""')
-    prompt_parts.append('')
-    prompt_parts.append('--- Start of Python program ---')
+    # prompt_parts.append('')
+    # prompt_parts.append('--- Start of Python program ---')
     return '\n'.join(prompt_parts)
 
 
@@ -110,7 +111,8 @@ def get_plan(sql):
         tables.append(table_name)
     
     out_parts = []
-    out_parts.append(f'Load data for table {tables[0]} (skip header row).')
+    out_parts.append('Import pandas library.')
+    out_parts.append(f'Load data for table {tables[0]}.')
     for table in tables[2:]:
         out_parts.append(f'Join with table {table}.')
     
@@ -131,7 +133,7 @@ def get_plan(sql):
         selects_sql = ', '.join([s.sql() for s in selects])
         out_parts.append(f'Calculate {selects_sql}.')
     
-    out_parts.append("Write query result to 'result.csv' (with header row).")
+    out_parts.append("Write query result to 'result.csv'.")
     out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
     return out_parts
 
@@ -173,7 +175,7 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
         max_tries: maximal number of tries
     
     Returns:
-        dictionary with best generated code and statistics
+        list of dictionaries with generated code and statistics
     """
     db_id = test_case['db_id']
     schema = catalog.schema(db_id)
@@ -182,29 +184,35 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
     query = test_case['query']
     print(f'Treating query {query}, question {question}.')
     
+    results = []
     for try_idx in range(max_tries):
         print(f'Starting try number {try_idx} ...')
+        
+        gen_start_s = time.time()
         prompt = get_prompt(schema, files, question, query, prompt_style)
         temperature = try_idx * 0.03
         code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
+        gen_total_s = time.time() - gen_start_s
+        
         success, output, elapsed_s = engine.execute(db_id, 'python', code, 30)
         print(f'CodexDB successful: {success} in {elapsed_s}s')                
         ref_output = pd.DataFrame(test_case['results'])
         comparable, nr_diffs, similarity = result_cmp(ref_output, output)
+        
+        nr_tries = try_idx + 1
+        test_prompt = get_prompt(schema, files, question, query, 'test')
+        results.append({
+            'nr_tries':nr_tries, 'executed':success, 'comparable':comparable, 
+            'nr_diffs':nr_diffs, 'similarity':similarity, 'output':output, 
+            'execution_s':elapsed_s, 'db':db_id, 'question':question, 
+            'query':query, 'prompt':test_prompt, 'code':code, 
+            'generation_s':gen_total_s})
+
         if similarity >= 1.0:
             break
 
-    nr_tries = try_idx + 1
-    result = {
-        'nr_tries':nr_tries,
-        'executed':success, 'comparable':comparable, 'nr_diffs':nr_diffs,
-        'similarity':similarity, 'outsize':len(output), 'secs':elapsed_s,
-        'db':db_id, 'question':question, 'query':query}
-    if similarity >= 1.0:
-        result['prompt'] = get_prompt(schema, files, question, query, False)
-        result['code'] = code
-    return result
+    return results
 
 
 if __name__ == '__main__':
@@ -230,15 +238,15 @@ if __name__ == '__main__':
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
 
-    results = []
+    all_results = []
     for i in range(args.nr_tests):
         print(f'Starting test case nr. {i} ...')
         test_case = test_cases[i]
-        result = solve(
+        cur_results = solve(
             catalog, args.model_id, args.prompt_style,
             test_case, args.max_tries)
-        print(result)
-        results.append(result)
+        all_results.append(cur_results)
+        print(cur_results)
 
     with open('results.json', 'w') as results_file:
-        json.dump(results, results_file)
+        json.dump(all_results, results_file)
