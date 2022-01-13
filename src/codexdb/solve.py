@@ -183,6 +183,7 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
     files = catalog.files(db_id)
     question = test_case['question']
     query = test_case['query']
+    temperature_step = 0.5 / max_tries
     print(f'Treating query {query}, question {question}.')
     
     results = []
@@ -191,7 +192,7 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
         
         gen_start_s = time.time()
         prompt = get_prompt(schema, files, question, query, prompt_style)
-        temperature = try_idx * 0.03
+        temperature = try_idx * temperature_step
         code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
         gen_total_s = time.time() - gen_start_s
