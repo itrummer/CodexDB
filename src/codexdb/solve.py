@@ -56,44 +56,10 @@ def generate_code(model_id, prompt, temperature):
         response = openai.Completion.create(
             engine=model_id, prompt=prompt, 
             temperature=temperature, max_tokens=400)
-        # ,
-            # stop='--- End of Python program ---')
         return response['choices'][0]['text']
     except Exception as e:
         print(f'Error querying OpenAI (model: {model_id}): {e}')
         return ''
-
-
-def get_prompt(schema, files, question, query, prompt_style):
-    """ Generate prompt for processing specific query. 
-    
-    Args:
-        schema: description of database schema
-        files: location of data files for tables
-        question: natural language query
-        query: SQL translation of query
-        prompt_style: describes style of generated prompt
-    
-    Returns:
-        Prompt generating code for executing query
-    """
-    prompt_parts = []
-    prompt_parts.append(
-        f'"""\nThis Python program answers the query "{question}" ' +\
-        f'on the following tables:')
-    prompt_parts += db_info(schema, files)
-    # prompt_parts.append('The first line in each file is the header column.')
-    if prompt_style == 'train':
-        prompt_parts.append(f'SQL query: {query}')
-        prompt_parts += get_plan(query)
-    else:
-        prompt_parts.append('1. Import pandas library.')
-        prompt_parts.append('2. Calculate query result.')
-        prompt_parts.append("3. Write result to 'result.csv'.")
-    prompt_parts.append('"""')
-    # prompt_parts.append('')
-    # prompt_parts.append('--- Start of Python program ---')
-    return '\n'.join(prompt_parts)
 
 
 def get_plan(sql):
@@ -143,6 +109,35 @@ def get_plan(sql):
     return out_parts
 
 
+def get_prompt(schema, files, question, query, prompt_style):
+    """ Generate prompt for processing specific query. 
+    
+    Args:
+        schema: description of database schema
+        files: location of data files for tables
+        question: natural language query
+        query: SQL translation of query
+        prompt_style: describes style of generated prompt
+    
+    Returns:
+        Prompt generating code for executing query
+    """
+    prompt_parts = []
+    prompt_parts.append(
+        f'"""\nThis Python program answers the query "{question}" ' +\
+        f'on the following tables:')
+    prompt_parts += db_info(schema, files)
+    if prompt_style == 'train':
+        prompt_parts.append(f'SQL query: {query}')
+        prompt_parts += get_plan(query)
+    else:
+        prompt_parts.append('1. Import pandas library.')
+        prompt_parts.append('2. Calculate query result.')
+        prompt_parts.append("3. Write result to 'result.csv'.")
+    prompt_parts.append('"""')
+    return '\n'.join(prompt_parts)
+
+
 def result_cmp(ref_output, cmp_output):
     """ Compares query result output against reference.
     
@@ -169,7 +164,28 @@ def result_cmp(ref_output, cmp_output):
         return False, -1, 0
 
 
-def solve(catalog, model_id, prompt_style, test_case, max_tries):
+def sample_prompts(prompt_style, examples):
+    """ Generate prompts from examples for few-shot learning.
+    
+    Args:
+        prompt_style: determines template for prompts
+        examples: several example prompts with completions
+    
+    Returns:
+        a prefix of the full prompt to generate
+    """
+    parts = []
+    for example in examples:
+        prompt = get_prompt(
+            example['schema'], example['files'], 
+            example['question'], example['query'], 
+            prompt_style)
+        parts.append(prompt)
+        parts.append(example['code'])
+    return '\n'.join(parts)
+    
+
+def solve(catalog, model_id, prompt_style, test_case, examples, max_tries):
     """ Solve given test case by generating code.
     
     Args:
@@ -177,6 +193,7 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
         model_id: ID of OpenAI model
         prompt_style: style of generated prompt
         test_case: a natural language query
+        examples: examples for few-shot learning
         max_tries: maximal number of tries
     
     Returns:
@@ -188,6 +205,7 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
     question = test_case['question']
     query = test_case['query']
     temperature_step = 0.5 / max_tries
+    prefix = sample_prompts(prompt_style, examples)
     print(f'Treating query {query}, question {question}.')
     
     results = []
@@ -195,7 +213,8 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
         print(f'Starting try number {try_idx} ...')
         
         gen_start_s = time.time()
-        prompt = get_prompt(schema, files, question, query, prompt_style)
+        suffix = get_prompt(schema, files, question, query, prompt_style)
+        prompt = prefix + '\n' + suffix 
         temperature = try_idx * temperature_step
         code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
@@ -210,10 +229,11 @@ def solve(catalog, model_id, prompt_style, test_case, max_tries):
         test_prompt = get_prompt(schema, files, question, query, 'test')
         results.append({
             'nr_tries':nr_tries, 'executed':success, 'comparable':comparable, 
-            'nr_diffs':nr_diffs, 'similarity':similarity, 'output':output, 
-            'execution_s':elapsed_s, 'db':db_id, 'question':question, 
-            'query':query, 'prompt':test_prompt, 'code':code, 
-            'generation_s':gen_total_s})
+            'nr_diffs':nr_diffs, 'similarity':similarity, 'outsize':len(output), 
+            'question':question, 'query':query, 
+            'db':db_id, 'schema':schema, 'files':files, 
+            'used_prompt':prompt, 'test_prompt':test_prompt, 'code':code,
+            'generation_s':gen_total_s, 'execution_s':elapsed_s})
 
         if similarity >= 1.0:
             break
@@ -229,6 +249,7 @@ if __name__ == '__main__':
     parser.add_argument('test_path', type=str, help='Path to test case file')
     parser.add_argument('model_id', type=str, help='ID of OpenAI model')
     parser.add_argument('prompt_style', type=str, help='Style of prompt')
+    parser.add_argument('sample_path', type=str, help='Path to sample file')
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     args = parser.parse_args()
@@ -237,6 +258,8 @@ if __name__ == '__main__':
     openai.api_key = args.ai_key
     with open(args.test_path) as file:
         test_cases = json.load(file)
+    with open(args.sample_path) as file:
+        examples = json.load(file)
     if args.prompt_style not in ['train', 'test']:
         print(f'Unknown prompt style: {args.prompt_style}!')
         sys.exit(1)
@@ -244,15 +267,15 @@ if __name__ == '__main__':
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
 
-    all_results = []
+    idx_to_results = {}
     for i in range(args.nr_tests):
         print(f'Starting test case nr. {i} ...')
         test_case = test_cases[i]
         cur_results = solve(
             catalog, args.model_id, args.prompt_style,
-            test_case, args.max_tries)
-        all_results.append(cur_results)
+            test_case, examples, args.max_tries)
+        idx_to_results[i] = cur_results
         print(cur_results)
 
     with open('results.json', 'w') as results_file:
-        json.dump(all_results, results_file)
+        json.dump(idx_to_results, results_file)
