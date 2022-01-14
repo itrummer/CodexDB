@@ -190,7 +190,9 @@ def sample_prompts(prompt_style, examples):
     return '\n'.join(parts)
     
 
-def solve(catalog, model_id, prompt_style, test_case, examples, max_tries):
+def solve(
+        catalog, model_id, prompt_style, test_case, 
+        examples, termination, max_tries):
     """ Solve given test case by generating code.
     
     Args:
@@ -199,6 +201,7 @@ def solve(catalog, model_id, prompt_style, test_case, examples, max_tries):
         prompt_style: style of generated prompt
         test_case: a natural language query
         examples: examples for few-shot learning
+        termination: criterion to advance to next case
         max_tries: maximal number of tries
     
     Returns:
@@ -225,22 +228,23 @@ def solve(catalog, model_id, prompt_style, test_case, examples, max_tries):
         print(f'Generated code:\n-------\n{code}\n-------\n')
         gen_total_s = time.time() - gen_start_s
         
-        success, output, elapsed_s = engine.execute(db_id, 'python', code, 30)
-        print(f'CodexDB successful: {success} in {elapsed_s}s')                
+        executed, output, elapsed_s = engine.execute(db_id, 'python', code, 30)
+        print(f'CodexDB executed: {executed} in {elapsed_s}s')                
         ref_output = pd.DataFrame(test_case['results'])
         comparable, nr_diffs, similarity = result_cmp(ref_output, output)
         
         nr_tries = try_idx + 1
         test_prompt = get_prompt(schema, files, question, query, 'test')
         results.append({
-            'nr_tries':nr_tries, 'executed':success, 'comparable':comparable, 
+            'nr_tries':nr_tries, 'executed':executed, 'comparable':comparable, 
             'nr_diffs':nr_diffs, 'similarity':similarity, 'outsize':len(output), 
             'question':question, 'query':query, 
             'db':db_id, 'schema':schema, 'files':files, 
             'used_prompt':prompt, 'test_prompt':test_prompt, 'code':code,
             'generation_s':gen_total_s, 'execution_s':elapsed_s})
 
-        if similarity >= 1.0:
+        if (termination == 'executed' and executed) or \
+            (termination == 'solved' and similarity >= 1.0):
             break
 
     return results
@@ -256,6 +260,7 @@ if __name__ == '__main__':
     parser.add_argument('prompt_style', type=str, help='Style of prompt')
     parser.add_argument('sample_path', type=str, help='Path to sample file')
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
+    parser.add_argument('termination', type=str, help='Termination criterion')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     args = parser.parse_args()
     
@@ -268,6 +273,9 @@ if __name__ == '__main__':
     if args.prompt_style not in ['train', 'test']:
         print(f'Unknown prompt style: {args.prompt_style}!')
         sys.exit(1)
+    if args.termination not in ['executed', 'solved']:
+        print(f'Unknown termination criterion: {args.termination}')
+        sys.exit(1)
 
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
@@ -278,7 +286,8 @@ if __name__ == '__main__':
         test_case = test_cases[i]
         cur_results = solve(
             catalog, args.model_id, args.prompt_style,
-            test_case, examples, args.max_tries)
+            test_case, examples, args.termination,
+            args.max_tries)
         idx_to_results[i] = cur_results
         print(cur_results)
 
