@@ -176,14 +176,15 @@ def sample_prompts(prompt_style, examples):
         a prefix of the full prompt to generate
     """
     parts = []
-    selected = random.choices(examples, k=2)
-    for example in selected:
-        prompt = get_prompt(
-            example['schema'], example['files'], 
-            example['question'], example['query'], 
-            prompt_style)
-        parts.append(prompt)
-        parts.append(example['code'])
+    if examples:
+        selected = random.choices(examples, k=2)
+        for example in selected:
+            prompt = get_prompt(
+                example['schema'], example['files'], 
+                example['question'], example['query'], 
+                prompt_style)
+            parts.append(prompt)
+            parts.append(example['code'])
     return '\n'.join(parts)
     
 
