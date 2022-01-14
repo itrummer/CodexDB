@@ -10,6 +10,7 @@ import json
 import os
 import openai
 import pandas as pd
+import random
 import sqlglot
 import sys
 import time
@@ -175,7 +176,8 @@ def sample_prompts(prompt_style, examples):
         a prefix of the full prompt to generate
     """
     parts = []
-    for example in examples:
+    selected = random.choices(examples, k=2)
+    for example in selected:
         prompt = get_prompt(
             example['schema'], example['files'], 
             example['question'], example['query'], 
