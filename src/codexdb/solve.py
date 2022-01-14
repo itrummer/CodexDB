@@ -125,8 +125,9 @@ def get_prompt(schema, files, question, query, prompt_style):
         Prompt generating code for executing query
     """
     prompt_parts = []
+    prompt_parts.append('"""')
     prompt_parts += db_info(schema, files)
-    prompt_parts.append(f'"""\nQuery: "{question}".')
+    prompt_parts.append(f'Query: "{question}".')
     if prompt_style == 'train':
         prompt_parts.append(f'SQL query: {query}')
         prompt_parts += get_plan(query)
