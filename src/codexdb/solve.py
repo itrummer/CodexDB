@@ -56,7 +56,8 @@ def generate_code(model_id, prompt, temperature):
         print(f'\nPrompt:\n*******\n{prompt}\n*******')
         response = openai.Completion.create(
             engine=model_id, prompt=prompt, 
-            temperature=temperature, max_tokens=400)
+            temperature=temperature, max_tokens=400,
+            stop='"""')
         return response['choices'][0]['text']
     except Exception as e:
         print(f'Error querying OpenAI (model: {model_id}): {e}')
