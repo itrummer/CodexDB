@@ -33,9 +33,9 @@ def db_info(schema, files):
     for tbl_idx in range(nr_tables):
         filename = files[tbl_idx]
         tbl_name = tables[tbl_idx]
-        tbl_columns = [c[1] for c in all_columns if c[0] == tbl_idx]
+        tbl_columns = ["'" + c[1] + "'" for c in all_columns if c[0] == tbl_idx]
         col_list = ', '.join(tbl_columns)
-        line = f'Table {tbl_name} with columns \'{col_list}\', ' \
+        line = f'Table {tbl_name} with columns {col_list}, ' \
             f'stored in \'{filename}\'.'
         lines.append(line)
     return lines
