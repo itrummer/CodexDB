@@ -245,6 +245,7 @@ def solve(
 
         if (termination == 'executed' and executed) or \
             (termination == 'solved' and similarity >= 1.0):
+            print('Termination Criterion Satisfied.')
             break
 
     return results
