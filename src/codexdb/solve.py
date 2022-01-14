@@ -125,17 +125,15 @@ def get_prompt(schema, files, question, query, prompt_style):
         Prompt generating code for executing query
     """
     prompt_parts = []
-    prompt_parts.append(
-        f'"""\nThis Python program answers the query "{question}" ' +\
-        f'on the following tables:')
     prompt_parts += db_info(schema, files)
+    prompt_parts.append(f'"""\nQuery: "{question}".')
     if prompt_style == 'train':
         prompt_parts.append(f'SQL query: {query}')
         prompt_parts += get_plan(query)
     else:
         prompt_parts.append('1. Import pandas library.')
-        prompt_parts.append('2. Calculate query result.')
-        prompt_parts.append("3. Write result to 'result.csv'.")
+        prompt_parts.append('2. Calculate query answer.')
+        prompt_parts.append("3. Store result in 'result.csv'.")
     prompt_parts.append('"""')
     return '\n'.join(prompt_parts)
 
@@ -186,6 +184,8 @@ def sample_prompts(prompt_style, examples):
                 prompt_style)
             parts.append(prompt)
             parts.append(example['code'])
+            parts.append('')
+            parts.append('')
     return '\n'.join(parts)
     
 
