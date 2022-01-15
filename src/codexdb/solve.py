@@ -56,7 +56,7 @@ def generate_code(model_id, prompt, temperature):
         print(f'\nPrompt:\n*******\n{prompt}\n*******')
         response = openai.Completion.create(
             engine=model_id, prompt=prompt, 
-            temperature=temperature, max_tokens=400,
+            temperature=temperature, max_tokens=600,
             stop='"""')
         return response['choices'][0]['text']
     except Exception as e:
@@ -139,12 +139,13 @@ def get_prompt(schema, files, question, query, prompt_style):
     return '\n'.join(prompt_parts)
 
 
-def result_cmp(ref_output, cmp_output):
+def result_cmp(ref_output, cmp_output, reorder):
     """ Compares query result output against reference.
     
     Args:
         ref_output: reference query result
         cmp_output: compare this against reference
+        reorder: whether to consider reordering
     
     Returns:
         Comparable flag, number of differences, similarity
@@ -156,6 +157,13 @@ def result_cmp(ref_output, cmp_output):
     ref_output.columns = [0] * ref_output.shape[1]
     cmp_output.columns = [0] * cmp_output.shape[1]
     try:
+        if reorder:
+            print('Reordering Rows Before Comparison')
+            nr_columns = len(ref_output.columns)
+            column_idxs = list(range(nr_columns))
+            ref_output.sort_values(by=column_idxs)
+            cmp_output.sort_values(by=column_idxs)
+
         diffs = ref_output.compare(cmp_output, align_axis=0)
         print(f'-- Differences:\n{diffs}\n--\n')
         nr_diffs = diffs.shape[0]
@@ -178,7 +186,7 @@ def sample_prompts(prompt_style, examples, nr_samples):
     """
     parts = []
     if examples:
-        selected = random.choices(examples, k=nr_samples)
+        selected = random.sample(examples, k=nr_samples)
         for example in selected:
             prompt = get_prompt(
                 example['schema'], example['files'], 
@@ -214,6 +222,7 @@ def solve(
     files = catalog.files(db_id)
     question = test_case['question']
     query = test_case['query']
+    reorder = False if 'order by' in query.lower() else True
     temperature_step = 0.5 / max_tries
     prefix = sample_prompts(prompt_style, examples, nr_samples)
     print(f'Treating query {query}, question {question}.')
@@ -233,7 +242,7 @@ def solve(
         executed, output, elapsed_s = engine.execute(db_id, 'python', code, 30)
         print(f'CodexDB executed: {executed} in {elapsed_s}s')                
         ref_output = pd.DataFrame(test_case['results'])
-        comparable, nr_diffs, similarity = result_cmp(ref_output, output)
+        comparable, nr_diffs, similarity = result_cmp(ref_output, output, reorder)
         
         nr_tries = try_idx + 1
         test_prompt = get_prompt(schema, files, question, query, 'test')
