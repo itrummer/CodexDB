@@ -165,19 +165,20 @@ def result_cmp(ref_output, cmp_output):
         return False, -1, 0
 
 
-def sample_prompts(prompt_style, examples):
+def sample_prompts(prompt_style, examples, nr_samples):
     """ Generate prompts from examples for few-shot learning.
     
     Args:
         prompt_style: determines template for prompts
         examples: several example prompts with completions
+        nr_samples: number of examples to select
     
     Returns:
         a prefix of the full prompt to generate
     """
     parts = []
     if examples:
-        selected = random.choices(examples, k=2)
+        selected = random.choices(examples, k=nr_samples)
         for example in selected:
             prompt = get_prompt(
                 example['schema'], example['files'], 
@@ -192,7 +193,7 @@ def sample_prompts(prompt_style, examples):
 
 def solve(
         catalog, model_id, prompt_style, test_case, 
-        examples, termination, max_tries):
+        examples, nr_samples, termination, max_tries):
     """ Solve given test case by generating code.
     
     Args:
@@ -201,6 +202,7 @@ def solve(
         prompt_style: style of generated prompt
         test_case: a natural language query
         examples: examples for few-shot learning
+        nr_samples: number of examples in prompt
         termination: criterion to advance to next case
         max_tries: maximal number of tries
     
@@ -213,7 +215,7 @@ def solve(
     question = test_case['question']
     query = test_case['query']
     temperature_step = 0.5 / max_tries
-    prefix = sample_prompts(prompt_style, examples)
+    prefix = sample_prompts(prompt_style, examples, nr_samples)
     print(f'Treating query {query}, question {question}.')
     
     results = []
@@ -260,6 +262,7 @@ if __name__ == '__main__':
     parser.add_argument('model_id', type=str, help='ID of OpenAI model')
     parser.add_argument('prompt_style', type=str, help='Style of prompt')
     parser.add_argument('sample_path', type=str, help='Path to sample file')
+    parser.add_argument('nr_samples', type=int, help='Number of samples in prompt')
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
     parser.add_argument('termination', type=str, help='Termination criterion')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
@@ -287,8 +290,8 @@ if __name__ == '__main__':
         test_case = test_cases[i]
         cur_results = solve(
             catalog, args.model_id, args.prompt_style,
-            test_case, examples, args.termination,
-            args.max_tries)
+            test_case, examples, args.nr_samples, 
+            args.termination, args.max_tries)
         idx_to_results[i] = cur_results
         print(cur_results)
 
