@@ -16,12 +16,14 @@ import sys
 import time
 
 
-def db_info(schema, files):
+def db_info(schema, db_dir, files, prompt_style):
     """ Generate description of database.
     
     Args:
         schema: description of database schema
+        db_dir: 
         files: names to files storing tables
+        prompt_style: style of generated prompt
     
     Returns:
         list of description lines
@@ -38,6 +40,17 @@ def db_info(schema, files):
         line = f'Table {tbl_name} with columns {col_list}, ' \
             f'stored in \'{filename}\'.'
         lines.append(line)
+        
+        if prompt_style == 'data':
+            df = pd.read_csv(f'{db_dir}/{filename}')
+            nr_rows = df.shape[0]
+            nr_cols = df.shape[1]
+            for row_idx in range(min(3, nr_rows)):
+                row_parts = []
+                for col_idx in range(nr_cols):
+                    row_parts.append(df.iloc[row_idx, col_idx])
+                lines.append(','.join(row_parts))
+            
     return lines
 
 
@@ -111,11 +124,12 @@ def get_plan(sql):
     return out_parts
 
 
-def get_prompt(schema, files, question, query, prompt_style):
+def get_prompt(schema, db_dir, files, question, query, prompt_style):
     """ Generate prompt for processing specific query. 
     
     Args:
         schema: description of database schema
+        db_dir: directory storing data files
         files: location of data files for tables
         question: natural language query
         query: SQL translation of query
@@ -126,7 +140,7 @@ def get_prompt(schema, files, question, query, prompt_style):
     """
     prompt_parts = []
     prompt_parts.append('"""')
-    prompt_parts += db_info(schema, files)
+    prompt_parts += db_info(schema, db_dir, files, prompt_style)
     prompt_parts.append(f'Query: "{question}".')
     if prompt_style == 'train':
         prompt_parts.append(f'SQL query: {query}')
@@ -220,6 +234,7 @@ def solve(
     db_id = test_case['db_id']
     schema = catalog.schema(db_id)
     files = catalog.files(db_id)
+    db_dir = catalog.db_dir()
     question = test_case['question']
     query = test_case['query']
     reorder = False if 'order by' in query.lower() else True
@@ -232,7 +247,8 @@ def solve(
         print(f'Starting try number {try_idx} ...')
         
         gen_start_s = time.time()
-        suffix = get_prompt(schema, files, question, query, prompt_style)
+        suffix = get_prompt(
+            schema, db_dir, files, question, query, prompt_style)
         prompt = prefix + '\n' + suffix 
         temperature = try_idx * temperature_step
         code = generate_code(model_id, prompt, temperature)
@@ -283,7 +299,7 @@ if __name__ == '__main__':
         test_cases = json.load(file)
     with open(args.sample_path) as file:
         examples = json.load(file)
-    if args.prompt_style not in ['train', 'test']:
+    if args.prompt_style not in ['train', 'test', 'data']:
         print(f'Unknown prompt style: {args.prompt_style}!')
         sys.exit(1)
     if args.termination not in ['executed', 'solved']:
