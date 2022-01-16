@@ -261,7 +261,8 @@ def solve(
         comparable, nr_diffs, similarity = result_cmp(ref_output, output, reorder)
         
         nr_tries = try_idx + 1
-        test_prompt = get_prompt(schema, files, question, query, 'test')
+        test_prompt = get_prompt(
+            schema, db_dir, files, question, query, 'test')
         results.append({
             'nr_tries':nr_tries, 'executed':executed, 'comparable':comparable, 
             'nr_diffs':nr_diffs, 'similarity':similarity, 'outsize':len(output), 
