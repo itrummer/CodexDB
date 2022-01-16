@@ -7,6 +7,7 @@ import argparse
 import codexdb.catalog
 import codexdb.engine
 import json
+import numpy as np
 import os
 import openai
 import pandas as pd
@@ -35,21 +36,34 @@ def db_info(schema, db_dir, files, prompt_style):
     for tbl_idx in range(nr_tables):
         filename = files[tbl_idx]
         tbl_name = tables[tbl_idx]
-        tbl_columns = ["'" + c[1] + "'" for c in all_columns if c[0] == tbl_idx]
-        col_list = ', '.join(tbl_columns)
-        line = f'Table {tbl_name} with columns {col_list}, ' \
-            f'stored in \'{filename}\'.'
-        lines.append(line)
         
         if prompt_style == 'data':
+            
+            lines.append(f'Sample from table {tbl_name}, stored in "{filename}":')
             df = pd.read_csv(f'{db_dir}/{filename}')
+            headers = []
+            for col_name, col_type in zip(df.columns, df.dtypes):
+                header = f'{col_name}:{col_type.name}'
+                headers.append(header)
+            lines.append(','.join(headers))
+                    
             nr_rows = df.shape[0]
             nr_cols = df.shape[1]
-            for row_idx in range(min(3, nr_rows)):
+            for row_idx in range(min(5, nr_rows)):
                 row_parts = []
                 for col_idx in range(nr_cols):
-                    row_parts.append(str(df.iloc[row_idx, col_idx]))
+                    value = str(df.iloc[row_idx, col_idx])
+                    col_type = df.dtypes[col_idx].type
+                    if not np.issubdtype(col_type, np.number):
+                        value = '"' + value + '"'
+                    row_parts.append(value)
                 lines.append(','.join(row_parts))
+        else:
+            tbl_columns = ["'" + c[1] + "'" for c in all_columns if c[0] == tbl_idx]
+            col_list = ','.join(tbl_columns)
+            line = f'Table {tbl_name} with columns {col_list}, ' \
+                f'stored in \'{filename}\'.'
+            lines.append(line)
             
     return lines
 
