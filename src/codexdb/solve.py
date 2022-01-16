@@ -234,7 +234,7 @@ def solve(
     db_id = test_case['db_id']
     schema = catalog.schema(db_id)
     files = catalog.files(db_id)
-    db_dir = catalog.db_dir()
+    db_dir = catalog.db_dir(db_id)
     question = test_case['question']
     query = test_case['query']
     reorder = False if 'order by' in query.lower() else True
