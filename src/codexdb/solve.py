@@ -48,7 +48,7 @@ def db_info(schema, db_dir, files, prompt_style):
             for row_idx in range(min(3, nr_rows)):
                 row_parts = []
                 for col_idx in range(nr_cols):
-                    row_parts.append(df.iloc[row_idx, col_idx])
+                    row_parts.append(str(df.iloc[row_idx, col_idx]))
                 lines.append(','.join(row_parts))
             
     return lines
