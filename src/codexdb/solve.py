@@ -43,7 +43,8 @@ def db_info(schema, db_dir, files, prompt_style):
             df = pd.read_csv(f'{db_dir}/{filename}')
             headers = []
             for col_name, col_type in zip(df.columns, df.dtypes):
-                header = f'{col_name}:{col_type.name}'
+                #header = f'{col_name}:{col_type.name}'
+                header = f'{col_name}'
                 headers.append(header)
             lines.append(','.join(headers))
                     
