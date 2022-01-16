@@ -54,6 +54,26 @@ def db_info(schema, db_dir, files, prompt_style):
     return lines
 
 
+def extract_samples(path_to_results):
+    """ Extracts completion examples from prior results file.
+    
+    Args:
+        path_to_results: path to prior results file
+    
+    Returns:
+        list of extracted examples
+    """
+    with open(path_to_results) as file:
+        prior_results = json.load(file)
+    
+    examples = []
+    for cur_results in prior_results.values():
+        for r in cur_results:
+            if r['similarity'] == 1.0:
+                examples.append(r)
+    return examples
+
+    
 def generate_code(model_id, prompt, temperature):
     """ Generate code by completing given prompt. 
     
@@ -299,7 +319,7 @@ if __name__ == '__main__':
     with open(args.test_path) as file:
         test_cases = json.load(file)
     with open(args.sample_path) as file:
-        examples = json.load(file)
+        examples = extract_samples(args.sample_path)
     if args.prompt_style not in ['train', 'test', 'data']:
         print(f'Unknown prompt style: {args.prompt_style}!')
         sys.exit(1)
