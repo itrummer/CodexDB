@@ -207,10 +207,11 @@ def result_cmp(ref_output, cmp_output, reorder):
         return False, -1, 0
 
 
-def sample_prompts(prompt_style, examples, nr_samples):
+def sample_prompts(db_dir, prompt_style, examples, nr_samples):
     """ Generate prompts from examples for few-shot learning.
     
     Args:
+        db_dir: directory containing database data
         prompt_style: determines template for prompts
         examples: several example prompts with completions
         nr_samples: number of examples to select
@@ -223,7 +224,7 @@ def sample_prompts(prompt_style, examples, nr_samples):
         selected = random.sample(examples, k=nr_samples)
         for example in selected:
             prompt = get_prompt(
-                example['schema'], example['files'], 
+                example['schema'], db_dir, example['files'], 
                 example['question'], example['query'], 
                 prompt_style)
             parts.append(prompt)
@@ -259,7 +260,7 @@ def solve(
     query = test_case['query']
     reorder = False if 'order by' in query.lower() else True
     temperature_step = 0.5 / max_tries
-    prefix = sample_prompts(prompt_style, examples, nr_samples)
+    prefix = sample_prompts(db_dir, prompt_style, examples, nr_samples)
     print(f'Treating query {query}, question {question}.')
     
     results = []
