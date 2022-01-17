@@ -301,7 +301,7 @@ def solve(
             schema, db_dir, files, question, query, prompt_style)
         prompt = prefix + '\n' + suffix 
         temperature = try_idx * temperature_step
-        code = code_gen.generate(catalog, test_case, temperature)
+        code = code_gen.generate(test_case, temperature)
         # code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
         gen_total_s = time.time() - gen_start_s
