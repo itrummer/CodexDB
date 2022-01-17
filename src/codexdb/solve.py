@@ -61,7 +61,7 @@ def db_info(schema, db_dir, files, prompt_style):
                 lines.append(','.join(row_parts))
             
             type_items = []
-            for col_name, col_type in zip(df.columns, df.types):
+            for col_name, col_type in zip(df.columns, df.dtypes):
                 if np.issubdtype(col_type, np.number):
                     print_type = 'numeric' 
                 else:
