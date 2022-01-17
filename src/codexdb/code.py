@@ -7,12 +7,13 @@ import abc
 import numpy as np
 import openai
 import pandas as pd
+import random
 import sqlglot
 
 class CodeGenerator(abc.ABC):
     """ Generates code in different languages using OpenAI. """
     
-    def __init__(self, examples, nr_samples, prompt_style, model_id):
+    def __init__(self, catalog, examples, nr_samples, prompt_style, model_id):
         """ Initializes with examples for few-shot learning.
         
         Args:
@@ -21,17 +22,17 @@ class CodeGenerator(abc.ABC):
             prompt_style: style of prompt to generate
             model_id: OpenAI model to use for generation
         """
+        self.catalog = catalog
         self.examples = examples
         self.nr_samples = nr_samples
         self.prompt_style = prompt_style
         self.model_id = model_id
     
     @abc.abstractmethod
-    def generate(self, catalog, test_case, temperature):
+    def generate(self, test_case, temperature):
         """ Generate code to solve given test case.
         
         Args:
-            catalog: catalog with information on database content
             test_case: generate code solving this test case
             temperature: degree of randomness during generation
         
@@ -44,11 +45,19 @@ class CodeGenerator(abc.ABC):
 class PythonGenerator(CodeGenerator):
     """ Generates Python code to solve database queries. """
     
-    @abc.abstractmethod
-    def generate(self, catalog, test_case, temperature):
+    def generate(self, test_case, temperature):
         """ Generate Python code to solve test case. """
-        pass
-    
+        prefix = self._sample_prompts()
+        db_id = test_case['db_id']
+        schema = self.catalog.schema(db_id)
+        files = self.catalog.files(db_id)
+        db_dir = self.catalog.db_dir(db_id)
+        question = test_case['question']
+        query = test_case['query']
+        suffix = self._get_prompt(schema, db_dir, files, question, query)
+        prompt = prefix + '\n' + suffix
+        return self._complete(prompt, temperature)
+
     def _complete(self, prompt, temperature):
         """ Generate code by completing given prompt. 
         
@@ -204,3 +213,23 @@ class PythonGenerator(CodeGenerator):
             prompt_parts.append("3. Store result in 'result.csv'.")
         prompt_parts.append('"""')
         return '\n'.join(prompt_parts)
+    
+    def _sample_prompts(self):
+        """ Generate prompts from examples for few-shot learning.
+        
+        Returns:
+            a prefix of the full prompt to generate
+        """
+        parts = []
+        if self.examples:
+            selected = random.sample(self.examples, k=self.nr_samples)
+            for example in selected:
+                prompt = self._get_prompt(
+                    example['schema'], self.db_dir, example['files'], 
+                    example['question'], example['query'], 
+                    self.prompt_style)
+                parts.append(prompt)
+                parts.append(example['code'])
+                parts.append('')
+                parts.append('')
+        return '\n'.join(parts)
