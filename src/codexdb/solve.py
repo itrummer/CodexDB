@@ -290,7 +290,7 @@ def solve(
     prefix = sample_prompts(db_dir, prompt_style, examples, nr_samples)
     print(f'Treating query {query}, question {question}.')    
     code_gen = codexdb.code.PythonGenerator(
-        examples, nr_samples, prompt_style, model_id)
+        catalog, examples, nr_samples, prompt_style, model_id)
     
     results = []
     for try_idx in range(max_tries):
