@@ -5,6 +5,7 @@ Created on Jan 3, 2022
 '''
 import argparse
 import codexdb.catalog
+import codexdb.code
 import codexdb.engine
 import json
 import numpy as np
@@ -198,7 +199,7 @@ def get_prompt(schema, db_dir, files, question, query, prompt_style):
     prompt_parts.append('"""')
     return '\n'.join(prompt_parts)
 
-
+    
 def result_cmp(ref_output, cmp_output, reorder):
     """ Compares query result output against reference.
     
@@ -287,7 +288,9 @@ def solve(
     reorder = False if 'order by' in query.lower() else True
     temperature_step = 0.5 / max_tries
     prefix = sample_prompts(db_dir, prompt_style, examples, nr_samples)
-    print(f'Treating query {query}, question {question}.')
+    print(f'Treating query {query}, question {question}.')    
+    code_gen = codexdb.code.PythonGenerator(
+        examples, nr_samples, prompt_style, model_id)
     
     results = []
     for try_idx in range(max_tries):
@@ -298,7 +301,8 @@ def solve(
             schema, db_dir, files, question, query, prompt_style)
         prompt = prefix + '\n' + suffix 
         temperature = try_idx * temperature_step
-        code = generate_code(model_id, prompt, temperature)
+        code = code_gen.generate(catalog, test_case, temperature)
+        # code = generate_code(model_id, prompt, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
         gen_total_s = time.time() - gen_start_s
         

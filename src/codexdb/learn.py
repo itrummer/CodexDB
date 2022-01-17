@@ -3,7 +3,7 @@ Created on Oct 3, 2021
 
 @author: immanueltrummer
 '''
-import codexdb.code
+import codexdb.deprecated.code_gen
 import codexdb.engine
 import gym.spaces
 import math
@@ -45,7 +45,7 @@ class PromptEnv(gym.Env):
                 'action\texecuted\toutsize\t' \
                 'samedim\tnrdiffs\tsecs\treward\n')
         
-        self.coder = codexdb.code.CodeGenerator(prompts)
+        self.coder = codexdb.deprecated.code_gen.CodeGenerator(prompts)
         self.engine = codexdb.engine.ExecuteCode(catalog)
         self.to_langs = self.engine.supported_langs()
         self.nr_to_langs = len(self.to_langs)

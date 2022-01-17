@@ -5,7 +5,7 @@ Created on Dec 5, 2021
 '''
 import argparse
 import codexdb.catalog
-import codexdb.code
+import codexdb.deprecated.code_gen
 import codexdb.engine
 import codexdb.learn
 import json
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     
     with open(args.config) as file:
         prompts = json.load(file)
-    code_gen = codexdb.code.CodeGenerator(prompts)
+    code_gen = codexdb.deprecated.code_gen.CodeGenerator(prompts)
     catalog = codexdb.catalog.DbCatalog(args.data_dir)
     engine = codexdb.engine.ExecuteCode(catalog)
     
