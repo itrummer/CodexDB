@@ -44,7 +44,7 @@ def db_info(schema, db_dir, files, prompt_style):
             headers = []
             for col_name, col_type in zip(df.columns, df.dtypes):
                 #header = f'{col_name}:{col_type.name}'
-                header = f'{col_name}'
+                header = f'"{col_name}"'
                 headers.append(header)
             lines.append(','.join(headers))
                     
@@ -66,7 +66,7 @@ def db_info(schema, db_dir, files, prompt_style):
                     print_type = 'numeric' 
                 else:
                     print_type = 'text'
-                type_item = f'{col_name}: {print_type}'
+                type_item = f'"{col_name}": {print_type}'
                 type_items.append(type_item)
             lines.append('Column types: ' + ', '.join(type_items))
                 
