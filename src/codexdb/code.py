@@ -202,7 +202,7 @@ class PythonGenerator(CodeGenerator):
         """
         prompt_parts = []
         prompt_parts.append('"""')
-        prompt_parts += self._db_info(schema, db_dir, files, self.prompt_style)
+        prompt_parts += self._db_info(schema, db_dir, files)
         prompt_parts.append(f'Query: "{question}".')
         if self.prompt_style == 'train':
             prompt_parts.append(f'SQL query: {query}')
