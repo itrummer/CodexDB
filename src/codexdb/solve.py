@@ -59,6 +59,17 @@ def db_info(schema, db_dir, files, prompt_style):
                         value = '"' + value + '"'
                     row_parts.append(value)
                 lines.append(','.join(row_parts))
+            
+            type_items = []
+            for col_name, col_type in zip(df.columns, df.types):
+                if np.issubdtype(col_type, np.number):
+                    print_type = 'numeric' 
+                else:
+                    print_type = 'text'
+                type_item = f'{col_name}: {print_type}'
+                type_items.append(type_item)
+            lines.append('Column types: ' + ', '.join(type_items))
+                
         else:
             tbl_columns = ["'" + c[1] + "'" for c in all_columns if c[0] == tbl_idx]
             col_list = ','.join(tbl_columns)
