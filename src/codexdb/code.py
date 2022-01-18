@@ -48,7 +48,7 @@ class CodeGenerator(abc.ABC):
         query = test_case['query']
         suffix = self._get_prompt(schema, db_dir, files, question, query)
         prompt = prefix + '\n' + suffix
-        return self._complete(prompt, temperature)
+        return 'SELECT ' + self._complete(prompt, temperature)
 
     def _complete(self, prompt, temperature):
         """ Generate code by completing given prompt. 

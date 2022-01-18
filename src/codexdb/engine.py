@@ -3,60 +3,40 @@ Created on Oct 3, 2021
 
 @author: immanueltrummer
 '''
+import abc
 import os
 import pandas as pd
 import subprocess
 import sys
+import sqlite3
 import time
 
-class ExecuteCode():
+class ExecutionEngine(abc.ABC):
     """ Executes code in different languages. """
     
     def __init__(self, catalog):
-        """ Initialize with database catalog and paths.
+        """ Initialize with database catalog and variables.
         
         Args:
             catalog: informs on database schema and file locations
         """
         self.catalog = catalog
-        self.cpp_path = os.environ['CODEXDB_CPP']
-        self.psql_path = os.environ['CODEXDB_PSQL']
-        self.python_path = os.environ['CODEXDB_PYTHON']
         self.tmp_dir = os.environ['CODEXDB_TMP']
+        self.result_path = f'{self.tmp_dir}/result.csv'
     
-    def execute(self, db_id, code_lang, code, timeout_s):
+    @abc.abstractmethod
+    def execute(self, db_id, code, timeout_s):
         """ Execute code written in specified language.
         
         Args:
             db_id: code references data in this database
-            code_lang: code is written in this language
             code: execute this code
             timeout_s: execution timeout in seconds
         
         Returns:
-            Boolean success flag, output, elapsed time in seconds
+            Boolean success flag, output, execution statistics
         """
-        self._clean()
-        self._copy_db(db_id)
-        start_s = time.time()
-        if code_lang == 'bash':
-            success, output = self._exec_bash(db_id, code)
-        elif code_lang == 'cpp':
-            success, output = self._exec_cpp(db_id, code)
-        elif code_lang == 'python':
-            success, output = self._exec_python(db_id, code, timeout_s)
-        elif code_lang == 'pg_sql':
-            success, output = self._exec_psql(db_id, code)
-        elif code_lang == 'dummy':
-            success, output = True, ''
-        else:
-            raise ValueError(f'Unsupported language: {code_lang}')
-        total_s = time.time() - start_s
-        return success, output, total_s
-    
-    def supported_langs(self):
-        """ Returns supported languages as string list. """
-        return ['bash', 'cpp', 'python', 'dummy']
+        raise NotImplementedError()
     
     def _clean(self):
         """ Cleans up working directory before execution. 
@@ -78,96 +58,6 @@ class ExecuteCode():
         for tbl_file in self.catalog.files(db_id):
             cmd = f'sudo cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
             os.system(cmd)
-    
-    def _exec_bash(self, db_id, code):
-        """ Execute bash code.
-        
-        Args:
-            db_id: database identifier
-            code: execute this code
-        
-        Returns:
-            Success flag and output of executed code
-        """
-        filename = 'execute.sh'
-        code = self._expand_paths(db_id, code)
-        self._write_file(filename, code)
-        sh_path = f'{self.tmp_dir}/execute.sh'
-        os.system(f'chmod +x {sh_path}')
-        if os.system(f'{sh_path} &> {self.tmp_dir}/bout.txt') > 0:
-            return False, ''
-        with open(f'{self.tmp_dir}/bout.txt') as file:
-            return True, file.read()
-    
-    def _exec_cpp(self, db_id, code):
-        """ Execute C++ code.
-        
-        Args:
-            db_id: database identifier
-            code: C++ code to execute
-        
-        Returns:
-            Success flag and output of executed code
-        """
-        filename = 'execute.cpp'
-        code = self._expand_paths(db_id, code)
-        self._write_file(filename, code)
-        src_path = f'{self.tmp_dir}/{filename}'
-        exe_path = f'{self.tmp_dir}/execute.out'
-        comp_cmd = f'{self.cpp_path} {src_path} -o {exe_path}'
-        exe_cmd = f'{exe_path} &> {self.tmp_dir}/cout.txt'
-        if os.system(comp_cmd) > 0 or os.system(exe_cmd) > 0:
-            return False, ''
-        with open(f'{self.tmp_dir}/cout.txt') as file:
-            return True, file.read()
-    
-    def _exec_psql(self, db_id, code):
-        """ Execute Postgres SQL query. 
-        
-        Args:
-            db_id: database identifier
-            code: SQL query to execute
-        
-        Returns:
-            Success flag and output of generated code
-        """
-        self._write_file('sql.txt', code)
-        sql_path = f'{self.tmp_dir}/sql.txt'
-        out_path = f'{self.tmp_dir}/output.txt'
-        if os.system(f'{self.psql_path} -f {sql_path} {db_id} > {out_path}'):
-            return False, ''
-        with open(out_path) as file:
-            return True, file.read()
-    
-    def _exec_python(self, db_id, code, timeout_s):
-        """ Execute Python code and return generated output.
-        
-        Args:
-            db_id: database identifier
-            code: Python code to execute
-            timeout_s: execution timeout in seconds
-        
-        Returns:
-            Success flag and output generated when executing code
-        """
-        filename = 'execute.py'
-        code = self._expand_paths(db_id, code)
-        self._write_file(filename, code)
-        exe_path = f'{self.tmp_dir}/{filename}'
-        out_path = f'{self.tmp_dir}/result.csv'
-        cmd_parts = ['timeout', str(timeout_s), self.python_path, exe_path]
-        sub_comp = subprocess.run(cmd_parts)
-        success = False if sub_comp.returncode > 0 else True
-        if not success:
-            print(f'Python stdout: {sub_comp.stdout}')
-            print(f'Python stderr: {sub_comp.stderr}')
-        try:
-            output = pd.read_csv(out_path)
-        except:
-            e = sys.exc_info()[0]
-            print(f'Exception while reading result file: {e}')
-            output = pd.DataFrame([[]])
-        return success, output
     
     def _expand_paths(self, db_id, code):
         """ Expand relative paths to data files in code.
@@ -200,3 +90,131 @@ class ExecuteCode():
         file_path = f'{self.tmp_dir}/{filename}'
         with open(file_path, 'w') as file:
             file.write(code)
+
+
+class PythonEngine(ExecutionEngine):
+    """ Executes Python code. """
+    
+    def __init__(self, catalog):
+        """ Initialize with database catalog and paths.
+        
+        Args:
+            catalog: informs on database schema and file locations
+        """
+        super().__init__(catalog)
+        self.python_path = os.environ['CODEXDB_PYTHON']
+    
+    def execute(self, db_id, code, timeout_s):
+        """ Execute code written in specified language.
+        
+        Args:
+            db_id: code references data in this database
+            code: execute this code
+            timeout_s: execution timeout in seconds
+        
+        Returns:
+            Boolean success flag, output, execution statistics
+        """
+        self._clean()
+        self._copy_db(db_id)
+        start_s = time.time()
+        success, output, stats = self._exec_python(db_id, code, timeout_s)
+        total_s = time.time() - start_s
+        stats['total_s'] = total_s
+        return success, output, stats
+    
+    def _exec_python(self, db_id, code, timeout_s):
+        """ Execute Python code and return generated output.
+        
+        Args:
+            db_id: database identifier
+            code: Python code to execute
+            timeout_s: execution timeout in seconds
+        
+        Returns:
+            Success flag, output, and execution statistics
+        """
+        filename = 'execute.py'
+        code = self._expand_paths(db_id, code)
+        self._write_file(filename, code)
+        exe_path = f'{self.tmp_dir}/{filename}'
+        cmd_parts = ['timeout', str(timeout_s), self.python_path, exe_path]
+        sub_comp = subprocess.run(cmd_parts)
+        success = False if sub_comp.returncode > 0 else True
+        if not success:
+            print(f'Python stdout: {sub_comp.stdout}')
+            print(f'Python stderr: {sub_comp.stderr}')
+            output = pd.DataFrame([[]])
+        else:
+            try:
+                output = pd.read_csv(self.result_path)
+            except:
+                e = sys.exc_info()[0]
+                print(f'Exception while reading result file: {e}')
+                output = pd.DataFrame([[]])
+        return success, output, {}
+
+
+class SqliteEngine(ExecutionEngine):
+    """ SQL execution engine using SQLite. """
+    
+    def __init__(self, catalog):
+        """ Initialize with given catalog. 
+        
+        Args:
+            catalog: information about database schemata
+        """
+        super().__init__(catalog)
+    
+    def execute(self, db_id, sql, timeout_s):
+        """ Execute given SQL query. 
+        
+        Args:
+            db_id: ID of database (in catalog)
+            sql: SQL query to execute on database
+            timeout_s: execution timeout in seconds
+        
+        Returns:
+            Success flag, output, and execution statistics
+        """
+        self._prepare_db(db_id)
+        return self._execute(db_id, sql, timeout_s)
+    
+    def _execute(self, db_id, sql, timeout_s):
+        """ Execute given SQL query on specified database. 
+        
+        Args:
+            db_id: ID of database in catalog
+            sql: execute this SQL query
+            timeout_s: execution timeout in seconds
+        
+        Returns:
+            success flag, result, and execution statistics
+        """
+        db_dir = self.catalog.db_dir(db_id)
+        db_path = f'{db_dir}/db.db'
+        try:
+            with sqlite3.connect(db_path) as connection:
+                result = pd.read_sql(sql, connection)
+                result.to_csv(self.result_path)
+            return True, result, {}
+        except Exception as e:
+            print(f'Exception: {e}')
+            return False, pd.DataFrame(), {}
+    
+    def _prepare_db(self, db_id):
+        """ Prepare database for querying at first query. 
+        
+        Args:
+            db_id: database ID in catalog
+        """
+        db_dir = self.catalog.db_dir(db_id)
+        db_path = f'{db_dir}/db.db'
+        if not os.path.exists(db_path):
+            with sqlite3.connect(db_path) as connection:
+                schema = self.catalog.schema(db_id)
+                tables = schema['table_names_original']
+                for table in tables:
+                    table_path = self.catalog.file(table)
+                    df = pd.read_csv(table_path)
+                    df.to_sql(table, connection)

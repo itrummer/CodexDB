@@ -30,6 +30,17 @@ class DbCatalog():
         """
         return f'{self.data_dir}/database/{db_id}'
     
+    def file(self, table):
+        """ Returns name of file storing table data.
+        
+        Args:
+            table: name of table
+        
+        Returns:
+            name of file storing data
+        """
+        return f'{table}.csv'
+    
     def files(self, db_id):
         """ Returns names of files containing database tables.
         
@@ -40,7 +51,7 @@ class DbCatalog():
             list of files associated with database tables
         """
         tables = self.schema(db_id)['table_names_original']
-        return [f'{t}.csv' for t in tables]
+        return [self.file(t) for t in tables]
     
     def schema(self, db_id):
         """ Returns description of database schema.
