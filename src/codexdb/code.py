@@ -287,7 +287,7 @@ class SqlGenerator(CodeGenerator):
         tables = schema['table_names_original']
         all_columns = schema['column_names_original']
         for idx, table in enumerate(tables):
-            cols = [c[1] for c in all_columns if c[0] == idx]
+            cols = [c[1].replace(' ', '_') for c in all_columns if c[0] == idx]
             lines.append(f'# {table}({",".join(cols)})')
         
         lines.append('#')
