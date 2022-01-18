@@ -215,6 +215,7 @@ class SqliteEngine(ExecutionEngine):
                 schema = self.catalog.schema(db_id)
                 tables = schema['table_names_original']
                 for table in tables:
-                    table_path = self.catalog.file(table)
+                    file_name = self.catalog.file_name(table)
+                    table_path = f'{db_dir}/{file_name}'
                     df = pd.read_csv(table_path)
                     df.to_sql(table, connection)
