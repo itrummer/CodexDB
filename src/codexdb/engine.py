@@ -210,13 +210,14 @@ class SqliteEngine(ExecutionEngine):
         """
         db_dir = self.catalog.db_dir(db_id)
         db_path = f'{db_dir}/db.db'
-        if not os.path.exists(db_path):
-            with sqlite3.connect(db_path) as connection:
-                schema = self.catalog.schema(db_id)
-                tables = schema['table_names_original']
-                for table in tables:
-                    file_name = self.catalog.file_name(table)
-                    table_path = f'{db_dir}/{file_name}'
-                    df = pd.read_csv(table_path)
-                    df.columns.str.replace(' ', '_')
-                    df.to_sql(table, connection)
+        if os.path.exists(db_path):
+            subprocess.run(['rm', db_path])
+        with sqlite3.connect(db_path) as connection:
+            schema = self.catalog.schema(db_id)
+            tables = schema['table_names_original']
+            for table in tables:
+                file_name = self.catalog.file_name(table)
+                table_path = f'{db_dir}/{file_name}'
+                df = pd.read_csv(table_path)
+                df.columns.str.replace(' ', '_')
+                df.to_sql(table, connection)
