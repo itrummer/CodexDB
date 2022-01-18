@@ -17,6 +17,7 @@ class CodeGenerator(abc.ABC):
         """ Initializes with examples for few-shot learning.
         
         Args:
+            catalog: database catalog
             examples: list of examples for few-shot learning.
             nr_samples: maximal number of examples to use.
             prompt_style: style of prompt to generate
@@ -26,9 +27,8 @@ class CodeGenerator(abc.ABC):
         self.examples = examples
         self.nr_samples = nr_samples
         self.prompt_style = prompt_style
-        self.model_id = model_id
+        self.ai_kwargs = {'engine':model_id}
     
-    @abc.abstractmethod
     def generate(self, test_case, temperature):
         """ Generate code to solve given test case.
         
@@ -39,14 +39,6 @@ class CodeGenerator(abc.ABC):
         Returns:
             generated code
         """
-        raise NotImplementedError()
-
-
-class PythonGenerator(CodeGenerator):
-    """ Generates Python code to solve database queries. """
-    
-    def generate(self, test_case, temperature):
-        """ Generate Python code to solve test case. """
         prefix = self._sample_prompts()
         db_id = test_case['db_id']
         schema = self.catalog.schema(db_id)
@@ -63,7 +55,7 @@ class PythonGenerator(CodeGenerator):
         
         Args:
             prompt: initiate generation with this prompt
-            temperature: degree of randomness in generation
+            temperature: degree of randomness
         
         Returns:
             generated code, following prompt
@@ -71,13 +63,51 @@ class PythonGenerator(CodeGenerator):
         try:
             print(f'\nPrompt:\n*******\n{prompt}\n*******')
             response = openai.Completion.create(
-                engine=self.model_id, prompt=prompt, 
-                temperature=temperature, max_tokens=600,
-                stop='"""')
+                prompt=prompt, temperature=temperature,
+                **self.ai_kwargs)
             return response['choices'][0]['text']
         except Exception as e:
             print(f'Error querying OpenAI (model: {self.model_id}): {e}')
             return ''
+    
+    @abc.abstractmethod
+    def _get_prompt(self, schema, db_dir, files, question, query):
+        """ Generate prompt for processing specific query. 
+        
+        Args:
+            schema: description of database schema
+            db_dir: directory storing data files
+            files: location of data files for tables
+            question: natural language query
+            query: SQL translation of query
+        
+        Returns:
+            Prompt for generating code for executing query
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractmethod
+    def _sample_prompts(self):
+        """ Generate sample prompts for few-shot learning. 
+        
+        Returns:
+            Prompt prefix with completion examples
+        """
+        raise NotImplementedError()
+
+
+class PythonGenerator(CodeGenerator):
+    """ Generates Python code to solve database queries. """
+    
+    def __init__(self, *kwargs):
+        """ Initializes for Python code generation.
+        
+        Args:
+            kwargs: arguments of super class constructor
+        """
+        super().__init__(*kwargs)
+        self.ai_kwargs['max_tokens'] = 600
+        self.ai_kwargs['stop'] = '"""'
     
     def _db_info(self, schema, db_dir, files):
         """ Generate description of database.
@@ -86,7 +116,6 @@ class PythonGenerator(CodeGenerator):
             schema: description of database schema
             db_dir: directory containing data
             files: names to files storing tables
-            prompt_style: style of generated prompt
         
         Returns:
             list of description lines
@@ -233,3 +262,38 @@ class PythonGenerator(CodeGenerator):
                 parts.append('')
                 parts.append('')
         return '\n'.join(parts)
+
+
+class SqlGenerator(CodeGenerator):
+    """ Translates natural language questions into SQL queries. """
+    
+    def __init__(self, *kwargs):
+        """ Initializes for SQL query generation.
+        
+        Args:
+            kwargs: arguments for super class constructor
+        """
+        super().__init__(*kwargs)
+        self.ai_kwargs['max_tokens'] = 150
+        self.ai_kwargs['stop'] = ['#', ';']
+    
+    def _get_prompt(self, schema, db_dir, files, question, query):
+        """ Returns prompt for given question. """
+        lines = []
+        lines.append('### Postgres SQL tables, with their properties:')
+        lines.append('#')
+        
+        tables = schema['table_names_original']
+        all_columns = schema['column_names_original']
+        for idx, table in enumerate(tables):
+            cols = [c[1] for c in all_columns if c[0] == idx]
+            lines.append(f'# {table}({",".join(cols)})')
+        
+        lines.append('#')
+        lines.append(f'### Query: {question}')
+        lines.append('SELECT')
+        return '\n'.join(lines)
+    
+    def _sample_prompts(self):
+        """ Returns prefix with samples for few-shot learning. """
+        return ''

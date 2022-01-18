@@ -289,16 +289,21 @@ def solve(
     temperature_step = 0.5 / max_tries
     prefix = sample_prompts(db_dir, prompt_style, examples, nr_samples)
     print(f'Treating query {query}, question {question}.')    
+    sql_gen = codexdb.code.SqlGenerator(
+        catalog, examples, nr_samples, 
+        prompt_style, model_id)
+    sql = 'SELECT ' + sql_gen.generate(test_case, 0)
+    print(f'SQL query: {sql}')
+
     code_gen = codexdb.code.PythonGenerator(
-        catalog, examples, nr_samples, prompt_style, model_id)
-    
+        catalog, examples, nr_samples, 
+        prompt_style, model_id)
     results = []
     for try_idx in range(max_tries):
         print(f'Starting try number {try_idx} ...')
         
         gen_start_s = time.time()
-        suffix = get_prompt(
-            schema, db_dir, files, question, query, prompt_style)
+        suffix = get_prompt(schema, db_dir, files, question, query, prompt_style)
         prompt = prefix + '\n' + suffix 
         temperature = try_idx * temperature_step
         code = code_gen.generate(test_case, temperature)
