@@ -253,7 +253,7 @@ class PythonGenerator(CodeGenerator):
         if self.examples:
             selected = random.sample(self.examples, k=self.nr_samples)
             for example in selected:
-                db_id = example['db_id']
+                db_id = example['schema']['db_id']
                 db_dir = self.catalog.db_dir(db_id)
                 prompt = self._get_prompt(
                     example['schema'], db_dir, example['files'], 
