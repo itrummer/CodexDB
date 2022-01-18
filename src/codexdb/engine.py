@@ -196,6 +196,7 @@ class SqliteEngine(ExecutionEngine):
         try:
             with sqlite3.connect(db_path) as connection:
                 result = pd.read_sql(sql, connection)
+                print(f'Query Result Info: {result.info()}')
                 result.to_csv(self.result_path)
             return True, result, {}
         except Exception as e:
@@ -203,7 +204,7 @@ class SqliteEngine(ExecutionEngine):
             return False, pd.DataFrame(), {}
     
     def _prepare_db(self, db_id):
-        """ Prepare database for querying at first query. 
+        """ Prepare database for querying. 
         
         Args:
             db_id: database ID in catalog
