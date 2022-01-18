@@ -220,5 +220,5 @@ class SqliteEngine(ExecutionEngine):
                 file_name = self.catalog.file_name(table)
                 table_path = f'{db_dir}/{file_name}'
                 df = pd.read_csv(table_path)
-                df.columns.str.replace(' ', '_')
+                df.columns = df.columns.str.replace(' ', '_')
                 df.to_sql(table, connection)
