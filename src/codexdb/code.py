@@ -67,7 +67,7 @@ class CodeGenerator(abc.ABC):
                 **self.ai_kwargs)
             return response['choices'][0]['text']
         except Exception as e:
-            print(f'Error querying OpenAI (model: {self.model_id}): {e}')
+            print(f'Error querying OpenAI: {e}')
             return ''
     
     @abc.abstractmethod
