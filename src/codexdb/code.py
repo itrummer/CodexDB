@@ -257,8 +257,7 @@ class PythonGenerator(CodeGenerator):
                 db_dir = self.catalog.db_dir(db_id)
                 prompt = self._get_prompt(
                     example['schema'], db_dir, example['files'], 
-                    example['question'], example['query'], 
-                    self.prompt_style)
+                    example['question'], example['query'])
                 parts.append(prompt)
                 parts.append(example['code'])
                 parts.append('')
