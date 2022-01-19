@@ -306,7 +306,7 @@ class SqlGenerator(CodeGenerator):
                 example['schema'], db_dir, example['files'], 
                 example['question'], example['query'])
             parts.append(prompt)
-            parts.append(example['query'])
+            parts.append(example['query'][6:])
             parts.append('')
             parts.append('')
         return '\n'.join(parts)
