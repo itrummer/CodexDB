@@ -12,6 +12,22 @@ import os
 import pandas as pd
 import sqlite3
 
+
+def sql_name(raw_name):
+    """ Cleaned column name.
+    
+    Args:
+        raw_name: raw column name
+    
+    Returns:
+        cleaned name suitable for SQL column
+    """
+    sql_name = raw_name
+    for to_replace in [' ', '\\', '/', '(', ')', '.']:
+        sql_name = sql_name.replace(to_replace, '_')
+    return sql_name.strip()
+
+
 def extract_data(source_dir, split, target_dir):
     """ Extract data from given split and store on hard disk.
     
@@ -30,10 +46,10 @@ def extract_data(source_dir, split, target_dir):
         for table in tables:
             table_id = table['id']
             table_name = 'table_' + table_id.replace('-','_')
-            columns = table['header']
             query = f'select * from {table_name}'
             df = pd.read_sql_query(query, connection)
-            df.columns = columns
+            raw_columns = table['header']
+            df.columns = [sql_name(c) for c in raw_columns]
             out_dir = f'{target_dir}/database/{table_id}'
             os.makedirs(out_dir, exist_ok=True)
             out_path = f'{out_dir}/Data.csv'
@@ -56,7 +72,7 @@ def extract_schemata(source_dir, split):
     
     schemata = {}
     for table in tables:
-        columns = table['header']
+        columns = [sql_name(h) for h in table['header']]
         idx_cols = [(0, c) for c in columns]
         schema = {}
         schema['table_names_original'] = ['Data']
@@ -68,13 +84,13 @@ def extract_schemata(source_dir, split):
     return schemata
 
 
-def extract_tests(engine, source_dir, split):
+def extract_tests(source_dir, split, target_dir):
     """ Extract test cases from file.
     
     Args:
-        engine: database engine for processing queries
         source_dir: source directory of WikiSQL
         split: extract queries from this split
+        target_dir: target directory for data
     
     Returns:
         list of extracted test cases
@@ -84,12 +100,28 @@ def extract_tests(engine, source_dir, split):
         out_cases = []
         for in_case in file:
             out_case = {}
-            table_id = in_case['table_id']
-            out_case['db_id'] = table_id
+            db_id = in_case['table_id']
+            out_case['db_id'] = db_id
+            csv_path = f'{target_dir}/database/{db_id}/Data.csv'
+            db_path = '/tmp/tmp.db'
+            df = pd.read_csv(csv_path)
+            with sqlite3.connect(db_path) as connection:
+                cursor = connection.cursor()
+                cursor.execute('drop table if exists Data')
+                connection.commit()
+                df.to_sql('Data', connection, index=False)
+                # for row in cursor.execute('select * from Data'):
+                    # print(row)
+                # for row in cursor.execute('select sql, tbl_name from sqlite_master'):
+                    # print(row)
+
+            engine = lib.dbengine.DBEngine(db_path)
+            query_template = lib.query.Query.from_dict(in_case['sql'], True)
+            query, raw_result = engine.execute_query(
+                'Data', query_template, lower=True)
+            # print(f'Query: {query}')
             out_case['question'] = in_case['question']
-            query = lib.query.Query.from_dict(in_case['sql'], True)
             out_case['query'] = str(query)
-            raw_result = engine.execute_query(table_id, query, lower=True)
             result = [[r] for r in raw_result if r is not None]
             out_case['results'] = result
             out_cases.append(out_case)
@@ -106,16 +138,14 @@ if __name__ == '__main__':
     schemata = {}
     test_cases = []
     
-    for split in ['train', 'dev', 'test']:
+    for split in ['dev', 'test', 'train']:
         print(f'Processing {split} split ...')
         
         extract_data(args.source_dir, split, args.target_dir)
         split_schemata = extract_schemata(args.source_dir, split)
         schemata = {**schemata, **split_schemata}
         
-        db_file = f'{args.source_dir}/{split}.db'
-        engine = lib.dbengine.DBEngine(db_file)
-        tests = extract_tests(engine, args.source_dir, split)
+        tests = extract_tests(args.source_dir, split, args.target_dir)
         test_out = f'{args.source_dir}/results_{split}.json'
         with open(test_out, 'w') as file:
             json.dump(tests, file)
