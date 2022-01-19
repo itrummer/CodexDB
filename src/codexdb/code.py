@@ -28,6 +28,7 @@ class CodeGenerator(abc.ABC):
         self.nr_samples = nr_samples
         self.prompt_style = prompt_style
         self.ai_kwargs = {'engine':model_id}
+        self.code_prefix = ''
     
     def generate(self, test_case, temperature):
         """ Generate code to solve given test case.
@@ -48,7 +49,7 @@ class CodeGenerator(abc.ABC):
         query = test_case['query']
         suffix = self._get_prompt(schema, db_dir, files, question, query)
         prompt = prefix + '\n' + suffix
-        return 'SELECT ' + self._complete(prompt, temperature)
+        return self.code_prefix + self._complete(prompt, temperature)
 
     def _complete(self, prompt, temperature):
         """ Generate code by completing given prompt. 
@@ -69,6 +70,31 @@ class CodeGenerator(abc.ABC):
         except Exception as e:
             print(f'Error querying OpenAI: {e}')
             return ''
+    
+    def _db_sample(self, db_dir, file_name):
+        """ Returns data sample from specified file. 
+        
+        Args:
+            db_dir: directory containing database data
+            file_name: name of file within directory
+        
+        Returns:
+            list of string representing sample rows
+        """
+        lines = []
+        df = pd.read_csv(f'{db_dir}/{file_name}')
+        nr_rows = df.shape[0]
+        nr_cols = df.shape[1]
+        for row_idx in range(min(5, nr_rows)):
+            row_parts = []
+            for col_idx in range(nr_cols):
+                value = str(df.iloc[row_idx, col_idx])
+                col_type = df.dtypes[col_idx].type
+                if not np.issubdtype(col_type, np.number):
+                    value = '"' + value + '"'
+                row_parts.append(value)
+            lines.append(','.join(row_parts))
+        return lines
     
     @abc.abstractmethod
     def _get_prompt(self, schema, db_dir, files, question, query):
@@ -134,22 +160,12 @@ class PythonGenerator(CodeGenerator):
                 df = pd.read_csv(f'{db_dir}/{filename}')
                 headers = []
                 for col_name, col_type in zip(df.columns, df.dtypes):
-                    #header = f'{col_name}:{col_type.name}'
                     header = f'"{col_name}"'
                     headers.append(header)
                 lines.append(','.join(headers))
-                        
-                nr_rows = df.shape[0]
-                nr_cols = df.shape[1]
-                for row_idx in range(min(5, nr_rows)):
-                    row_parts = []
-                    for col_idx in range(nr_cols):
-                        value = str(df.iloc[row_idx, col_idx])
-                        col_type = df.dtypes[col_idx].type
-                        if not np.issubdtype(col_type, np.number):
-                            value = '"' + value + '"'
-                        row_parts.append(value)
-                    lines.append(','.join(row_parts))
+                
+                file_name = files[tbl_idx]
+                lines += self._db_sample(db_dir, file_name)
                 
                 type_items = []
                 for col_name, col_type in zip(df.columns, df.dtypes):
@@ -277,6 +293,7 @@ class SqlGenerator(CodeGenerator):
         super().__init__(*kwargs)
         self.ai_kwargs['max_tokens'] = 150
         self.ai_kwargs['stop'] = ['#', ';']
+        self.code_prefix = 'SELECT '
     
     def _get_prompt(self, schema, db_dir, files, question, query):
         """ Returns prompt for given question. """
@@ -289,7 +306,12 @@ class SqlGenerator(CodeGenerator):
         for idx, table in enumerate(tables):
             cols = [c[1].replace(' ', '_') for c in all_columns if c[0] == idx]
             lines.append(f'# {table}({",".join(cols)})')
-        
+            if self.prompt_style == 'data':
+                lines.append(f'Sample rows from {table}:')
+                file_name = files[idx]
+                sample = self._db_sample(db_dir, file_name)
+                lines += ['# ' + s for s in sample]
+
         lines.append('#')
         lines.append(f'### Query: {question}')
         lines.append('SELECT')
@@ -305,8 +327,7 @@ class SqlGenerator(CodeGenerator):
             prompt = self._get_prompt(
                 example['schema'], db_dir, example['files'], 
                 example['question'], example['query'])
-            parts.append(prompt)
-            parts.append(example['query'][6:])
+            parts.append(prompt + example['query'][6:])
             parts.append('')
             parts.append('')
         return '\n'.join(parts)
