@@ -307,13 +307,13 @@ class SqlGenerator(CodeGenerator):
             cols = [c[1].replace(' ', '_') for c in all_columns if c[0] == idx]
             lines.append(f'# {table}({",".join(cols)})')
             if self.prompt_style == 'data':
-                lines.append(f'Sample rows from {table}:')
+                #lines.append(f'Sample rows from {table}:')
                 file_name = files[idx]
                 sample = self._db_sample(db_dir, file_name)
                 lines += ['# ' + s for s in sample]
 
         lines.append('#')
-        lines.append(f'### Query: {question}')
+        lines.append(f'### Query: "{question}"')
         lines.append('SELECT')
         return '\n'.join(lines)
     
