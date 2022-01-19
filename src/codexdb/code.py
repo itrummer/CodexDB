@@ -297,4 +297,16 @@ class SqlGenerator(CodeGenerator):
     
     def _sample_prompts(self):
         """ Returns prefix with samples for few-shot learning. """
-        return ''
+        parts = []
+        selected = random.sample(self.examples, k=self.nr_samples)
+        for example in selected:
+            db_id = example['schema']['db_id']
+            db_dir = self.catalog.db_dir(db_id)
+            prompt = self._get_prompt(
+                example['schema'], db_dir, example['files'], 
+                example['question'], example['query'])
+            parts.append(prompt)
+            parts.append(example['query'])
+            parts.append('')
+            parts.append('')
+        return '\n'.join(parts)
