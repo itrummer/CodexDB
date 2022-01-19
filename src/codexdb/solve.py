@@ -14,10 +14,11 @@ import pandas as pd
 import sys
 import time
 
-def extract_samples(path_to_results):
+def extract_samples(catalog, path_to_results):
     """ Extracts completion examples from prior results file.
     
     Args:
+        catalog: database catalog with schema information
         path_to_results: path to prior results file
     
     Returns:
@@ -31,6 +32,13 @@ def extract_samples(path_to_results):
         for r in cur_results:
             if r['similarity'] == 1.0:
                 examples.append(r)
+    
+    for e in examples:
+        if 'schema' not in e:
+            db_id = e['db_id']
+            e['schema'] = catalog.schema(db_id)
+            e['files'] = catalog.files(db_id)
+            
     return examples
     
 def result_cmp(ref_output, cmp_output, reorder):
@@ -134,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     args = parser.parse_args()
     
+    catalog = codexdb.catalog.DbCatalog(args.data_dir)
     os.environ['KMP_DUPLICATE_LIB_OK']='True'
     openai.api_key = args.ai_key
     with open(args.test_path) as file:
@@ -142,7 +151,7 @@ if __name__ == '__main__':
         print(f'Unknown implementation language: {args.language}!')
         sys.exit(1)
     with open(args.sample_path) as file:
-        examples = extract_samples(args.sample_path)
+        examples = extract_samples(catalog, args.sample_path)
     if args.prompt_style not in ['train', 'test', 'data']:
         print(f'Unknown prompt style: {args.prompt_style}!')
         sys.exit(1)
@@ -150,7 +159,6 @@ if __name__ == '__main__':
         print(f'Unknown termination criterion: {args.termination}')
         sys.exit(1)
 
-    catalog = codexdb.catalog.DbCatalog(args.data_dir)
     if args.language == 'python':
         coder = codexdb.code.PythonGenerator(
             catalog, examples, args.nr_samples, 
