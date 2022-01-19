@@ -71,12 +71,13 @@ class CodeGenerator(abc.ABC):
             print(f'Error querying OpenAI: {e}')
             return ''
     
-    def _db_sample(self, db_dir, file_name):
+    def _db_sample(self, db_dir, file_name, max_rows):
         """ Returns data sample from specified file. 
         
         Args:
             db_dir: directory containing database data
             file_name: name of file within directory
+            max_rows: maximal number of sample rows
         
         Returns:
             list of string representing sample rows
@@ -85,7 +86,7 @@ class CodeGenerator(abc.ABC):
         df = pd.read_csv(f'{db_dir}/{file_name}')
         nr_rows = df.shape[0]
         nr_cols = df.shape[1]
-        for row_idx in range(min(5, nr_rows)):
+        for row_idx in range(min(max_rows, nr_rows)):
             row_parts = []
             for col_idx in range(nr_cols):
                 value = str(df.iloc[row_idx, col_idx])
@@ -247,7 +248,7 @@ class PythonGenerator(CodeGenerator):
         """
         prompt_parts = []
         prompt_parts.append('"""')
-        prompt_parts += self._db_info(schema, db_dir, files)
+        prompt_parts += self._db_info(schema, db_dir, files, 5)
         prompt_parts.append(f'Query: "{question}".')
         if self.prompt_style == 'train':
             prompt_parts.append(f'SQL query: {query}')
@@ -309,7 +310,7 @@ class SqlGenerator(CodeGenerator):
             if self.prompt_style == 'data':
                 #lines.append(f'Sample rows from {table}:')
                 file_name = files[idx]
-                sample = self._db_sample(db_dir, file_name)
+                sample = self._db_sample(db_dir, file_name, 10)
                 lines += ['# ' + s for s in sample]
 
         lines.append('#')
