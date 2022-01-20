@@ -136,13 +136,14 @@ class PythonGenerator(CodeGenerator):
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
     
-    def _db_info(self, schema, db_dir, files):
+    def _db_info(self, schema, db_dir, files, max_rows):
         """ Generate description of database.
         
         Args:
             schema: description of database schema
             db_dir: directory containing data
             files: names to files storing tables
+            max_rows: maximal number of rows in data sample
         
         Returns:
             list of description lines
@@ -166,7 +167,7 @@ class PythonGenerator(CodeGenerator):
                 lines.append(','.join(headers))
                 
                 file_name = files[tbl_idx]
-                lines += self._db_sample(db_dir, file_name)
+                lines += self._db_sample(db_dir, file_name, max_rows)
                 
                 type_items = []
                 for col_name, col_type in zip(df.columns, df.dtypes):
@@ -310,7 +311,7 @@ class SqlGenerator(CodeGenerator):
             if self.prompt_style == 'data':
                 #lines.append(f'Sample rows from {table}:')
                 file_name = files[idx]
-                sample = self._db_sample(db_dir, file_name, 10)
+                sample = self._db_sample(db_dir, file_name, 5)
                 lines += ['# ' + s for s in sample]
 
         lines.append('#')
