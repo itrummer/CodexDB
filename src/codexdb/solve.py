@@ -103,6 +103,7 @@ def solve(test_case, coder, engine, termination, max_tries):
         temperature = try_idx * temperature_step
         code = coder.generate(test_case, temperature).lower()
         print(f'Generated code:\n-------\n{code}\n-------\n')
+        print(f'Reference Query: "{query}"')
         gen_total_s = time.time() - gen_start_s
         executed, codb_result, elapsed_s = engine.execute(db_id, code, 30)
         print(f'CodexDB executed: {executed} in {elapsed_s}s')                
