@@ -101,7 +101,7 @@ def solve(test_case, coder, engine, termination, max_tries):
         print(f'Starting try number {try_idx} ...')
         gen_start_s = time.time()
         temperature = try_idx * temperature_step
-        code = coder.generate(test_case, temperature).lower()
+        code = coder.generate(test_case, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
         print(f'Reference Query: "{query}"')
         gen_total_s = time.time() - gen_start_s
