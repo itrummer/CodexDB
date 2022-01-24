@@ -162,7 +162,7 @@ class PythonGenerator(CodeGenerator):
                 lines.append(f'Sample from table {tbl_name}, stored in "{filename}":')
                 df = pd.read_csv(f'{db_dir}/{filename}')
                 headers = []
-                for col_name, col_type in zip(df.columns, df.dtypes):
+                for col_name in df.columns:
                     header = f'"{col_name}"'
                     headers.append(header)
                 lines.append(','.join(headers))
@@ -205,15 +205,15 @@ class PythonGenerator(CodeGenerator):
         prompt_parts = []
         prompt_parts.append('"""')
         prompt_parts += self._db_info(schema, db_dir, files, 5)
-        prompt_parts.append(f'Query: "{question}".')
         if self.prompt_style == 'train':
             #prompt_parts.append(f'SQL query: {query}')
             prompt_parts.append('Processing steps:')
             plan = self.planner.plan(query)
             plan.add_step(['Import pandas library'], False)
-            plan.add_step(["Store result in 'result.csv' (without index)"])
+            plan.add_step(["Store result data frame in 'result.csv' (without index)"])
             prompt_parts += plan.steps()
         else:
+            prompt_parts.append(f'Query: "{question}".')
             prompt_parts.append('1. Import pandas library.')
             prompt_parts.append('2. Calculate query answer.')
             prompt_parts.append("3. Store result in 'result.csv'.")
