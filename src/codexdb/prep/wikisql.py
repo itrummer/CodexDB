@@ -23,7 +23,7 @@ def sql_name(raw_name):
         cleaned name suitable for SQL column
     """
     sql_name = raw_name
-    for to_replace in [' ', '\\', '/', '(', ')', '.']:
+    for to_replace in ['"', ' ', '\\', '/', '(', ')', '.']:
         sql_name = sql_name.replace(to_replace, '_')
     return sql_name.strip()
 
@@ -98,7 +98,9 @@ def extract_tests(source_dir, split, target_dir):
     in_path = f'{source_dir}/{split}.jsonl'
     with jsonlines.open(in_path) as file:
         out_cases = []
-        for in_case in file:
+        for idx, in_case in enumerate(file):
+            # if idx == 3729:
+                # print('Here!')
             out_case = {}
             db_id = in_case['table_id']
             out_case['db_id'] = db_id
