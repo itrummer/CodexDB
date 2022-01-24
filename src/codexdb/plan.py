@@ -325,7 +325,9 @@ class NlPlanner():
         text = expression.args.get('this') or ''
         is_string = expression.args.get('is_string')
         if is_string:
-            text = text.replace("'", "\\'")
+            escape_code = sqlglot.tokens.Tokenizer.ESCAPE_CODE
+            text = text.replace(escape_code, "'")
+            # text = text.replace("'", "''")
             return [f"'{text}'"], NlPlan()
         else:
             return [text], NlPlan()
