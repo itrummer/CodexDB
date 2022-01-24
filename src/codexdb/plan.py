@@ -149,8 +149,7 @@ class NlPlanner():
         """
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
-        print(ast)
-        return self.nl(ast)
+        return self.nl(ast)[1]
     
     def _select_nl(self, expression):
         """ Generates natural language plan for select query. """
