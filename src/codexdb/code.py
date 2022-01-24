@@ -207,10 +207,11 @@ class PythonGenerator(CodeGenerator):
         prompt_parts += self._db_info(schema, db_dir, files, 5)
         prompt_parts.append(f'Query: "{question}".')
         if self.prompt_style == 'train':
-            prompt_parts.append(f'SQL query: {query}')
+            #prompt_parts.append(f'SQL query: {query}')
+            prompt_parts.append('Query plan:')
             plan = self.planner.plan(query)
-            plan.add_step('Import pandas library.', False)
-            plan.add_step("Store result in 'result.csv'.")
+            plan.add_step(['Import pandas library.'], False)
+            plan.add_step(["Store result in 'result.csv'."])
             prompt_parts += plan.steps()
         else:
             prompt_parts.append('1. Import pandas library.')
