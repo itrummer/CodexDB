@@ -4,11 +4,11 @@ Created on Jan 17, 2022
 @author: immanueltrummer
 '''
 import abc
+import codexdb.plan
 import numpy as np
 import openai
 import pandas as pd
 import random
-import sqlglot
 
 class CodeGenerator(abc.ABC):
     """ Generates code in different languages using OpenAI. """
@@ -135,6 +135,7 @@ class PythonGenerator(CodeGenerator):
         super().__init__(*kwargs)
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
+        self.planner = codexdb.plan.NlPlanner()
     
     def _db_info(self, schema, db_dir, files, max_rows):
         """ Generate description of database.
@@ -188,52 +189,6 @@ class PythonGenerator(CodeGenerator):
                 
         return lines
     
-    def _get_plan(self, sql):
-        """ Generate natural language query plan. 
-        
-        Args:
-            sql: the SQL query to process
-        
-        Returns:
-            list of plan steps (in order)
-        """
-        tokenizer = sqlglot.tokens.Tokenizer()
-        parser = sqlglot.parser.Parser()
-        tokens = tokenizer.tokenize(sql)
-        ast = parser.parse(tokens)[0]
-        
-        tables = []
-        for table_expr in ast.find_all(sqlglot.expressions.Table):
-            table_name = table_expr.args['this'].args['this']
-            tables.append(table_name)
-        
-        out_parts = []
-        out_parts.append('Import pandas library.')
-        out_parts.append(f'Load data for table {tables[0]}.')
-        for table in tables[2:]:
-            out_parts.append(f'Join with table {table}.')
-        
-        where = ast.args['where'] if 'where' in ast.args else None
-        if where is not None:
-            out_parts.append(f'Filter using {where.sql()}.')
-        
-        group_by = ast.args['group'] if 'group' in ast.args else None
-        if group_by is not None:
-            out_parts.append(f'Group data via {group_by.sql()}.')
-        
-        order_by = ast.args['order'] if 'order' in ast.args else None
-        if order_by is not None:
-            out_parts.append(f'Sort according to {order_by.sql()}.')
-        
-        selects = ast.args['expressions'] if 'expressions' in ast.args else None
-        if selects is not None:
-            selects_sql = ', '.join([s.sql() for s in selects])
-            out_parts.append(f'Calculate {selects_sql}.')
-        
-        out_parts.append("Write query result to 'result.csv'.")
-        out_parts = [f'{idx}. {out}' for idx, out in enumerate(out_parts, 1)]
-        return out_parts
-    
     def _get_prompt(self, schema, db_dir, files, question, query):
         """ Generate prompt for processing specific query. 
         
@@ -253,7 +208,7 @@ class PythonGenerator(CodeGenerator):
         prompt_parts.append(f'Query: "{question}".')
         if self.prompt_style == 'train':
             prompt_parts.append(f'SQL query: {query}')
-            prompt_parts += self._get_plan(query)
+            prompt_parts += self.planner.plan(query)
         else:
             prompt_parts.append('1. Import pandas library.')
             prompt_parts.append('2. Calculate query answer.')
