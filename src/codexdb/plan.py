@@ -156,7 +156,12 @@ class NlPlanner():
         """
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
-        return self.nl(ast)[1]
+        labels, plan = self.nl(ast)
+        final_step = \
+            ['Store'] + labels + \
+            ["as data frame in 'result.csv' (no index)"]
+        plan.add_step(final_step)
+        return plan
     
     def _select_nl(self, expression):
         """ Generates natural language plan for select query. """
@@ -214,7 +219,7 @@ class NlPlanner():
         
         select_labels, select_prep = self._expressions(expression)
         plan.add_plan(select_prep)
-        select_step = ['Get'] + select_labels + \
+        select_step = ['Select'] + select_labels + \
             ['from'] + last_labels
         last_labels = [plan.add_step(select_step)]
         
@@ -401,8 +406,9 @@ class NlPlanner():
         alias_labels, alias_prep = self.nl(expression, 'alias')
         this_labels, plan = self.nl(expression, 'this')
         plan.add_plan(alias_prep)
-        labels = this_labels + ['('] + alias_labels + [' in the following)']
-        return labels, plan
+        rename_step = ['Rename'] + this_labels + ['to'] + alias_labels
+        last_label = plan.add_step(rename_step)
+        return [last_label], plan
 
     def _paren_nl(self, expression):
         """ Translate parenthesis expression to natural language. """
