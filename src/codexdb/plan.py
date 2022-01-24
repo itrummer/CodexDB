@@ -51,14 +51,17 @@ class NlPlan():
         else:
             return None
 
-    def steps(self):
+    def steps(self, offset):
         """ Generates list of natural language plan steps. 
+        
+        Args:
+            offset: add this number to each plan step index
         
         Returns:
             list of steps (strings)
         """
         nl_steps = [self._step_to_nl(step) for _, step in self.id_steps]
-        return [f'{idx}. {s}.' for idx, s in enumerate(nl_steps, 1)]
+        return [f'{(idx+offset)}. {s}.' for idx, s in enumerate(nl_steps, 1)]
 
     def _index_of(self, search):
         """ Finds step by its index.
