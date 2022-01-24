@@ -399,7 +399,7 @@ class NlPlanner():
         alias_labels, alias_prep = self.nl(expression, 'alias')
         this_labels, plan = self.nl(expression, 'this')
         plan.add_plan(alias_prep)
-        labels = ['Rename'] + this_labels + ['to'] + alias_labels
+        labels = this_labels + ['('] + alias_labels + [' in the following)']
         return labels, plan
 
     def _paren_nl(self, expression):
