@@ -406,9 +406,8 @@ class NlPlanner():
         alias_labels, alias_prep = self.nl(expression, 'alias')
         this_labels, plan = self.nl(expression, 'this')
         plan.add_plan(alias_prep)
-        rename_step = ['Rename'] + this_labels + ['to'] + alias_labels
-        last_label = plan.add_step(rename_step)
-        return [last_label], plan
+        last_labels = this_labels + ['(aka.'] + alias_labels + [')']
+        return last_labels, plan
 
     def _paren_nl(self, expression):
         """ Translate parenthesis expression to natural language. """
