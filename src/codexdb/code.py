@@ -210,7 +210,7 @@ class PythonGenerator(CodeGenerator):
             prompt_parts.append('Processing steps:')
             plan = self.planner.plan(query)
             plan.add_step(['Import pandas library'], False)
-            plan.add_step(["Store result data frame in 'result.csv' (without index)"])
+            # plan.add_step(["Store result data frame in 'result.csv' (without index)"])
             prompt_parts += plan.steps()
         else:
             prompt_parts.append(f'Query: "{question}".')
