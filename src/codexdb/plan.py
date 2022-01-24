@@ -31,17 +31,21 @@ class NlPlan():
         """
         self.id_steps += plan.id_steps
         
-    def add_step(self, step):
+    def add_step(self, step, at_end=True):
         """ Adds one step to plan. 
         
         Args:
             step: a list mixing strings and expressions
+            at_end: whether to add step at the end
         
         Returns:
             integer ID of newly created step
         """
         step_id = self._step_ID()
-        self.id_steps.append((step_id, step))
+        if at_end:
+            self.id_steps.append((step_id, step))
+        else:
+            self.id_steps.insert(0, (step_id, step))
         return step_id
 
     def last_step_id(self):
