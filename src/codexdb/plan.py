@@ -332,10 +332,11 @@ class NlPlanner():
         if is_string:
             escape_code = sqlglot.tokens.Tokenizer.ESCAPE_CODE
             text = text.replace(escape_code, "'")
+            text = f"'{text}'"
             if text == text.lower():
                 text = text + ' (all lowercase)'
             # text = text.replace("'", "''")
-            return [f"'{text}'"], NlPlan()
+            return [text], NlPlan()
         else:
             return [text], NlPlan()
 
