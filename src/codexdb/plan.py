@@ -55,7 +55,7 @@ class NlPlan():
         else:
             return None
 
-    def steps(self, offset):
+    def steps(self, offset=0):
         """ Generates list of natural language plan steps. 
         
         Args:
