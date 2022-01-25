@@ -268,8 +268,7 @@ class NlPlanner():
             return ['number of rows'], NlPlan()
         else:
             arg_labels, prep = self.nl(count_args)
-            labels = ['row count'] + arg_labels + \
-                ['. Subtract number of rows with unknown values in'] + \
+            labels = ['row count (do not count rows with unknown values in'] + \
                 arg_labels
             return labels, prep
     
