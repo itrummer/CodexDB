@@ -268,7 +268,8 @@ class NlPlanner():
             return ['number of rows'], NlPlan()
         else:
             arg_labels, prep = self.nl(count_args)
-            labels = ['number of rows with known values for'] + arg_labels
+            labels = ['row count, considering rows with known values for'] + \
+                arg_labels + [',']
             return labels, prep
     
     def _binary(self, expression):
