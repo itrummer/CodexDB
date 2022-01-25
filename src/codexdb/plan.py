@@ -157,7 +157,7 @@ class NlPlanner():
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
         labels, plan = self.nl(ast)
-        transform = ['If necessary, transform'] + labels + ['into data frame.']
+        transform = ['If necessary, transform'] + labels + ['into data frame']
         labels = [plan.add_step(transform)]
         write_out = ['Store'] + labels + ["in 'result.csv' (no index)"]
         plan.add_step(write_out)
@@ -178,7 +178,7 @@ class NlPlanner():
             where_expr = expression.args['where'].args['this']
             where_labels, where_prep = self.nl(where_expr)
             plan.add_plan(where_prep)
-            where_step = ['Filter'] + from_labels + ['using'] + where_labels
+            where_step = ['Filter'] + last_labels + ['using'] + where_labels
             last_labels = [plan.add_step(where_step)]
         
         if expression.args.get('group'):
@@ -423,7 +423,10 @@ class NlPlanner():
 
     def _table_nl(self, expression):
         """ Describe table in natural language. """
-        return self.nl(expression, 'this')
+        table_labels, plan = self.nl(expression, 'this')
+        step = ['Load data for table'] + table_labels
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
     
     def _identifier_nl(self, expression):
         """ Express identifier (e.g., table name) in natural language. """
