@@ -157,10 +157,10 @@ class NlPlanner():
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
         labels, plan = self.nl(ast)
-        final_step = \
-            ['Store'] + labels + \
-            ["as data frame in 'result.csv' (no index)"]
-        plan.add_step(final_step)
+        transform = ['If necessary, transform'] + labels + ['into data frame.']
+        labels = plan.add_step(transform)
+        write_out = ['Store'] + labels + ["in 'result.csv' (no index)"]
+        plan.add_step(write_out)
         return plan
     
     def _select_nl(self, expression):
@@ -219,7 +219,7 @@ class NlPlanner():
         
         select_labels, select_prep = self._expressions(expression)
         plan.add_plan(select_prep)
-        select_step = ['Select'] + select_labels + \
+        select_step = ['Form result with columns'] + select_labels + \
             ['from'] + last_labels
         last_labels = [plan.add_step(select_step)]
         
@@ -303,6 +303,7 @@ class NlPlanner():
     def _column_nl(self, expression):
         """ Express a column reference in natural language. """
         labels, plan = self.nl(expression.args['this'])
+        # labels += ['column']
         table = expression.args.get('table')
         if table:
             table_labels, table_prep = self.nl(table)
