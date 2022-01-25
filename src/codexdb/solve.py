@@ -98,6 +98,8 @@ def solve(test_case, coder, engine, termination, max_tries):
 
     results = []
     for try_idx in range(max_tries):
+        print("Waiting due to OpenAI's rate limit ...")
+        time.sleep(2)
         print(f'Starting try number {try_idx} ...')
         gen_start_s = time.time()
         temperature = try_idx * temperature_step
