@@ -144,7 +144,7 @@ class PythonGenerator(CodeGenerator):
             "\tfinal_result.to_csv('result.csv', index=False)\n" +\
             "else:\n" +\
             "\twith open('result.csv') as file:\n" +\
-            "\t\tfile.write('result\n')\n" +\
+            "\t\tfile.write('result\\n')\n" +\
             "\t\tfile.write(final_result)\n"
     
     def _db_info(self, schema, db_dir, files, max_rows):
