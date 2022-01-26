@@ -176,9 +176,9 @@ class NlPlanner():
         
         if expression.args.get('where'):
             where_expr = expression.args['where'].args['this']
-            where_labels, where_prep = self.nl(where_expr)
+            _, where_prep = self.nl(where_expr)
             plan.add_plan(where_prep)
-            where_step = ['Filter'] + last_labels + ['using'] + where_labels
+            where_step = ['Use this condition to filter'] + last_labels
             last_labels = [plan.add_step(where_step)]
         
         if expression.args.get('group'):
@@ -217,11 +217,17 @@ class NlPlanner():
                 ['rows from'] + last_labels
             last_labels = [plan.add_step(limit_step)]
         
-        select_labels, select_prep = self._expressions(expression)
-        plan.add_plan(select_prep)
-        select_step = ['Form result with columns'] + select_labels + \
-            ['from'] + last_labels
+        select_labels_list = []
+        for expr in expression.args.get('expressions'):
+            select_labels, prep = self.nl(expr)
+            plan.add_plan(prep)
+            select_labels_list.append(select_labels)
+        
+        select_step = ['Create an empty table.']
         last_labels = [plan.add_step(select_step)]
+        for select_labels in select_labels_list:
+            select_step = ['Add column containing'] + select_labels
+            last_labels = [plan.add_step(select_step)]
         
         if expression.args.get('distinct'):
             distinct_step = \
