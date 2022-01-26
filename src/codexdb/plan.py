@@ -157,7 +157,7 @@ class NlPlanner():
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
         labels, plan = self.nl(ast)
-        write_out = ['Store'] + labels + ["in 'result.csv' (no index)"]
+        write_out = ['Store'] + labels + ["in variable named 'final_result'"]
         plan.add_step(write_out)
         return plan
     

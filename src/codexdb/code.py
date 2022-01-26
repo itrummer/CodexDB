@@ -29,6 +29,7 @@ class CodeGenerator(abc.ABC):
         self.prompt_style = prompt_style
         self.ai_kwargs = {'engine':model_id}
         self.code_prefix = ''
+        self.code_suffix = ''
     
     def generate(self, test_case, temperature):
         """ Generate code to solve given test case.
@@ -49,7 +50,8 @@ class CodeGenerator(abc.ABC):
         query = test_case['query']
         suffix = self._get_prompt(schema, db_dir, files, question, query)
         prompt = prefix + '\n' + suffix
-        return self.code_prefix + self._complete(prompt, temperature)
+        gen_code = self._complete(prompt, temperature)
+        return self.code_prefix + gen_code + self.code_suffix
 
     def _complete(self, prompt, temperature):
         """ Generate code by completing given prompt. 
@@ -136,6 +138,14 @@ class PythonGenerator(CodeGenerator):
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
         self.planner = codexdb.plan.NlPlanner()
+        self.code_suffix = \
+            "import pandas as pd\n" +\
+            "if isinstance(final_result, pd.DataFrame):\n" +\
+            "\tfinal_result.to_csv('result.csv', index=False)\n" +\
+            "else:\n" +\
+            "\twith open('result.csv') as file:\n" +\
+            "\t\tfile.write('result\n')\n" +\
+            "\t\tfile.write(final_result)\n"
     
     def _db_info(self, schema, db_dir, files, max_rows):
         """ Generate description of database.
