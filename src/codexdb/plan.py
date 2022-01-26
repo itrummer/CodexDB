@@ -327,7 +327,12 @@ class NlPlanner():
     def _literal_nl(self, expression):
         """ Translates a literal into natural language. """
         text = expression.args.get('this') or ''
-        is_string = expression.args.get('is_string')
+        try:
+            float(text)
+            is_string = False
+        except:
+            is_string = True
+        # is_string = expression.args.get('is_string')
         if is_string:
             escape_code = sqlglot.tokens.Tokenizer.ESCAPE_CODE
             text = text.replace(escape_code, "'")
