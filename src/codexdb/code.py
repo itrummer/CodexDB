@@ -140,7 +140,8 @@ class PythonGenerator(CodeGenerator):
         self.planner = codexdb.plan.NlPlanner()
         suffix_parts = [
             "\nimport pandas as pd",
-            "if isinstance(final_result, (pd.DataFrame, pd.Series, list, dict)):",
+            "import numpy as np",
+            "if isinstance(final_result, (pd.DataFrame, pd.Series, list, dict, np.ndarray)):",
             "\tfinal_result = pd.DataFrame(final_result)",
             "\tfinal_result.to_csv('result.csv', index=False)",
             "else:",
