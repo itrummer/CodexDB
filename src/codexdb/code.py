@@ -138,14 +138,17 @@ class PythonGenerator(CodeGenerator):
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
         self.planner = codexdb.plan.NlPlanner()
-        self.code_suffix = \
-            "\nimport pandas as pd\n" +\
-            "if isinstance(final_result, pd.DataFrame):\n" +\
-            "\tfinal_result.to_csv('result.csv', index=False)\n" +\
-            "else:\n" +\
-            "\twith open('result.csv', 'w') as file:\n" +\
-            "\t\tfile.write('result\\n')\n" +\
-            "\t\tfile.write(final_result)\n"
+        suffix_parts = [
+            "\nimport pandas as pd",
+            "if isinstance(final_result, (pd.DataFrame, pd.Series, list, dict):",
+            "\tfinal_result = pd.DataFrame(final_result)",
+            "\tfinal_result.to_csv('result.csv', index=False)",
+            "else:",
+            "\twith open('result.csv', 'w') as file:",
+            "\t\tfile.write('result\\n')",
+            "\t\tfile.write(str(final_result))"
+            ]
+        self.code_suffix = '\n'.join(suffix_parts)
     
     def _db_info(self, schema, db_dir, files, max_rows):
         """ Generate description of database.
