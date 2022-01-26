@@ -9,6 +9,7 @@ import numpy as np
 import openai
 import pandas as pd
 import random
+import time
 
 class CodeGenerator(abc.ABC):
     """ Generates code in different languages using OpenAI. """
@@ -63,15 +64,22 @@ class CodeGenerator(abc.ABC):
         Returns:
             generated code, following prompt
         """
-        try:
-            print(f'\nPrompt:\n*******\n{prompt}\n*******')
-            response = openai.Completion.create(
-                prompt=prompt, temperature=temperature,
-                **self.ai_kwargs)
-            return response['choices'][0]['text']
-        except Exception as e:
-            print(f'Error querying OpenAI: {e}')
-            return ''
+        wait_s = 1
+        nr_retries = 0
+        while nr_retries < 5:
+            try:
+                print(f'\nPrompt:\n*******\n{prompt}\n*******')
+                response = openai.Completion.create(
+                    prompt=prompt, temperature=temperature,
+                    **self.ai_kwargs)
+                return response['choices'][0]['text']
+            except Exception as e:
+                print(f'Error querying OpenAI: {e}')
+                print(f'Wait {wait_s} s before retry nr. {nr_retries} ...')
+                time.sleep(wait_s)
+                wait_s *= 2
+                nr_retries += 1
+        return ''
     
     def _db_sample(self, db_dir, file_name, max_rows):
         """ Returns data sample from specified file. 
