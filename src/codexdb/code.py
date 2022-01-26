@@ -139,7 +139,7 @@ class PythonGenerator(CodeGenerator):
         self.ai_kwargs['stop'] = '"""'
         self.planner = codexdb.plan.NlPlanner()
         self.code_suffix = \
-            "import pandas as pd\n" +\
+            "\nimport pandas as pd\n" +\
             "if isinstance(final_result, pd.DataFrame):\n" +\
             "\tfinal_result.to_csv('result.csv', index=False)\n" +\
             "else:\n" +\
