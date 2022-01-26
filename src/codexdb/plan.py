@@ -157,9 +157,7 @@ class NlPlanner():
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
         labels, plan = self.nl(ast)
-        write_out = ['If'] + labels + ["is a data frame: store in 'result.csv' (no index)"]
-        plan.add_step(write_out)
-        write_out = ['Otherwise: write newline, then'] + labels + ["to 'result.csv'"]
+        write_out = ['Store'] + labels + ["in 'result.csv' (no index)"]
         plan.add_step(write_out)
         return plan
     
@@ -176,11 +174,11 @@ class NlPlanner():
         
         if expression.args.get('where'):
             where_expr = expression.args['where'].args['this']
-            _, where_prep = self.nl(where_expr)
+            where_labels, where_prep = self.nl(where_expr)
             plan.add_plan(where_prep)
-            where_step = ['Use this condition to filter'] + last_labels
+            where_step = ['Filter'] + from_labels + ['using'] + where_labels
             last_labels = [plan.add_step(where_step)]
-        
+
         if expression.args.get('group'):
             group_expr = expression.args['group']
             group_labels, group_prep = self._expressions(group_expr)
