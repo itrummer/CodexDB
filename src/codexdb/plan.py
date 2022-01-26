@@ -157,8 +157,9 @@ class NlPlanner():
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
         labels, plan = self.nl(ast)
-        write_out = ['Store'] + labels + ["in 'result.csv' (no index)"]
+        write_out = ['If'] + labels + ["is a data frame: store in 'result.csv' (no index)"]
         plan.add_step(write_out)
+        write_out = ['Otherwise: write newline, then'] + labels + ["to 'result.csv'"]
         return plan
     
     def _select_nl(self, expression):
@@ -215,17 +216,11 @@ class NlPlanner():
                 ['rows from'] + last_labels
             last_labels = [plan.add_step(limit_step)]
         
-        select_labels_list = []
-        for expr in expression.args.get('expressions'):
-            select_labels, prep = self.nl(expr)
-            plan.add_plan(prep)
-            select_labels_list.append(select_labels)
-        
-        select_step = ['Create an empty table.']
+        select_labels, select_prep = self._expressions(expression)
+        plan.add_plan(select_prep)
+        select_step = ['Create table with columns'] + select_labels + \
+            ['from'] + last_labels
         last_labels = [plan.add_step(select_step)]
-        for select_labels in select_labels_list:
-            select_step = ['Add column containing'] + select_labels
-            last_labels = [plan.add_step(select_step)]
         
         if expression.args.get('distinct'):
             distinct_step = \
