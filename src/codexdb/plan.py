@@ -160,6 +160,7 @@ class NlPlanner():
         write_out = ['If'] + labels + ["is a data frame: store in 'result.csv' (no index)"]
         plan.add_step(write_out)
         write_out = ['Otherwise: write newline, then'] + labels + ["to 'result.csv'"]
+        plan.add_step(write_out)
         return plan
     
     def _select_nl(self, expression):
