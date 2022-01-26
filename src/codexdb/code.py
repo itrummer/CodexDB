@@ -143,7 +143,7 @@ class PythonGenerator(CodeGenerator):
             "if isinstance(final_result, pd.DataFrame):\n" +\
             "\tfinal_result.to_csv('result.csv', index=False)\n" +\
             "else:\n" +\
-            "\twith open('result.csv') as file:\n" +\
+            "\twith open('result.csv', 'w') as file:\n" +\
             "\t\tfile.write('result\\n')\n" +\
             "\t\tfile.write(final_result)\n"
     
