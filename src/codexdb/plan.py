@@ -157,8 +157,6 @@ class NlPlanner():
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
         labels, plan = self.nl(ast)
-        transform = ['If'] + labels + ['is scalar, insert into list and construct data frame']
-        labels = [plan.add_step(transform)]
         write_out = ['Store'] + labels + ["in 'result.csv' (no index)"]
         plan.add_step(write_out)
         return plan
