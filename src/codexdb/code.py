@@ -237,9 +237,12 @@ class PythonGenerator(CodeGenerator):
             #prompt_parts.append(f'SQL query: {query}')
             prompt_parts.append('Processing steps:')
             plan = self.planner.plan(query)
-            plan.intersperse_step([self.mod_between])
-            plan.add_step([self.mod_start], False)
-            plan.add_step([self.mod_end])
+            if self.mod_between:
+                plan.intersperse_step([self.mod_between])
+            if self.mod_start:
+                plan.add_step([self.mod_start], False)
+            if self.mod_end:
+                plan.add_step([self.mod_end])
             # plan.add_step(['Import pandas library'], False)
             prompt_parts += plan.steps()
         else:
