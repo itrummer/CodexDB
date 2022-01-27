@@ -47,7 +47,24 @@ class NlPlan():
         else:
             self.id_steps.insert(0, (step_id, step))
         return step_id
-
+    
+    def intersperse_step(self, step):
+        """ Add given step after each current plan step. 
+        
+        Args:
+            step: intersperse this step
+        """
+        nr_steps = len(self.id_steps)
+        for _ in range(nr_steps):
+            self.add_step(step, False)
+        
+        new_id_steps = []
+        for i in range(nr_steps):
+            new_id_steps.append(self.id_steps[i+nr_steps])
+            new_id_steps.append(self.id_steps[i])
+            
+        self.id_steps = new_id_steps
+        
     def last_step_id(self):
         """ Returns ID of last step or None. """
         if self.id_steps:

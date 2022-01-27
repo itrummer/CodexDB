@@ -14,9 +14,7 @@ import time
 class CodeGenerator(abc.ABC):
     """ Generates code in different languages using OpenAI. """
     
-    def __init__(
-            self, catalog, examples, nr_samples, 
-            prompt_style, user_mods, model_id):
+    def __init__(self, catalog, examples, nr_samples, prompt_style, model_id):
         """ Initializes with examples for few-shot learning.
         
         Args:
@@ -24,14 +22,12 @@ class CodeGenerator(abc.ABC):
             examples: list of examples for few-shot learning.
             nr_samples: maximal number of examples to use.
             prompt_style: style of prompt to generate
-            user_mods: modifications by users (in natural language)
             model_id: OpenAI model to use for generation
         """
         self.catalog = catalog
         self.examples = examples
         self.nr_samples = nr_samples
         self.prompt_style = prompt_style
-        self.user_mods = user_mods
         self.ai_kwargs = {'engine':model_id}
         self.code_prefix = ''
         self.code_suffix = ''
@@ -140,13 +136,16 @@ class CodeGenerator(abc.ABC):
 class PythonGenerator(CodeGenerator):
     """ Generates Python code to solve database queries. """
     
-    def __init__(self, *kwargs):
+    def __init__(self, *pargs, mod_start, mod_between, mod_end):
         """ Initializes for Python code generation.
         
         Args:
-            kwargs: arguments of super class constructor
+            pargs: arguments of super class constructor
+            mod_start: modification at start of query plan
+            mod_between: modifications between plan steps
+            mod_end: modifications at end of query plan
         """
-        super().__init__(*kwargs)
+        super().__init__(*pargs)
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
         self.planner = codexdb.plan.NlPlanner()
@@ -162,6 +161,9 @@ class PythonGenerator(CodeGenerator):
             "\t\tfile.write(str(final_result))"
             ]
         self.code_suffix = '\n'.join(suffix_parts)
+        self.mod_start = mod_start
+        self.mod_between = mod_between
+        self.mod_end = mod_end
     
     def _db_info(self, schema, db_dir, files, max_rows):
         """ Generate description of database.
@@ -235,17 +237,16 @@ class PythonGenerator(CodeGenerator):
             #prompt_parts.append(f'SQL query: {query}')
             prompt_parts.append('Processing steps:')
             plan = self.planner.plan(query)
-            plan.add_step(['Import pandas library'], False)
-            # plan.add_step(["Store result data frame in 'result.csv' (without index)"])
+            plan.intersperse_step([self.mod_between])
+            plan.add_step([self.mod_start], False)
+            plan.add_step([self.mod_end])
+            # plan.add_step(['Import pandas library'], False)
             prompt_parts += plan.steps()
         else:
             prompt_parts.append(f'Query: "{question}".')
             prompt_parts.append('1. Import pandas library.')
             prompt_parts.append('2. Calculate query answer.')
             prompt_parts.append("3. Store result in 'result.csv'.")
-        
-        if self.user_mods:
-            prompt_parts.append(self.user_mods)
         prompt_parts.append('"""')
         return '\n'.join(prompt_parts)
     
