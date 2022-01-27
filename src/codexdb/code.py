@@ -14,7 +14,9 @@ import time
 class CodeGenerator(abc.ABC):
     """ Generates code in different languages using OpenAI. """
     
-    def __init__(self, catalog, examples, nr_samples, prompt_style, model_id):
+    def __init__(
+            self, catalog, examples, nr_samples, 
+            prompt_style, user_mods, model_id):
         """ Initializes with examples for few-shot learning.
         
         Args:
@@ -22,12 +24,14 @@ class CodeGenerator(abc.ABC):
             examples: list of examples for few-shot learning.
             nr_samples: maximal number of examples to use.
             prompt_style: style of prompt to generate
+            user_mods: modifications by users (in natural language)
             model_id: OpenAI model to use for generation
         """
         self.catalog = catalog
         self.examples = examples
         self.nr_samples = nr_samples
         self.prompt_style = prompt_style
+        self.user_mods = user_mods
         self.ai_kwargs = {'engine':model_id}
         self.code_prefix = ''
         self.code_suffix = ''
@@ -239,6 +243,9 @@ class PythonGenerator(CodeGenerator):
             prompt_parts.append('1. Import pandas library.')
             prompt_parts.append('2. Calculate query answer.')
             prompt_parts.append("3. Store result in 'result.csv'.")
+        
+        if self.user_mods:
+            prompt_parts.append(self.user_mods)
         prompt_parts.append('"""')
         return '\n'.join(prompt_parts)
     

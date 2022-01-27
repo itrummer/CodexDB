@@ -138,6 +138,7 @@ if __name__ == '__main__':
     parser.add_argument('language', type=str, help='Implementation language')
     parser.add_argument('model_id', type=str, help='ID of OpenAI model')
     parser.add_argument('prompt_style', type=str, help='Style of prompt')
+    parser.add_argument('user_mods', type=str, help='Additional instructions')
     parser.add_argument('sample_path', type=str, help='Path to sample file')
     parser.add_argument('nr_samples', type=int, help='Number of samples in prompt')
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
@@ -165,12 +166,14 @@ if __name__ == '__main__':
     if args.language == 'python':
         coder = codexdb.code.PythonGenerator(
             catalog, examples, args.nr_samples, 
-            args.prompt_style, args.model_id)
+            args.prompt_style, args.user_mods,
+            args.model_id)
         engine = codexdb.engine.PythonEngine(catalog)
     elif args.language == 'sql':
         coder = codexdb.code.SqlGenerator(
             catalog, examples, args.nr_samples, 
-            args.prompt_style, args.model_id)
+            args.prompt_style, args.user_mods, 
+            args.model_id)
         engine = codexdb.engine.SqliteEngine(catalog)
 
     idx_to_results = {}
