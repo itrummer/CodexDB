@@ -6,26 +6,38 @@ Created on Jan 28, 2022
 import argparse
 import json
 
-def count_solved(results):
+def count_solved(results, must_contain, multiplicity):
     """ Count the number of solved test cases. 
     
     Args:
         results: results from one run
+        must_contain: strings that must appear in code, separated by colon
+        multiplicity: minimal number of occurrences for each required string
     
     Returns:
         number of solved test cases
     """
-    count = 0
+    required = zip(must_contain.split(':'), multiplicity.split(':'))
+    nr_solved = 0
     for results in results.values():
         for r in results:
             if r['similarity'] == 1.0:
-                count += 1
-    return count
+                valid = True
+                for required_string, required_number in required:
+                    code = r['code']
+                    if code.count(required_string) < required_number:
+                        valid = False
+                
+                if valid:
+                    nr_solved += 1
+    return nr_solved
 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('run_dir', type=str, help='Path to directory with runs')
+    parser.add_argument('must_contain', type=str, help='Code must contain this')
+    parser.add_argument('multiplicity', type=str, help='Minimal #occurrences')
     args = parser.parse_args()
     
     plots = []
