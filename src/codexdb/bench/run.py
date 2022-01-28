@@ -27,10 +27,9 @@ def train(data_dir, train_path, log_path, mod_start,
         mod_start, mod_between, mod_end, '', 0, 50, 'solved', 10, 
         log_path, result_path)
 
-def test_plain(
-        data_dir, test_path, sample_path, mod_start, 
-        mod_between, mod_end, out_dir):
-    """ Solve test cases without any user-defined modifications.
+def test(data_dir, test_path, sample_path, mod_start, 
+         mod_between, mod_end, out_dir):
+    """ Solve test cases using previously generated samples.
     
     Args:
         data_dir: directory of database
@@ -76,6 +75,5 @@ if __name__ == '__main__':
     sample_path = f'{args.out_dir}/train_plain.json'
     train(args.data_dir, args.train_path, log_path, args.mod_start, 
           args.mod_between, args.mod_end, sample_path)
-    test_plain(args.data_dir, args.test_path, sample_path, 
-               args.mod_start, args.mod_between, args.mod_end, 
-               args.out_dir)
+    test(args.data_dir, args.test_path, sample_path, args.mod_start, 
+         args.mod_between, args.mod_end, args.out_dir)
