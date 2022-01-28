@@ -152,9 +152,12 @@ class PythonGenerator(CodeGenerator):
         suffix_parts = [
             "\nimport pandas as pd",
             "import numpy as np",
+            "import vaex",
             "if isinstance(final_result, (pd.DataFrame, pd.Series, list, dict, np.ndarray)):",
             "\tfinal_result = pd.DataFrame(final_result)",
             "\tfinal_result.to_csv('result.csv', index=False)",
+            "elif isinstance(final_result, vaex.dataframe.DataFrame):",
+            "\tfinal_result.export_csv('result.csv')",
             "else:",
             "\twith open('result.csv', 'w') as file:",
             "\t\tfile.write('result\\n')",
