@@ -41,7 +41,7 @@ def test_plain(data_dir, test_path, sample_path, out_dir):
                 result_path = f'{out_dir}/results_{run_id}.json'
                 codexdb.solve.main(
                     data_dir, test_path, 'python', model_id, 
-                    prompt_style, mod_start='Import pandas library', '', '', 
+                    prompt_style, 'Import pandas library', '', '', 
                     sample_path, nr_samples, 100, 'executed', 1, 
                     log_path, result_path)
 
