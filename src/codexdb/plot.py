@@ -41,7 +41,7 @@ if __name__ == '__main__':
                     count = count_solved(data)
                     point = f'({nr_samples}, {count})'
                     line += [point]
-            plot += ['\add plot coordinates {' +  ' '.join(line) + '};']
+            plot += ['\\addplot coordinates {' +  ' '.join(line) + '};']
         plots += ['\n'.join(plot)]
     
     for plot in plots:
