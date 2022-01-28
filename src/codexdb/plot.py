@@ -25,7 +25,7 @@ def count_solved(results, must_contain, multiplicity):
                 valid = True
                 for required_string, required_number in required:
                     code = r['code']
-                    if code.count(required_string) < required_number:
+                    if code.count(required_string) < int(required_number):
                         valid = False
                 
                 if valid:
