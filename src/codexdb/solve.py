@@ -7,11 +7,11 @@ import argparse
 import codexdb.catalog
 import codexdb.code
 import codexdb.engine
+import contextlib
 import json
 import os
 import openai
 import pandas as pd
-import sys
 import time
 
 def extract_samples(catalog, path_to_results):
@@ -74,10 +74,11 @@ def result_cmp(ref_output, cmp_output, reorder):
         print('(Incomparable)')
         return False, -1, 0
 
-def solve(test_case, coder, engine, termination, max_tries):
+def solve(catalog, test_case, coder, engine, termination, max_tries):
     """ Solve given test case by generating code.
     
     Args:
+        catalog: database catalog
         test_case: a natural language query
         coder: code generator to use
         engine: execution engine for code
@@ -128,6 +129,75 @@ def solve(test_case, coder, engine, termination, max_tries):
 
     return results
 
+def main(
+        data_dir, test_path, language, model_id, 
+        prompt_style, mod_start, mod_between, mod_end, 
+        sample_path, nr_samples, 
+        nr_tests, termination, max_tries,
+        log_path, result_path):
+    """ Try solving given test cases and write results to file.
+    
+    Args:
+        data_dir: directory containing database
+        test_path: path to file with test cases
+        language: generate code in this language
+        model_id: OpenAI engine for code generation
+        prompt_style: choose prompt template
+        mod_start: modification at plan start
+        mod_between: modifications between steps
+        mod_end: modification at plan end
+        sample_path: path to example library
+        nr_samples: number of examples in prompt
+        nr_tests: process so many test cases
+        termination: termination criterion
+        max_tries: maximal tries per test case
+        log_path: path for logging output
+        result_path: path to result .json file
+    """
+    catalog = codexdb.catalog.DbCatalog(data_dir)
+    os.environ['KMP_DUPLICATE_LIB_OK']='True'
+    
+    with open(test_path) as file:
+        test_cases = json.load(file)
+    if language not in ['python', 'sql']:
+        raise ValueError(f'Unknown implementation language: {language}!')
+    examples = []
+    if sample_path:
+        with open(sample_path) as file:
+            examples = extract_samples(catalog, sample_path)
+    if prompt_style not in ['question', 'query', 'plan', 'data']:
+        raise ValueError(f'Unknown prompt style: {prompt_style}!')
+    if termination not in ['executed', 'solved']:
+        raise ValueError(f'Unknown termination criterion: {termination}')
+
+    with open(log_path, 'w') as log_file:
+        with contextlib.redirect_stdout(log_file):
+            if language == 'python':
+                coder = codexdb.code.PythonGenerator(
+                    catalog, examples, nr_samples, 
+                    prompt_style, model_id,
+                    mod_start=mod_start, 
+                    mod_between=mod_between, 
+                    mod_end=mod_end)
+                engine = codexdb.engine.PythonEngine(catalog)
+            elif language == 'sql':
+                coder = codexdb.code.SqlGenerator(
+                    catalog, examples, nr_samples, 
+                    prompt_style, model_id)
+                engine = codexdb.engine.SqliteEngine(catalog)
+        
+            idx_to_results = {}
+            for i in range(nr_tests):
+                print(f'Starting test case nr. {i} ...')
+                test_case = test_cases[i]
+                cur_results = solve(
+                    catalog, test_case, coder, engine, 
+                    termination, max_tries)
+                idx_to_results[i] = cur_results
+                print(cur_results)
+        
+            with open(result_path, 'w') as results_file:
+                json.dump(idx_to_results, results_file)
 
 if __name__ == '__main__':
     
@@ -146,48 +216,13 @@ if __name__ == '__main__':
     parser.add_argument('nr_tests', type=int, help='Number of test cases')
     parser.add_argument('termination', type=str, help='Termination criterion')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
+    parser.add_argument('log_path', type=str, help='Redirect output here')
+    parser.add_argument('result_path', type=str, help='Contains results')
     args = parser.parse_args()
     
-    catalog = codexdb.catalog.DbCatalog(args.data_dir)
-    os.environ['KMP_DUPLICATE_LIB_OK']='True'
     openai.api_key = args.ai_key
-    with open(args.test_path) as file:
-        test_cases = json.load(file)
-    if args.language not in ['python', 'sql']:
-        print(f'Unknown implementation language: {args.language}!')
-        sys.exit(1)
-    with open(args.sample_path) as file:
-        examples = extract_samples(catalog, args.sample_path)
-    if args.prompt_style not in ['train', 'test', 'data']:
-        print(f'Unknown prompt style: {args.prompt_style}!')
-        sys.exit(1)
-    if args.termination not in ['executed', 'solved']:
-        print(f'Unknown termination criterion: {args.termination}')
-        sys.exit(1)
-
-    if args.language == 'python':
-        coder = codexdb.code.PythonGenerator(
-            catalog, examples, args.nr_samples, 
-            args.prompt_style, args.model_id,
-            mod_start=args.mod_start, 
-            mod_between=args.mod_between, 
-            mod_end=args.mod_end)
-        engine = codexdb.engine.PythonEngine(catalog)
-    elif args.language == 'sql':
-        coder = codexdb.code.SqlGenerator(
-            catalog, examples, args.nr_samples, 
-            args.prompt_style, args.model_id)
-        engine = codexdb.engine.SqliteEngine(catalog)
-
-    idx_to_results = {}
-    for i in range(args.nr_tests):
-        print(f'Starting test case nr. {i} ...')
-        test_case = test_cases[i]
-        cur_results = solve(
-            test_case, coder, engine, 
-            args.termination, args.max_tries)
-        idx_to_results[i] = cur_results
-        print(cur_results)
-
-    with open('results.json', 'w') as results_file:
-        json.dump(idx_to_results, results_file)
+    main(
+        args.data_dir, args.test_path, args.language, args.model_id, 
+        args.prompt_style, args.mod_start, args.mod_between, args.mod_end, 
+        args.sample_path, args.nr_samples, args.nr_tests, args.termination, 
+        args.max_tries, args.log_path, args.result_path)

@@ -233,18 +233,21 @@ class PythonGenerator(CodeGenerator):
         prompt_parts = []
         prompt_parts.append('"""')
         prompt_parts += self._db_info(schema, db_dir, files, 5)
-        if self.prompt_style == 'train':
-            #prompt_parts.append(f'SQL query: {query}')
-            prompt_parts.append('Processing steps:')
-            plan = self.planner.plan(query)
-            if self.mod_between:
-                plan.intersperse_step([self.mod_between])
-            if self.mod_start:
-                plan.add_step([self.mod_start], False)
-            if self.mod_end:
-                plan.add_step([self.mod_end])
-            # plan.add_step(['Import pandas library'], False)
-            prompt_parts += plan.steps()
+        if self.prompt_style in ['question', 'query', 'plan']:
+            if self.prompt_style == 'question':
+                prompt_parts.append(f'Question: {query}')
+            elif self.prompt_style == 'query':
+                prompt_parts.append(f'SQL query: {query}')
+            else:
+                prompt_parts.append('Processing steps:')
+                plan = self.planner.plan(query)
+                if self.mod_between:
+                    plan.intersperse_step([self.mod_between])
+                if self.mod_start:
+                    plan.add_step([self.mod_start], False)
+                if self.mod_end:
+                    plan.add_step([self.mod_end])
+                prompt_parts += plan.steps()
         else:
             prompt_parts.append(f'Query: "{question}".')
             prompt_parts.append('1. Import pandas library.')
