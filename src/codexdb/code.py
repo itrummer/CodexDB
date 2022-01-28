@@ -158,6 +158,8 @@ class PythonGenerator(CodeGenerator):
             "\tfinal_result.to_csv('result.csv', index=False)",
             "elif isinstance(final_result, vaex.dataframe.DataFrame):",
             "\tfinal_result.export_csv('result.csv')",
+            "elif isinstance(final_result, vaex.xpression.Expression):",
+            "\tnp.savetxt('result.csv', final_result.values, delimiter=',', header='result')",
             "else:",
             "\twith open('result.csv', 'w') as file:",
             "\t\tfile.write('result\\n')",
