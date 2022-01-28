@@ -50,7 +50,9 @@ if __name__ == '__main__':
                 result_path = f'{args.run_dir}/results_{run_id}.json'
                 with open(result_path) as file:
                     data = json.load(file)
-                    count = count_solved(data)
+                    count = count_solved(
+                        data, args.must_contain, 
+                        args.multiplicity)
                     point = f'({nr_samples}, {count})'
                     line += [point]
             plot += ['\\addplot coordinates {' +  ' '.join(line) + '};']
