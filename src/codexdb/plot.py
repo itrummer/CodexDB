@@ -42,7 +42,7 @@ if __name__ == '__main__':
                     point = f'({nr_samples}, {count})'
                     line += [point]
             plot += ['\add plot coordinates {' +  ' '.join(line) + '};']
-        plot += ['\n'.join(plot)]
+        plots += ['\n'.join(plot)]
     
     for plot in plots:
         print('---')
