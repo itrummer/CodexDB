@@ -17,7 +17,11 @@ def count_solved(results, must_contain, multiplicity):
     Returns:
         number of solved test cases
     """
-    required = zip(must_contain.split(':'), multiplicity.split(':'))
+    if must_contain:
+        required = zip(must_contain.split(':'), multiplicity.split(':'))
+    else:
+        required = []
+    
     nr_solved = 0
     for results in results.values():
         for r in results:
