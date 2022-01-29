@@ -62,14 +62,19 @@ def scale_data(source_path, factor, target_path):
         os.system('cp /tmp/scaled2 /tmp/scaled1')
     os.system(f'cp /tmp/scaled1 {target_path}')
 
-def scale_tables(catalog, db_id, factor):
+def scale_tables(catalog, db_id, factor, code):
     """ Scale up data size of tables in database by given factor.
     
     Args:
         catalog: contains information on database schema
         db_id: scale up tables of this database
         factor: scale up data size by approximately this factor
+        code: code referencing original data files
+    
+    Returns:
+        code referencing scaled data files
     """
+    scaled_code = code
     schema = catalog.schema(db_id)
     tables = schema['table_names_original']
     for table in tables:
@@ -79,6 +84,8 @@ def scale_tables(catalog, db_id, factor):
         catalog.assign_file(db_id, table, scaled_file)
         scaled_path = catalog.file_path(db_id, table)
         scale_data(original_path, factor, scaled_path)
+        scaled_code = scaled_code.replace(original_file, scaled_file)
+    return scaled_code
 
 def unscale_tables(catalog, db_id):
     """ Replace scaled tables by the original. 
@@ -107,10 +114,10 @@ def test_performance(engine, db_id, factor, code, timeout_s):
         performance statistics
     """
     print('Starting data scaling ...')
-    scale_tables(catalog, db_id, factor)
+    scaled_code = scale_tables(catalog, db_id, factor, code)
     print('Scaling finished - starting measurements ...')
     start_s = time.time()
-    engine.execute(db_id, code, timeout_s)
+    engine.execute(db_id, scaled_code, timeout_s)
     total_s = time.time() - start_s
     print('Execution finished - unscaling tables ...')
     unscale_tables(catalog, db_id)
