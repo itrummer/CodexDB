@@ -80,6 +80,19 @@ def scale_tables(catalog, db_id, factor):
         scaled_path = catalog.file_path(db_id, table)
         scale_data(original_path, factor, scaled_path)
 
+def unscale_tables(catalog, db_id):
+    """ Replace scaled tables by the original. 
+    
+    Args:
+        catalog: information on the database schema
+        db_id: unscale all tables in this database
+    """
+    schema = catalog.schema(db_id)
+    tables = schema['table_names_original']
+    for table in tables:
+        key = (db_id, table)
+        del catalog.table_to_file[key]
+
 def test_performance(engine, db_id, factor, code, timeout_s):
     """ Measure performance when processing code on given engine.
     
@@ -99,6 +112,8 @@ def test_performance(engine, db_id, factor, code, timeout_s):
     start_s = time.time()
     engine.execute(db_id, code, timeout_s)
     total_s = time.time() - start_s
+    print('Execution finished - unscaling tables ...')
+    unscale_tables(catalog, db_id)
     return {'total_s':total_s}
 
 
