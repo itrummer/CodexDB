@@ -5,6 +5,7 @@ Created on Jan 28, 2022
 '''
 import argparse
 import json
+import statistics
 
 def count_solved(results, must_contain, multiplicity):
     """ Count the number of solved test cases. 
@@ -36,6 +37,25 @@ def count_solved(results, must_contain, multiplicity):
                     nr_solved += 1
     return nr_solved
 
+def median(results, extractor, solved):
+    """ Calculate median of numerical field over all tries.
+    
+    Args:
+        results: dictionary mapping test case IDs to lists of tries
+        extractor: function for extracting value of interest
+        solved: whether to consider solved test cases only
+    
+    Returns:
+        average of field over all relevant tries
+    """
+    values = []
+    for tries in results.values():
+        for one_try in tries:
+            if not solved or one_try['similarity'] == 1.0:
+                value = extractor(one_try)
+                values += [value]
+    return statistics.median(values) if values else -1
+
 def generate_plot(run_dir, y_fct):
     """ Generates commands for PGF group plot. 
     
@@ -63,6 +83,48 @@ def generate_plot(run_dir, y_fct):
         plots += ['\n'.join(plot)]
     return plots
 
+def agg_all(run_dir, solved, map_fct, agg_fct):
+    """ Calculate aggregates over all runs.
+    
+    Args:
+        run_dir: directory containing benchmark results
+        solved: whether to consider only successful tries
+        map_fct: maps tries to values for aggregation
+        agg_fct: function used to aggregate values
+    
+    Returns:
+        aggregated value over all tries
+    """
+    values = []
+    for model_id in ['cushman-codex', 'davinci-codex']:
+        for prompt_style in ['question', 'query', 'plan']:
+            for nr_samples in [0, 2, 4]:
+                run_id = f'{model_id}_{prompt_style}_{nr_samples}'
+                result_path = f'{run_dir}/results_{run_id}.json'
+                with open(result_path) as file:
+                    data = json.load(file)
+                    for tries in data.values():
+                        for one_try in tries:
+                            if not solved or one_try['similarity']==1.0:
+                                value = map_fct(one_try)
+                                values.append(value)
+    
+    return agg_fct(values)
+
+def print_aggs(run_dir, solved, map_fct):
+    """ Print out aggregates for tries in directory.
+    
+    Args:
+        run_dir: directory containing benchmark results
+        solved: whether to only consider successful tries
+        map_fct: maps tries to numbers for aggregation
+    """
+    print(f'Printint aggregates for {run_dir} (solved: {solved}):')
+    for agg_fct in [min, statistics.median, max]:
+        agg_val = agg_all(run_dir, solved, map_fct, agg_fct)
+        print(f'{agg_fct}:{agg_val}')
+    print('\n' * 3)
+
 def print_group(plots):
     """ Print out a group of plots.
     
@@ -72,6 +134,8 @@ def print_group(plots):
     for plot in plots:
         print('---')
         print(plot)
+    print()
+    print('###')
 
 
 if __name__ == '__main__':
@@ -86,3 +150,27 @@ if __name__ == '__main__':
     count_fct = lambda d:count_solved(d, args.must_contain, args.multiplicity)
     count_plots = generate_plot(args.run_dir, count_fct)
     print_group(count_plots)
+    
+    print('GENERATION TIMES')
+    map_fct = lambda x:x['generation_s']
+    y_fct = lambda d:median(d, map_fct, True)
+    print_group(generate_plot(args.run_dir, y_fct))
+    print_aggs(args.run_dir, True, map_fct)
+    
+    print('CODE LENGTH')
+    map_fct = lambda x:len(x['code'])
+    y_fct = lambda d:median(d, map_fct, True)
+    print_group(generate_plot(args.run_dir, y_fct))
+    print_aggs(args.run_dir, True, map_fct)
+    
+    print('QUERY LENGTH')
+    map_fct = lambda x:len(x['query'])
+    y_fct = lambda d:median(d, map_fct, False)
+    print_group(generate_plot(args.run_dir, y_fct))
+    print_aggs(args.run_dir, False, map_fct)
+    
+    print('EXECUTION TIMES')
+    map_fct = lambda x:x['execution_s']['total_s']
+    y_fct = lambda d:median(d, map_fct, True)
+    print_group(generate_plot(args.run_dir, y_fct))
+    print_aggs(args.run_dir, True, map_fct)
