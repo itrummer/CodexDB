@@ -127,7 +127,7 @@ if __name__ == '__main__':
         tries = test_cases[test_case_key]
         test_case = tries[-1]
         if test_case['similarity'] == 1.0:
-            db_id = test_case['db_id']
+            db_id = test_case['schema']['db_id']
             code = get_code(args.language, test_case)
             stats = test_performance(
                 engine, db_id, args.factor, 
