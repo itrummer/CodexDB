@@ -19,7 +19,7 @@ class DbCatalog():
         self.schema_path = f'{data_dir}/schemata.json'
         with open(self.schema_path) as file:
             self.schemata = json.load(file)
-        self.table_to_file = collections.defaultdict(lambda _, t: f'{t}.csv')
+        self.table_to_file = collections.defaultdict(lambda d_t: f'{d_t[1]}.csv')
     
     def assign_file(self, db_id, table, file_name):
         """ Assign file to given table in given database.
