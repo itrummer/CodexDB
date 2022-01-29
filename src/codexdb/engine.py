@@ -217,7 +217,7 @@ class SqliteEngine(ExecutionEngine):
             schema = self.catalog.schema(db_id)
             tables = schema['table_names_original']
             for table in tables:
-                file_name = self.catalog.file_name(table)
+                file_name = self.catalog.file_name(db_id, table)
                 table_path = f'{db_dir}/{file_name}'
                 df = pd.read_csv(table_path)
                 df.columns = df.columns.str.replace(' ', '_')
