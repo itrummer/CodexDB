@@ -6,7 +6,7 @@ Created on Jan 17, 2022
 import abc
 import codexdb.plan
 import numpy as np
-import openai
+import openai.error
 import pandas as pd
 import random
 import time
@@ -40,7 +40,7 @@ class CodeGenerator(abc.ABC):
             temperature: degree of randomness during generation
         
         Returns:
-            generated code
+            statistics, generated code
         """
         prefix = self._sample_prompts()
         db_id = test_case['db_id']
@@ -51,8 +51,9 @@ class CodeGenerator(abc.ABC):
         query = test_case['query']
         suffix = self._get_prompt(schema, db_dir, files, question, query)
         prompt = prefix + '\n' + suffix
-        gen_code = self._complete(prompt, temperature)
-        return self.code_prefix + gen_code + self.code_suffix
+        stats, gen_code = self._complete(prompt, temperature)
+        final_code = self.code_prefix + gen_code + self.code_suffix
+        return stats, final_code
 
     def _complete(self, prompt, temperature):
         """ Generate code by completing given prompt. 
@@ -62,24 +63,35 @@ class CodeGenerator(abc.ABC):
             temperature: degree of randomness
         
         Returns:
-            generated code, following prompt
+            statistics, generated code
         """
         wait_s = 1
         nr_retries = 0
         while nr_retries < 5:
+            stats = {'nr_retries':nr_retries}
             try:
                 print(f'\nPrompt:\n*******\n{prompt}\n*******')
+                start_s = time.time()
                 response = openai.Completion.create(
                     prompt=prompt, temperature=temperature,
                     **self.ai_kwargs)
-                return response['choices'][0]['text']
+                total_s = time.time() - start_s
+                stats['last_request_s'] = total_s
+                stats['error'] = False
+                return stats, response['choices'][0]['text']
+            except openai.error.InvalidRequestError as e:
+                print(f'InvalidRequestError: {e} - giving up')
+                # No point in retrying (often: prompt to long)
+                stats['error'] = True
+                return stats, ''
             except Exception as e:
                 print(f'Error querying OpenAI: {e}')
                 print(f'Wait {wait_s} s before retry nr. {nr_retries} ...')
                 time.sleep(wait_s)
                 wait_s *= 2
                 nr_retries += 1
-        return ''
+                stats['error'] = True
+        return stats, ''
     
     def _db_sample(self, db_dir, file_name, max_rows):
         """ Returns data sample from specified file. 

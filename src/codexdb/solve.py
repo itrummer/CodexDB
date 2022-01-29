@@ -104,7 +104,7 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
         print(f'Starting try number {try_idx} ...')
         gen_start_s = time.time()
         temperature = try_idx * temperature_step
-        code = coder.generate(test_case, temperature)
+        gen_stats, code = coder.generate(test_case, temperature)
         print(f'Generated code:\n-------\n{code}\n-------\n')
         print(f'Reference Query: "{query}"')
         gen_total_s = time.time() - gen_start_s
@@ -120,7 +120,8 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
             'outsize':len(codb_result), 
             'question':question, 'query':query, 
             'db':db_id, 'schema':schema, 'files':files, 
-            'code':code, 'generation_s':gen_total_s, 'execution_s':elapsed_s})
+            'code':code, 'gen_stats':gen_stats, 'gen_total_s':gen_total_s,
+            'execution_s':elapsed_s})
 
         if (termination == 'executed' and executed) or \
             (termination == 'solved' and similarity >= 1.0):
