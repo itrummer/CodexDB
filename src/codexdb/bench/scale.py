@@ -5,6 +5,7 @@ Created on Jan 29, 2022
 '''
 import argparse
 import codexdb.catalog
+import codexdb.engine
 import json
 import math
 import os
