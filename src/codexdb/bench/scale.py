@@ -134,5 +134,8 @@ if __name__ == '__main__':
                 code, args.timeout_s)
             results += [stats]
     
+    times = [str(s['total_s']) for s in results]
+    print('\n'.join(times))
+    
     with open('stats.json', 'w') as file:
         json.dump(results, file)
