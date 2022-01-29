@@ -3,7 +3,6 @@ Created on Oct 5, 2021
 
 @author: immanueltrummer
 '''
-import collections
 import json
 
 class DbCatalog():
@@ -19,7 +18,7 @@ class DbCatalog():
         self.schema_path = f'{data_dir}/schemata.json'
         with open(self.schema_path) as file:
             self.schemata = json.load(file)
-        self.table_to_file = collections.defaultdict(lambda d_t: f'{d_t[1]}.csv')
+        self.table_to_file = {}
     
     def assign_file(self, db_id, table, file_name):
         """ Assign file to given table in given database.
@@ -53,7 +52,8 @@ class DbCatalog():
             name of file storing data
         """
         key = (db_id, table)
-        return self.table_to_file[key]
+        default = f'{table}.csv'
+        return self.table_to_file.get(key, default)
     
     def file_path(self, db_id, table):
         """ Returns path to file containing data for table.
