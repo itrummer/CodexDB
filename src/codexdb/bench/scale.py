@@ -106,7 +106,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('data_dir', type=str, help='Data directory')
     parser.add_argument('factor', type=int, help='Scale data by this factor')
-    parser.add_argument('test_path', type=str, help='Path to test case file')
     parser.add_argument('language', type=str, help='Implementation language')
     parser.add_argument('test_path', type=str, help='Path to file with tests')
     parser.add_argument('nr_tests', type=int, help='How many test cases')

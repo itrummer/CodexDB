@@ -69,7 +69,8 @@ def generate_plot(run_dir, y_fct):
     plots = []
     for model_id in ['cushman-codex', 'davinci-codex']:
         plot = []
-        for prompt_style in ['question', 'query', 'plan']:
+        #for prompt_style in ['question', 'query', 'plan']:
+        for prompt_style in ['plan']:
             line = []
             for nr_samples in [0, 2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
@@ -97,7 +98,8 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
     """
     values = []
     for model_id in ['cushman-codex', 'davinci-codex']:
-        for prompt_style in ['question', 'query', 'plan']:
+        #for prompt_style in ['question', 'query', 'plan']:
+        for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
                 result_path = f'{run_dir}/results_{run_id}.json'
