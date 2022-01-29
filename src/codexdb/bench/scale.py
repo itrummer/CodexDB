@@ -155,6 +155,8 @@ if __name__ == '__main__':
                 engine, db_id, args.factor, 
                 code, args.timeout_s)
             results += [stats]
+        else:
+            results += [{'total_s':-1}]
     
     times = [str(s['total_s']) for s in results]
     print('\n'.join(times))
