@@ -123,7 +123,8 @@ if __name__ == '__main__':
     
     results = []
     for test_case_id in range(nr_tests):
-        tries = test_cases[test_case_id]
+        test_case_key = str(test_case_id)
+        tries = test_cases[test_case_key]
         test_case = tries[-1]
         if test_case['similarity'] == 1.0:
             db_id = test_case['db_id']
