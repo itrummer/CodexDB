@@ -131,7 +131,7 @@ if __name__ == '__main__':
             code = get_code(args.language, test_case)
             stats = test_performance(
                 engine, db_id, args.factor, 
-                test_case, args.timeout_s)
+                code, args.timeout_s)
             results += [stats]
     
     with open('stats.json', 'w') as file:
