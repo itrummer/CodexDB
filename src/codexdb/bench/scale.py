@@ -122,13 +122,16 @@ if __name__ == '__main__':
     nr_tests = min(args.nr_tests, nr_all_tests)
     
     results = []
-    for test_case in test_cases[:nr_tests]:
-        db_id = test_case['db_id']
-        code = get_code(args.language, test_case)
-        stats = test_performance(
-            engine, db_id, args.factor, 
-            test_case, args.timeout_s)
-        results += [stats]
+    for test_case_id in range(nr_tests):
+        tries = test_cases[test_case_id]
+        test_case = tries[-1]
+        if test_case['similarity'] == 1.0:
+            db_id = test_case['db_id']
+            code = get_code(args.language, test_case)
+            stats = test_performance(
+                engine, db_id, args.factor, 
+                test_case, args.timeout_s)
+            results += [stats]
     
     with open('stats.json', 'w') as file:
         json.dump(results, file)
