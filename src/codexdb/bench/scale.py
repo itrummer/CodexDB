@@ -89,7 +89,7 @@ def scale_tables(catalog, db_id, factor, code):
         scale_data(original_path, factor, scaled_path)
         scaled_code = scaled_code.replace(original_file, scaled_file)
         byte_size = os.path.getsize(scaled_path)
-        nr_rows = (1 for l in open(scaled_path))
+        nr_rows = sum(1 for _ in open(scaled_path))
         table_byte_sizes += [byte_size]
         table_nr_rows += [nr_rows]
     return scaled_code, table_byte_sizes, table_nr_rows
