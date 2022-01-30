@@ -179,8 +179,8 @@ if __name__ == '__main__':
     
     by_factors = []
     for idx, factor in enumerate(factors):
-        factor_results = results[idx::nr_factors]
-        by_factors.append(factor_results['total_s'])
+        factor_times = [r['total_s'] for r in results[idx::nr_factors]]
+        by_factors.append(factor_times)
     times_df = pd.DataFrame(by_factors)
     times_df.columns = factors
     times_df.to_csv(times_path, index=False)
