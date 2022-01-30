@@ -9,6 +9,7 @@ import codexdb.engine
 import json
 import math
 import os
+import pandas as pd
 import time
 
 def get_code(language, test_case):
@@ -72,11 +73,13 @@ def scale_tables(catalog, db_id, factor, code):
         code: code referencing original data files
     
     Returns:
-        code referencing scaled data files
+        code referencing scaled data files, byte sizes, #rows
     """
     scaled_code = code
     schema = catalog.schema(db_id)
     tables = schema['table_names_original']
+    table_byte_sizes = []
+    table_nr_rows = []
     for table in tables:
         original_file = catalog.file_name(db_id, table)
         original_path = catalog.file_path(db_id, table)
@@ -85,7 +88,11 @@ def scale_tables(catalog, db_id, factor, code):
         scaled_path = catalog.file_path(db_id, table)
         scale_data(original_path, factor, scaled_path)
         scaled_code = scaled_code.replace(original_file, scaled_file)
-    return scaled_code
+        byte_size = os.path.getsize(scaled_file)
+        nr_rows = (1 for l in open(scaled_file))
+        table_byte_sizes += [byte_size]
+        table_nr_rows += [nr_rows]
+    return scaled_code, table_byte_sizes, table_nr_rows
 
 def unscale_tables(catalog, db_id):
     """ Replace scaled tables by the original. 
@@ -111,24 +118,24 @@ def test_performance(engine, db_id, factor, code, timeout_s):
         timeout_s: timeout in seconds for each execution
     
     Returns:
-        performance statistics
+        performance and size statistics
     """
     print('Starting data scaling ...')
-    scaled_code = scale_tables(catalog, db_id, factor, code)
+    scaled_code, byte_sizes, row_sizes = scale_tables(
+        catalog, db_id, factor, code)
     print('Scaling finished - starting measurements ...')
     start_s = time.time()
     engine.execute(db_id, scaled_code, timeout_s)
     total_s = time.time() - start_s
     print('Execution finished - unscaling tables ...')
     unscale_tables(catalog, db_id)
-    return {'total_s':total_s}
+    return {'total_s':total_s, 'byte_sizes':byte_sizes, 'row_sizes':row_sizes}
 
 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('data_dir', type=str, help='Data directory')
-    parser.add_argument('factor', type=int, help='Scale data by this factor')
     parser.add_argument('language', type=str, help='Implementation language')
     parser.add_argument('test_path', type=str, help='Path to file with tests')
     parser.add_argument('nr_tests', type=int, help='How many test cases')
@@ -142,24 +149,42 @@ if __name__ == '__main__':
     
     nr_all_tests = len(test_cases)
     nr_tests = min(args.nr_tests, nr_all_tests)
+    factors = [10, 1000, 100000]
+    nr_factors = len(factors)
+    
+    times_path = 'times.csv'
+    results_path = 'stats.json'
+    if os.path.exists(times_path):
+        raise ValueError(f'Error - {times_path} exists!')
+    if os.path.exists(results_path):
+        raise ValueError(f'Error - {results_path} exists!')
     
     results = []
     for test_case_id in range(nr_tests):
         test_case_key = str(test_case_id)
         tries = test_cases[test_case_key]
         test_case = tries[-1]
-        if test_case['similarity'] == 1.0:
-            db_id = test_case['schema']['db_id']
-            code = get_code(args.language, test_case)
-            stats = test_performance(
-                engine, db_id, args.factor, 
-                code, args.timeout_s)
-            results += [stats]
-        else:
-            results += [{'total_s':-1}]
+        for factor in factors:
+            print(f'Treating test case {test_case_id}, factor {factor}')
+            if test_case['similarity'] == 1.0:
+                db_id = test_case['schema']['db_id']
+                code = get_code(args.language, test_case)
+                stats = test_performance(
+                    engine, db_id, factor, 
+                    code, args.timeout_s)
+                stats['scaling_factor'] = factor
+                results += [stats]
+            else:
+                results += [{'total_s':-1, 'scaling_factor':factor}]
     
-    times = [str(s['total_s']) for s in results]
-    print('\n'.join(times))
-    
-    with open('stats.json', 'w') as file:
+    by_factors = []
+    for idx, factor in enumerate(factors):
+        factor_results = results[idx::nr_factors]
+        by_factors.append(factor_results['total_s'])
+    times_df = pd.DataFrame(by_factors)
+    times_df.columns = factors
+    times_df.to_csv(times_path, index=False)
+    print(times_df)
+
+    with open(results_path, 'w') as file:
         json.dump(results, file)
