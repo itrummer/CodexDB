@@ -161,23 +161,6 @@ class PythonGenerator(CodeGenerator):
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
         self.planner = codexdb.plan.NlPlanner()
-        suffix_parts = [
-            "\nimport pandas as pd",
-            "import numpy as np",
-            "import vaex",
-            "if isinstance(final_result, (pd.DataFrame, pd.Series, list, dict, np.ndarray)):",
-            "\tfinal_result = pd.DataFrame(final_result)",
-            "\tfinal_result.to_csv('result.csv', index=False)",
-            "elif isinstance(final_result, vaex.dataframe.DataFrame):",
-            "\tfinal_result.export_csv('result.csv')",
-            "elif isinstance(final_result, vaex.xpression.Expression):",
-            "\tnp.savetxt('result.csv', final_result.values, delimiter=',', header='result')",
-            "else:",
-            "\twith open('result.csv', 'w') as file:",
-            "\t\tfile.write('result\\n')",
-            "\t\tfile.write(str(final_result))"
-            ]
-        self.code_suffix = '\n'.join(suffix_parts)
         self.mod_start = mod_start
         self.mod_between = mod_between
         self.mod_end = mod_end

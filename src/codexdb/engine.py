@@ -104,12 +104,12 @@ class PythonEngine(ExecutionEngine):
         super().__init__(catalog)
         self.python_path = os.environ['CODEXDB_PYTHON']
     
-    def execute(self, db_id, code, timeout_s):
+    def execute(self, db_id, query_code, timeout_s):
         """ Execute code written in specified language.
         
         Args:
             db_id: code references data in this database
-            code: execute this code
+            query_code: code for processing query
             timeout_s: execution timeout in seconds
         
         Returns:
@@ -117,11 +117,39 @@ class PythonEngine(ExecutionEngine):
         """
         self._clean()
         self._copy_db(db_id)
+        code = query_code + '\n' + self._to_disk_code(query_code)
         start_s = time.time()
         success, output, stats = self._exec_python(db_id, code, timeout_s)
         total_s = time.time() - start_s
         stats['total_s'] = total_s
         return success, output, stats
+    
+    def _to_disk_code(self, query_code):
+        """ Generates a piece of code for writing results to disk. 
+        
+        Args:
+            query_code: code for query processing (not yet used)
+        
+        Returns:
+            code writing final result to disk
+        """
+        parts = [
+            "\nimport pandas as pd",
+            "import numpy as np",
+            "import vaex",
+            "if isinstance(final_result, (pd.DataFrame, pd.Series, list, dict, np.ndarray)):",
+            "\tfinal_result = pd.DataFrame(final_result)",
+            "\tfinal_result.to_csv('result.csv', index=False)",
+            "elif isinstance(final_result, vaex.dataframe.DataFrame):",
+            "\tfinal_result.export_csv('result.csv')",
+            "elif isinstance(final_result, vaex.xpression.Expression):",
+            "\tnp.savetxt('result.csv', final_result.values, delimiter=',', header='result')",
+            "else:",
+            "\twith open('result.csv', 'w') as file:",
+            "\t\tfile.write('result\\n')",
+            "\t\tfile.write(str(final_result))"
+            ]
+        return '\n'.join(parts)
     
     def _exec_python(self, db_id, code, timeout_s):
         """ Execute Python code and return generated output.
