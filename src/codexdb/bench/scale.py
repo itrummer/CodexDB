@@ -177,12 +177,11 @@ if __name__ == '__main__':
             else:
                 results += [{'total_s':-1, 'scaling_factor':factor}]
     
-    by_factors = []
+    by_factors = {}
     for idx, factor in enumerate(factors):
         factor_times = [r['total_s'] for r in results[idx::nr_factors]]
-        by_factors.append(factor_times)
+        by_factors[factor] = factor_times
     times_df = pd.DataFrame(by_factors)
-    times_df.columns = factors
     times_df.to_csv(times_path, index=False)
     print(times_df)
 
