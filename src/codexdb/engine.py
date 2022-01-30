@@ -195,13 +195,15 @@ class SqliteEngine(ExecutionEngine):
         db_path = f'{db_dir}/db.db'
         try:
             with sqlite3.connect(db_path) as connection:
+                start_s = time.time()
                 result = pd.read_sql(sql, connection)
+                total_s = time.time() - start_s
                 print(f'Query Result Info: {result.info()}')
                 result.to_csv(self.result_path)
-            return True, result, {}
+            return True, result, {'execution_s':total_s}
         except Exception as e:
             print(f'Exception: {e}')
-            return False, pd.DataFrame(), {}
+            return False, pd.DataFrame(), {'execution_s':-1}
     
     def _prepare_db(self, db_id):
         """ Prepare database for querying. 

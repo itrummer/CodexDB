@@ -125,11 +125,14 @@ def test_performance(engine, db_id, factor, code, timeout_s):
         catalog, db_id, factor, code)
     print('Scaling finished - starting measurements ...')
     start_s = time.time()
-    engine.execute(db_id, scaled_code, timeout_s)
+    _, _, stats = engine.execute(db_id, scaled_code, timeout_s)
     total_s = time.time() - start_s
     print('Execution finished - unscaling tables ...')
     unscale_tables(catalog, db_id)
-    return {'total_s':total_s, 'byte_sizes':byte_sizes, 'row_sizes':row_sizes}
+    stats['total_s'] = total_s
+    stats['byte_sizes'] = byte_sizes
+    stats['row_sizes'] = row_sizes
+    return stats
 
 
 if __name__ == '__main__':
