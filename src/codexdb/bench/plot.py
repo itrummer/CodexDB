@@ -116,11 +116,15 @@ def generate_plot(run_dir, y_fct):
             for nr_samples in [0, 2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
                 result_path = f'{run_dir}/results_{run_id}.json'
-                with open(result_path) as file:
-                    data = json.load(file)
-                    y_coordinate = y_fct(data)
-                    point = f'({nr_samples}, {y_coordinate})'
-                    line += [point]
+                try:
+                    with open(result_path) as file:
+                        data = json.load(file)
+                        y_coordinate = y_fct(data)
+                        point = f'({nr_samples}, {y_coordinate})'
+                        line += [point]
+                except Exception as e:
+                    print(f'Exception for {result_path}: {e}')
+                    line += ['(-1, -1)']
             plot += ['\\addplot coordinates {' +  ' '.join(line) + '};']
         plots += ['\n'.join(plot)]
     return plots
@@ -180,9 +184,6 @@ if __name__ == '__main__':
     parser.add_argument('multiplicity', type=str, help='Minimal #occurrences')
     args = parser.parse_args()
     
-    print('ANALYZING TRAINING')
-    analyze_training(args.run_dir)
-    
     print('Counting number of solved test cases:')
     count_fct = lambda d:count_solved(d, args.must_contain, args.multiplicity)
     count_plots = generate_plot(args.run_dir, count_fct)
@@ -211,3 +212,6 @@ if __name__ == '__main__':
     y_fct = lambda d:median(d, map_fct, True)
     print_group(generate_plot(args.run_dir, y_fct))
     print_aggs(args.run_dir, True, map_fct)
+    
+    print('ANALYZING TRAINING')
+    analyze_training(args.run_dir)

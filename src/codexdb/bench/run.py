@@ -7,6 +7,7 @@ import argparse
 import codexdb.solve
 import openai
 import os
+import time
 
 
 def train(data_dir, train_path, log_path, mod_start,
@@ -73,7 +74,15 @@ if __name__ == '__main__':
     # Train and test generating code without modifications
     log_path = f'{args.out_dir}/train_log_plain'
     sample_path = f'{args.out_dir}/train_plain.json'
+    
+    start_s = time.time()
     train(args.data_dir, args.train_path, log_path, args.mod_start, 
           args.mod_between, args.mod_end, sample_path)
+    total_s = time.time() - start_s
+    print(f'Training took {total_s} seconds')
+    
+    start_s = time.time()
     test(args.data_dir, args.test_path, sample_path, args.mod_start, 
          args.mod_between, args.mod_end, args.out_dir)
+    total_s = time.time() - start_s
+    print(f'Testing took {total_s} seconds')
