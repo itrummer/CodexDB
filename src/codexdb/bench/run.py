@@ -50,7 +50,7 @@ def test(data_dir, test_path, sample_path, mod_start,
                 codexdb.solve.main(
                     data_dir, test_path, 'python', model_id, 
                     prompt_style, mod_start, mod_between, mod_end, 
-                    sample_path, nr_samples, 100, 'executed', 1, 
+                    sample_path, nr_samples, 100, 'executed', 2, 
                     log_path, result_path)
 
 
