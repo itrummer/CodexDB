@@ -142,7 +142,7 @@ class PythonEngine(ExecutionEngine):
         self._write_file(filename, code)
         exe_path = f'{self.tmp_dir}/{filename}'
         cmd_parts = ['timeout', str(timeout_s), self.python_path, exe_path]
-        sub_comp = subprocess.run(cmd_parts)
+        sub_comp = subprocess.run(cmd_parts, capture_output=True)
         success = False if sub_comp.returncode > 0 else True
         if not success:
             print(f'Python stdout: {sub_comp.stdout}')
