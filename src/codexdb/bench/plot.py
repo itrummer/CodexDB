@@ -4,7 +4,9 @@ Created on Jan 28, 2022
 @author: immanueltrummer
 '''
 import argparse
+import collections
 import json
+import re
 import statistics
 
 def agg_all(run_dir, solved, map_fct, agg_fct):
@@ -21,21 +23,59 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
     """
     values = []
     for model_id in ['cushman-codex', 'davinci-codex']:
-        #for prompt_style in ['question', 'query', 'plan']:
+        # for prompt_style in ['question', 'query', 'plan']:
         for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
                 result_path = f'{run_dir}/results_{run_id}.json'
-                with open(result_path) as file:
-                    data = json.load(file)
-                    for tries in data.values():
-                        for one_try in tries:
-                            if not solved or one_try['similarity']==1.0:
-                                value = map_fct(one_try)
-                                if value is not None:
-                                    values.append(value)
+                try:
+                    with open(result_path) as file:
+                        data = json.load(file)
+                        for tries in data.values():
+                            for one_try in tries:
+                                if not solved or one_try['similarity']==1.0:
+                                    value = map_fct(one_try)
+                                    if value is not None:
+                                        values.append(value)
+                except Exception as e:
+                    print(e)
     
     return agg_fct(values)
+
+def analyze_code(run_dir):
+    """ Analyze generated code. 
+    
+    Args:
+        run_dir: directory containing benchmark results
+    """
+    print('Analyzing generated code ...')
+    result_path = f'{run_dir}/results_davinci-codex_plan_2.json'
+    with open(result_path) as file:
+        data = json.load(file)
+    
+    lib_count = collections.defaultdict(lambda:0)
+    tries_by_case = data.values()
+    libraries = [
+        'csv', 'pandas', 'vaex', 'dask', 
+        'modin', 'julia', 'datatable']
+    for tries in tries_by_case:
+        code = tries[-1]['code']
+        for library in libraries:
+            if f'import {library}' in code:
+                lib_count[library] += 1
+    
+    reg_count = collections.defaultdict(lambda:0)
+    reg_exps = [
+        'print\(\'Done\.\'\)', 'print\(([a-zA-Z_])+\)', 
+        'print\(["|\'].+["|\']\)', 'print']
+    for tries in tries_by_case:
+        code = tries[-1]['code']
+        for reg_exp in reg_exps:
+            if re.search(reg_exp, code):
+                reg_count[reg_exp] += 1
+    
+    print(lib_count)
+    print(reg_count)
 
 def analyze_training(run_dir):
     """ Analyze training process. """
@@ -43,7 +83,7 @@ def analyze_training(run_dir):
     result_path = f'{run_dir}/train_plain.json'
     with open(result_path) as file:
         data = json.load(file)
-        
+
     tries_by_case = data.values()
     nr_solved = 0
     for tries in tries_by_case:
@@ -51,6 +91,18 @@ def analyze_training(run_dir):
             nr_solved += 1
     print(f'Cases solved: {nr_solved}')
     
+    solved_by = []
+    for max_nr_tries in range(11):
+        count = 0
+        for tries in tries_by_case:
+            nr_tries = len(tries)
+            last_idx = min(max_nr_tries, nr_tries)
+            count += len([t for t in tries[:last_idx] if t['similarity']==1.0])
+        solved_by += [count]
+    solved_by = list(enumerate(solved_by))
+    solved_by = ' '.join([str(s) for s in solved_by])
+    print(f'Nr. solved by try: {solved_by}')
+
     total_s = 0
     for tries in tries_by_case:
         for one_try in tries:
@@ -110,8 +162,8 @@ def generate_plot(run_dir, y_fct):
     plots = []
     for model_id in ['cushman-codex', 'davinci-codex']:
         plot = []
-        #for prompt_style in ['question', 'query', 'plan']:
-        for prompt_style in ['plan']:
+        for prompt_style in ['question', 'query', 'plan']:
+        # for prompt_style in ['plan']:
             line = []
             for nr_samples in [0, 2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
@@ -212,6 +264,9 @@ if __name__ == '__main__':
     y_fct = lambda d:median(d, map_fct, True)
     print_group(generate_plot(args.run_dir, y_fct))
     print_aggs(args.run_dir, True, map_fct)
+    
+    print('ANALYZING CODE')
+    analyze_code(args.run_dir)
     
     print('ANALYZING TRAINING')
     analyze_training(args.run_dir)
