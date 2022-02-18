@@ -152,7 +152,7 @@ if __name__ == '__main__':
     
     nr_all_tests = len(test_cases)
     nr_tests = min(args.nr_tests, nr_all_tests)
-    factors = [10, 1000, 100000]
+    factors = [1000, 1000000]
     nr_factors = len(factors)
     
     times_path = 'times.csv'
