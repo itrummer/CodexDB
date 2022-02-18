@@ -170,7 +170,7 @@ if __name__ == '__main__':
         for factor in factors:
             print(f'Treating test case {test_case_id}, factor {factor}')
             try:
-                if test_case['similarity'] == 1.0:
+                if test_case['similarity'] == 1.0 or args.language == 'sql':
                     db_id = test_case['schema']['db_id']
                     code = get_code(args.language, test_case)
                     stats = test_performance(
