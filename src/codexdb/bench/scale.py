@@ -169,16 +169,20 @@ if __name__ == '__main__':
         test_case = tries[-1]
         for factor in factors:
             print(f'Treating test case {test_case_id}, factor {factor}')
-            if test_case['similarity'] == 1.0:
-                db_id = test_case['schema']['db_id']
-                code = get_code(args.language, test_case)
-                stats = test_performance(
-                    engine, db_id, factor, 
-                    code, args.timeout_s)
-                stats['scaling_factor'] = factor
-                results += [stats]
-            else:
-                results += [{'total_s':-1, 'scaling_factor':factor}]
+            try:
+                if test_case['similarity'] == 1.0:
+                    db_id = test_case['schema']['db_id']
+                    code = get_code(args.language, test_case)
+                    stats = test_performance(
+                        engine, db_id, factor, 
+                        code, args.timeout_s)
+                    stats['scaling_factor'] = factor
+                    print(f'Run statistics: {stats}')
+                    results += [stats]
+                else:
+                    results += [{'total_s':-1, 'scaling_factor':factor}]
+            except Exception as e:
+                print(f'Exception: {e}')
     
     by_factors = {}
     for idx, factor in enumerate(factors):
