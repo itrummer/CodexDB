@@ -2,7 +2,7 @@
 
 
 CodexDB blurs the line between users and developers. It allows users to specify natural language instructions, together with their SQL queries. 
-CodexDB uses OpenAI's GPT-3 Codex model to generate code for query processing that complies with natural language instructions. 
+CodexDB uses OpenAI's GPT-3 Codex model to generate code for query processing that complies with those natural language instructions. 
 
 # How to Run Benchmarks
 
