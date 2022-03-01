@@ -6,6 +6,6 @@ CodexDB uses OpenAI's GPT-3 Codex model to generate code for query processing th
 
 # How to Run Benchmarks
 
-The code under "/src/codexdb/bench/run.py" reads SQL queries from an input file and generates codes that complies with additional instructions. 
+The code under "/src/codexdb/bench/run.py" reads SQL queries from an input file and generates code that complies with additional instructions. 
 It first performs a training run in which it solves 50 training queries with a high number of retries, increasing the chances to generate accurate code. 
 Next, it uses the generated examples as part of the prompt (few-shot learning) to solve the test queries with a lower number of retries.
