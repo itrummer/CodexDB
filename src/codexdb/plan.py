@@ -184,10 +184,16 @@ class NlPlanner():
         last_labels = from_labels
         
         for join_expr in expression.args.get("joins", []):
-            join_labels, join_prep = self.nl(join_expr)
-            plan.add_plan(join_prep)
-            join_step = ['Join'] + last_labels + ['and'] + join_labels
-            last_labels = [plan.add_step(join_step)]
+            join_table = join_expr.args.get('this')
+            join_pred = join_expr.args.get('on')
+            table_labels, table_prep = self.nl(join_table)
+            filter_label, filter_prep = self.nl(join_pred)
+            cross_step = ['Join'] + last_labels + ['and'] + table_labels
+            filter_step = ['Keep join result rows where'] + filter_label + ['is true']
+            plan.add_plan(table_prep)
+            plan.add_step(cross_step)
+            plan.add_plan(filter_prep)
+            last_labels = [plan.add_step(filter_step)]
         
         if expression.args.get('where'):
             where_expr = expression.args['where'].args['this']
@@ -288,8 +294,20 @@ class NlPlanner():
     
     def _between_nl(self, expression):
         """ Translates between statement into natural language. """
-        print(expression)
-        raise NotImplementedError
+        op = expression.args.get('this')
+        low = expression.args.get('low')
+        high = expression.args.get('high')
+        op_label, op_prep = self.nl(op)
+        low_label, low_prep = self.nl(low)
+        high_label, high_prep = self.nl(high)
+        plan = NlPlan()
+        plan.add_plan(op_prep)
+        plan.add_plan(low_prep)
+        plan.add_plan(high_prep)
+        step = ['Check if'] + op_label + ['is between'] + \
+            low_label + ['and'] + high_label
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
     
     def _binary(self, expression):
         """ Pre-processes a generic binary expression. 
@@ -345,6 +363,10 @@ class NlPlanner():
             plan.add_plan(prep)
             labels += new_labels + [', ']
         return labels[:-1], plan
+    
+    def _join_nl(self, expression):
+        """ Translates join expression into natural language. """
+        raise NotImplementedError
     
     def _literal_nl(self, expression):
         """ Translates a literal into natural language. """
@@ -467,8 +489,20 @@ class NlPlanner():
 
 if __name__ == '__main__':
     
+    # with open('/Users/immanueltrummer/benchmarks/spider/results_train_spider.json') as file:
+        # test_cases = json.load(file)
+        #
+    # planner = NlPlanner()
+    # for idx, test_case in enumerate(test_cases[0:50]):
+        # query = test_case['query']
+        # print(f'{idx}: {query}')
+        # plan = planner.plan(query)
+        # print(plan.steps())
+    
+    query = "SELECT DISTINCT T1.creation FROM department AS T1 JOIN management AS T2 ON T1.department_id  =  T2.department_id JOIN head AS T3 ON T2.head_id  =  T3.head_id WHERE T3.born_state  =  'Alabama'"
     planner = NlPlanner()
-    planner.plan('SELECT avg(num_employees) FROM department WHERE ranking BETWEEN 10 AND 15')
+    plan = planner.plan(query)
+    print(plan.steps())
     
     # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
         # test_cases = json.load(file)
