@@ -286,6 +286,11 @@ class NlPlanner():
             labels = ['count of rows without null values in'] + arg_labels
             return labels, prep
     
+    def _between_nl(self, expression):
+        """ Translates between statement into natural language. """
+        print(expression)
+        raise NotImplementedError
+    
     def _binary(self, expression):
         """ Pre-processes a generic binary expression. 
         
@@ -461,15 +466,19 @@ class NlPlanner():
         return ['-'] + labels, plan
 
 if __name__ == '__main__':
-    with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
-        test_cases = json.load(file)
     
     planner = NlPlanner()
-    for idx, test_case in enumerate(test_cases):
-        print(f'Idx: {idx}')
-        question = test_case['question']
-        query = test_case['query']
-        print(f'Question: {question}')
-        print(f'Query: {query}')
-        label, plan = planner.plan(query)
+    planner.plan('SELECT avg(num_employees) FROM department WHERE ranking BETWEEN 10 AND 15')
+    
+    # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
+        # test_cases = json.load(file)
+        #
+        #
+    # for idx, test_case in enumerate(test_cases):
+        # print(f'Idx: {idx}')
+        # question = test_case['question']
+        # query = test_case['query']
+        # print(f'Question: {question}')
+        # print(f'Query: {query}')
+        # label, plan = planner.plan(query)
         # print(plan.steps())
