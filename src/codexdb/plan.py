@@ -119,6 +119,8 @@ class NlPlan():
             elif isinstance(in_part, int):
                 in_idx = self._index_of(in_part)
                 out_parts.append(f'results of Step {in_idx}')
+            else:
+                raise ValueError(f'Cannot translate plan step part: {in_part}')
         return ' '.join(out_parts)
 
 
@@ -187,13 +189,20 @@ class NlPlanner():
             join_table = join_expr.args.get('this')
             join_pred = join_expr.args.get('on')
             table_labels, table_prep = self.nl(join_table)
-            filter_label, filter_prep = self.nl(join_pred)
-            cross_step = ['Join'] + last_labels + ['and'] + table_labels
-            filter_step = ['Keep join result rows where'] + filter_label + ['is true']
             plan.add_plan(table_prep)
-            plan.add_step(cross_step)
-            plan.add_plan(filter_prep)
-            last_labels = [plan.add_step(filter_step)]
+            filter_label, filter_prep = self.nl(join_pred)
+            filter_steps = filter_prep.id_steps
+            print(filter_steps)
+            if len(filter_steps) == 1:
+                join_step = ['Join'] + last_labels + ['and'] + \
+                    table_labels + [':'] + filter_steps[0][1]
+                last_labels = [plan.add_step(join_step)]
+            else:
+                cross_step = ['Join'] + last_labels + ['and'] + table_labels
+                filter_step = ['Keep rows if'] + filter_label + ['is true']
+                plan.add_step(cross_step)
+                plan.add_plan(filter_prep)
+                last_labels = [plan.add_step(filter_step)]
         
         if expression.args.get('where'):
             where_expr = expression.args['where'].args['this']
@@ -354,6 +363,10 @@ class NlPlanner():
             labels += ['in'] + db_labels
         return labels, plan
 
+    def _except_nl(self, expression):
+        """ Translates SQL except expression into natural language. """
+        return self._set_operation(expression, 'From', 'remove', None)
+
     def _expressions(self, expression):
         """ Translates associated expressions into natural language. """
         plan = NlPlan()
@@ -363,6 +376,24 @@ class NlPlanner():
             plan.add_plan(prep)
             labels += new_labels + [', ']
         return labels[:-1], plan
+    
+    def _in_nl(self, expression):
+        """ Translate SQL IN expression into natural language. """
+        left_label, left_prep = self.nl(expression, 'this')
+        right_label, right_prep = self.nl(expression, 'query')
+        step = ['Check if'] + left_label + ['appears in'] + right_label
+        plan = NlPlan()
+        plan.add_plan(left_prep)
+        plan.add_plan(right_prep)
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
+    
+    def _intersect_nl(self, expression):
+        """ Translate set intersection into natural language. """
+        distinct = expression.args.get('distinct')
+        drop_duplicates = True if distinct is not None else False
+        postfix = 'and eliminate duplicates' if drop_duplicates else None
+        return self._set_operation(expression, 'Intersect', 'and', postfix)
     
     def _join_nl(self, expression):
         """ Translates join expression into natural language. """
@@ -387,7 +418,14 @@ class NlPlanner():
             return [text], NlPlan()
         else:
             return [text], NlPlan()
-
+    
+    def _not_nl(self, expression):
+        """ Express negation in natural language. """
+        op_label, plan = self.nl(expression, 'this')
+        step = ['Check if'] + op_label + ['is false']
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
+    
     def _null_nl(self, _):
         """ Express SQL NULL value in natural language. """
         return 'unknown', NlPlan()
@@ -464,6 +502,29 @@ class NlPlanner():
         """ Translate parenthesis expression to natural language. """
         return self.nl(expression, 'this')
     
+    def _set_operation(self, expression, prefix, connector, postfix):
+        """ Translate set expression into natural language.
+        
+        Args:
+            expression: SQL expression representing set operation
+            prefix: start final step with this text
+            connector: text between references to operands
+            postfix: end final step with this text
+        
+        Returns:
+            label and preparatory plan
+        """
+        left_label, left_prep = self.nl(expression, 'this')
+        right_label, right_prep = self.nl(expression, 'expression')
+        plan = NlPlan()
+        plan.add_plan(left_prep)
+        plan.add_plan(right_prep)
+        step = [prefix] + left_label + [connector] + right_label
+        if postfix is not None:
+            step += [postfix]
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
+    
     def _star_nl(self, _):
         """ Translates star into natural language. """
         return ['all columns'], NlPlan()
@@ -489,20 +550,20 @@ class NlPlanner():
 
 if __name__ == '__main__':
     
-    # with open('/Users/immanueltrummer/benchmarks/spider/results_train_spider.json') as file:
-        # test_cases = json.load(file)
-        #
-    # planner = NlPlanner()
-    # for idx, test_case in enumerate(test_cases[0:50]):
-        # query = test_case['query']
-        # print(f'{idx}: {query}')
-        # plan = planner.plan(query)
-        # print(plan.steps())
-    
-    query = "SELECT DISTINCT T1.creation FROM department AS T1 JOIN management AS T2 ON T1.department_id  =  T2.department_id JOIN head AS T3 ON T2.head_id  =  T3.head_id WHERE T3.born_state  =  'Alabama'"
+    with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
+        test_cases = json.load(file)
+        
     planner = NlPlanner()
-    plan = planner.plan(query)
-    print(plan.steps())
+    for idx, test_case in enumerate(test_cases[0:100]):
+        query = test_case['query']
+        print(f'{idx}: {query}')
+        plan = planner.plan(query)
+        print(plan.steps())
+    
+    # query = "SELECT DISTINCT T1.creation FROM department AS T1 JOIN management AS T2 ON T1.department_id  =  T2.department_id JOIN head AS T3 ON T2.head_id  =  T3.head_id WHERE T3.born_state  =  'Alabama'"
+    # planner = NlPlanner()
+    # plan = planner.plan(query)
+    # print(plan.steps())
     
     # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
         # test_cases = json.load(file)
