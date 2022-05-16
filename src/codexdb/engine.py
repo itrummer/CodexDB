@@ -14,15 +14,13 @@ import time
 class ExecutionEngine(abc.ABC):
     """ Executes code in different languages. """
     
-    def __init__(self, catalog, id_case):
+    def __init__(self, catalog):
         """ Initialize with database catalog and variables.
         
         Args:
             catalog: informs on database schema and file locations
-            id_case: whether to consider letter case of identifiers
         """
         self.catalog = catalog
-        self.id_case = id_case
         self.tmp_dir = os.environ['CODEXDB_TMP']
         self.result_path = f'{self.tmp_dir}/result.csv'
     
@@ -107,13 +105,15 @@ class ExecutionEngine(abc.ABC):
 class PythonEngine(ExecutionEngine):
     """ Executes Python code. """
     
-    def __init__(self, catalog):
+    def __init__(self, catalog, id_case):
         """ Initialize with database catalog and paths.
         
         Args:
             catalog: informs on database schema and file locations
+            id_case: whether to consider letter case for identifiers
         """
         super().__init__(catalog)
+        self.id_case = id_case
         self.python_path = os.environ['CODEXDB_PYTHON']
     
     def execute(self, db_id, code, timeout_s):
