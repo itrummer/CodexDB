@@ -5,6 +5,7 @@ Created on Oct 3, 2021
 '''
 import argparse
 import codexdb.solve
+import getpass
 import openai
 import os
 import time
@@ -44,8 +45,10 @@ def test(data_dir, test_path, sample_path, id_case,
         out_dir: generate output in this directory
     """
     for model_id in ['cushman-codex', 'davinci-codex']:
-        for prompt_style in ['plan', 'query', 'question']:
-            for nr_samples in [0, 2, 4]:
+        # for prompt_style in ['plan', 'query', 'question']:
+            # for nr_samples in [0, 2, 4]:
+        for prompt_style in ['plan']:
+            for nr_samples in [2]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
                 log_path = f'{out_dir}/log_{run_id}'
                 result_path = f'{out_dir}/results_{run_id}.json'
@@ -72,6 +75,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if os.listdir(args.out_dir):
         raise ValueError('Output directory must be empty!')
+    
+    print(f'Login: {os.getlogin()}')
+    print(f'User: {getpass.getuser()}')
     
     openai.api_key = args.ai_key
     
