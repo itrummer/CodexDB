@@ -176,7 +176,8 @@ def main(
             if language == 'python':
                 coder = codexdb.code.PythonGenerator(
                     catalog, examples, nr_samples, 
-                    prompt_style, model_id, id_case,
+                    prompt_style, model_id, 
+                    id_case=id_case,
                     mod_start=mod_start, 
                     mod_between=mod_between, 
                     mod_end=mod_end)
