@@ -66,6 +66,10 @@ def result_cmp(ref_output, cmp_output, reorder):
             ref_output.sort_values(by=column_idxs)
             cmp_output.sort_values(by=column_idxs)
 
+        print(f'--- CodexDB column types:\n{cmp_output.dtypes}')
+        print(f'--- CodexDB normalized output:\n{cmp_output}\n--\n')
+        print(f'--- Reference column types:\n{ref_output.dtypes}')
+        print(f'--- Normalized reference output:\n{ref_output}\n--\n')
         diffs = ref_output.compare(cmp_output, align_axis=0)
         print(f'-- Differences:\n{diffs}\n--\n')
         nr_diffs = diffs.shape[0]
