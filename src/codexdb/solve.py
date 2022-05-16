@@ -131,9 +131,8 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
     return results
 
 def main(
-        data_dir, test_path, language, model_id, 
-        prompt_style, mod_start, mod_between, mod_end, 
-        sample_path, nr_samples, 
+        data_dir, test_path, language, model_id, prompt_style, id_case,
+        mod_start, mod_between, mod_end, sample_path, nr_samples, 
         nr_tests, termination, max_tries,
         log_path, result_path):
     """ Try solving given test cases and write results to file.
@@ -144,6 +143,7 @@ def main(
         language: generate code in this language
         model_id: OpenAI engine for code generation
         prompt_style: choose prompt template
+        id_case: whether to consider letter case of identifiers
         mod_start: modification at plan start
         mod_between: modifications between steps
         mod_end: modification at plan end
@@ -176,11 +176,12 @@ def main(
             if language == 'python':
                 coder = codexdb.code.PythonGenerator(
                     catalog, examples, nr_samples, 
-                    prompt_style, model_id,
+                    prompt_style, model_id, id_case,
                     mod_start=mod_start, 
                     mod_between=mod_between, 
                     mod_end=mod_end)
-                engine = codexdb.engine.PythonEngine(catalog)
+                engine = codexdb.engine.PythonEngine(
+                    catalog, id_case)
             elif language == 'sql':
                 coder = codexdb.code.SqlGenerator(
                     catalog, examples, nr_samples, 

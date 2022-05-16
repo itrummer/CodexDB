@@ -148,11 +148,12 @@ class CodeGenerator(abc.ABC):
 class PythonGenerator(CodeGenerator):
     """ Generates Python code to solve database queries. """
     
-    def __init__(self, *pargs, mod_start, mod_between, mod_end):
+    def __init__(self, *pargs, id_case, mod_start, mod_between, mod_end):
         """ Initializes for Python code generation.
         
         Args:
             pargs: arguments of super class constructor
+            id_case: whether to consider letter case for identifiers
             mod_start: modification at start of query plan
             mod_between: modifications between plan steps
             mod_end: modifications at end of query plan
@@ -161,6 +162,7 @@ class PythonGenerator(CodeGenerator):
         self.ai_kwargs['max_tokens'] = 600
         self.ai_kwargs['stop'] = '"""'
         self.planner = codexdb.plan.NlPlanner()
+        self.id_case = id_case
         self.mod_start = mod_start
         self.mod_between = mod_between
         self.mod_end = mod_end
@@ -184,6 +186,9 @@ class PythonGenerator(CodeGenerator):
         for tbl_idx in range(nr_tables):
             filename = files[tbl_idx]
             tbl_name = tables[tbl_idx]
+            if not self.id_case:
+                filename = filename.lower()
+                tbl_name = tbl_name.lower()
             
             if self.prompt_style == 'data':
                 
@@ -191,6 +196,8 @@ class PythonGenerator(CodeGenerator):
                 df = pd.read_csv(f'{db_dir}/{filename}')
                 headers = []
                 for col_name in df.columns:
+                    if not self.id_case:
+                        col_name = col_name.lower()
                     header = f'"{col_name}"'
                     headers.append(header)
                 lines.append(','.join(headers))
@@ -209,8 +216,11 @@ class PythonGenerator(CodeGenerator):
                 lines.append('Column types: ' + ', '.join(type_items))
                     
             else:
-                tbl_columns = ["'" + c[1] + "'" for c in all_columns if c[0] == tbl_idx]
-                col_list = ','.join(tbl_columns)
+                table_columns = [c[1] for c in all_columns if c[0] == tbl_idx]
+                if not self.id_case:
+                    table_columns = [c.lower() for c in table_columns]
+                quoted_columns = ["'" + c + "'" for c in table_columns]
+                col_list = ','.join(quoted_columns)
                 line = f'Table {tbl_name} with columns {col_list}, ' \
                     f'stored in \'{filename}\'.'
                 lines.append(line)

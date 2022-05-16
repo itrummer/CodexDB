@@ -14,13 +14,15 @@ import time
 class ExecutionEngine(abc.ABC):
     """ Executes code in different languages. """
     
-    def __init__(self, catalog):
+    def __init__(self, catalog, id_case):
         """ Initialize with database catalog and variables.
         
         Args:
             catalog: informs on database schema and file locations
+            id_case: whether to consider letter case of identifiers
         """
         self.catalog = catalog
+        self.id_case = id_case
         self.tmp_dir = os.environ['CODEXDB_TMP']
         self.result_path = f'{self.tmp_dir}/result.csv'
     
@@ -56,9 +58,19 @@ class ExecutionEngine(abc.ABC):
         """
         src_dir = self.catalog.db_dir(db_id)
         for tbl_file in self.catalog.files(db_id):
-            cmd = f'sudo cp -r {src_dir}/{tbl_file} {self.tmp_dir}'
-            os.system(cmd)
-    
+            src_path = f'{src_dir}/{tbl_file}'
+            if self.id_case:
+                cmd = f'sudo cp -r {src_path} {self.tmp_dir}'
+                os.system(cmd)
+            else:
+                with open(src_path) as file:
+                    lines = file.readlines()
+                    lines[0] = lines[0].lower()
+                to_path = f'{self.tmp_dir}/{tbl_file.lower()}'
+                with open(to_path, 'w') as file:
+                    for line in lines:
+                        file.write(line)
+
     def _expand_paths(self, db_id, code):
         """ Expand relative paths to data files in code.
         

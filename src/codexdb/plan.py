@@ -555,12 +555,13 @@ if __name__ == '__main__':
         
     planner = NlPlanner()
     for idx, test_case in enumerate(test_cases[0:100]):
+        db_id = test_case['db_id']
         query = test_case['query']
-        print(f'{idx}: {query}')
-        plan = planner.plan(query)
-        print(plan.steps())
+        print(f'{idx}: {db_id}/{query}')
+        # plan = planner.plan(query)
+        # print(plan.steps())
     
-    # query = "SELECT DISTINCT T1.creation FROM department AS T1 JOIN management AS T2 ON T1.department_id  =  T2.department_id JOIN head AS T3 ON T2.head_id  =  T3.head_id WHERE T3.born_state  =  'Alabama'"
+    # query = "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.age  >  20"
     # planner = NlPlanner()
     # plan = planner.plan(query)
     # print(plan.steps())
