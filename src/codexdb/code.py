@@ -159,9 +159,9 @@ class PythonGenerator(CodeGenerator):
             mod_end: modifications at end of query plan
         """
         super().__init__(*pargs)
-        self.ai_kwargs['max_tokens'] = 600
+        self.ai_kwargs['max_tokens'] = 800
         self.ai_kwargs['stop'] = '"""'
-        self.planner = codexdb.plan.NlPlanner()
+        self.planner = codexdb.plan.NlPlanner(id_case)
         self.id_case = id_case
         self.mod_start = mod_start
         self.mod_between = mod_between

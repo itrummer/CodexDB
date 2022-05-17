@@ -127,12 +127,13 @@ class NlPlan():
 class NlPlanner():
     """ Generates natural language query plan for query. """
     
-    def __init__(self):
-        """ Initializes with given line prefix. 
+    def __init__(self, id_case):
+        """ Initializes planner. 
         
         Args:
-            line_prefix: every line is prefixed by this string
+            id_case: whether to consider letter case for identifiers
         """
+        self.id_case = id_case
         self.tokenizer = sqlglot.tokens.Tokenizer()
         self.parser = sqlglot.parser.Parser()
     
@@ -539,6 +540,8 @@ class NlPlanner():
     def _identifier_nl(self, expression):
         """ Express identifier (e.g., table name) in natural language. """
         label = expression.args.get('this') or ''
+        if not self.id_case:
+            label = label.lower()
         if expression.args.get('quoted'):
             label = f"'{label}'"
         return [label], NlPlan()
