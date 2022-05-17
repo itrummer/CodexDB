@@ -6,6 +6,7 @@ Created on May 17, 2022
 import argparse
 import codexdb.solve
 import json
+import openai
 import os
 
 if __name__ == '__main__':
@@ -14,6 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('config_path', type=str, help='Configuration file path')
     args = parser.parse_args()
     
+    openai.api_key = args.ai_key
     with open(args.config_path) as file:
         config = json.load(file)
     
