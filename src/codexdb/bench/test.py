@@ -43,5 +43,5 @@ if __name__ == '__main__':
         data_dir, test_path, 'python', 
         model_id, prompt_style, id_case, 
         mod_start, mod_between, mod_end, 
-        sample_path, nr_samples, 200, 
-        'executed', 4, log_path, result_path)
+        sample_path, nr_samples, nr_tests, 
+        'executed', nr_retries, log_path, result_path)
