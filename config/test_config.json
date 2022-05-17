@@ -2,7 +2,7 @@
 	"data_dir":"/home/ubuntu/spider/spider",
 	"sample_path":"/home/ubuntu/codexdb/experiments/spider2/pandas/train_plain.json",
 	"test_path":"/home/ubuntu/spider/spider/results_dev.json",
-	"nr_tests":200,
+	"nr_tests":100,
 	"model_id":"davinci-codex",
 	"prompt_style":"plan",
 	"nr_samples":4,
@@ -10,6 +10,6 @@
 	"mod_start":"Use pandas library",
 	"mod_between":"",
 	"mod_end":"",
-	"nr_retries":200,
+	"nr_retries":4,
 	"out_dir":"/home/ubuntu/codexdb/experiments/spider2/pandas3"
 }
