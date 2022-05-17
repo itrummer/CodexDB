@@ -1,6 +1,6 @@
 {
 	"data_dir":"/home/ubuntu/spider/spider",
-	"sample_path":"/home/ubuntu/codexdb/experiments/spider2/pandas2/train_plain.json",
+	"sample_path":"/home/ubuntu/codexdb/experiments/spider2/pandas/train_plain.json",
 	"test_path":"/home/ubuntu/spider/spider/results_dev.json",
 	"nr_tests":200,
 	"model_id":"davinci-codex",
