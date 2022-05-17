@@ -31,7 +31,7 @@ if __name__ == '__main__':
     nr_retries = config['nr_retries']
     out_dir = config['out_dir']
     
-    if os.listdir(args.out_dir):
+    if os.listdir(out_dir):
         raise ValueError('Output directory must be empty!')
 
     run_id = f'{model_id}_{prompt_style}_{nr_samples}'
