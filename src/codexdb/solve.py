@@ -59,6 +59,10 @@ def result_cmp(ref_output, cmp_output, reorder):
     ref_output.columns = [0] * ref_output.shape[1]
     cmp_output.columns = [0] * cmp_output.shape[1]
     try:
+        print('Casting all columns to string type ...')
+        ref_output = ref_output.astype(str)
+        cmp_output = cmp_output.astype(str)
+        
         if reorder:
             print('Reordering Rows Before Comparison')
             nr_columns = len(ref_output.columns)
