@@ -127,13 +127,15 @@ class NlPlan():
 class NlPlanner():
     """ Generates natural language query plan for query. """
     
-    def __init__(self, id_case):
+    def __init__(self, id_case, quote_ids=True):
         """ Initializes planner. 
         
         Args:
             id_case: whether to consider letter case for identifiers
+            quote_ids: whether to place all identifiers in quotes
         """
         self.id_case = id_case
+        self.quote_ids = quote_ids
         self.tokenizer = sqlglot.tokens.Tokenizer()
         self.parser = sqlglot.parser.Parser()
     
@@ -542,7 +544,7 @@ class NlPlanner():
         label = expression.args.get('this') or ''
         if not self.id_case:
             label = label.lower()
-        if expression.args.get('quoted'):
+        if self.quote_ids or expression.args.get('quoted'):
             label = f"'{label}'"
         return [label], NlPlan()
     
