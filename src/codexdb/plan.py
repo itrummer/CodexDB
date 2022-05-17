@@ -556,8 +556,8 @@ if __name__ == '__main__':
     with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
         test_cases = json.load(file)
         
-    planner = NlPlanner()
-    for idx, test_case in enumerate(test_cases[0:100]):
+    planner = NlPlanner(False)
+    for idx, test_case in enumerate(test_cases[0:200]):
         db_id = test_case['db_id']
         query = test_case['query']
         print(f'{idx}: {db_id}/{query}')

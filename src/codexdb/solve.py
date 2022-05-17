@@ -63,8 +63,8 @@ def result_cmp(ref_output, cmp_output, reorder):
             print('Reordering Rows Before Comparison')
             nr_columns = len(ref_output.columns)
             column_idxs = list(range(nr_columns))
-            ref_output.sort_values(by=column_idxs)
-            cmp_output.sort_values(by=column_idxs)
+            ref_output.sort_values(by=column_idxs, inplace=True)
+            cmp_output.sort_values(by=column_idxs, inplace=True)
 
         print(f'--- CodexDB column types:\n{cmp_output.dtypes}')
         print(f'--- CodexDB normalized output:\n{cmp_output}\n--\n')
@@ -113,7 +113,7 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
         print(f'Reference Query: "{query}"')
         gen_total_s = time.time() - gen_start_s
         executed, codb_result, elapsed_s = engine.execute(db_id, code, 30)
-        print(f'CodexDB executed: {executed} in {elapsed_s}s')                
+        print(f'CodexDB executed: {executed} in {elapsed_s}s')
         ref_output = pd.DataFrame(test_case['results'])
         comparable, nr_diffs, similarity = result_cmp(
             ref_output, codb_result, reorder)
