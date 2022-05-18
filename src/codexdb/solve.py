@@ -83,8 +83,9 @@ def result_cmp(ref_output, cmp_output, reorder):
         print(f'-- Differences:\n{diffs}\n--\n')
         nr_diffs = diffs.shape[0]
         return True, nr_diffs, 1.0/(nr_diffs+1)
-    except:
+    except Exception as e:
         print('(Incomparable)')
+        print(f'Exception: {e}')
         return False, -1, 0
 
 def solve(catalog, test_case, coder, engine, termination, max_tries):
