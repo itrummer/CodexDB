@@ -61,8 +61,8 @@ def result_cmp(ref_output, cmp_output, reorder):
     
     ref_output.reindex()
     cmp_output.reindex()
-    ref_output.columns = [0] * ref_output.shape[1]
-    cmp_output.columns = [0] * cmp_output.shape[1]
+    ref_output.columns = range(ref_output.shape[1])
+    cmp_output.columns = range(cmp_output.shape[1])
     try:
         print('Casting all columns to string type ...')
         ref_output = ref_output.astype(str)
