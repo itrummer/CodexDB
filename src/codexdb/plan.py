@@ -20,6 +20,9 @@ class NlPlan():
     
     def __init__(self):
         """ Initializes plan steps. 
+        
+        Args:
+            id_steps: list of tuples (step ID and step)
         """
         # List of Tuple(Step ID, List of parts)
         self.id_steps = []
@@ -49,6 +52,13 @@ class NlPlan():
             self.id_steps.insert(0, (step_id, step))
         return step_id
     
+    def id_to_step(self):
+        """ Returns dictionary mapping step IDs to steps. """
+        id_to_step = {}
+        for step_id, step in self.id_steps:
+            id_to_step[step_id] = step
+        return id_to_step
+    
     def intersperse_step(self, step):
         """ Add given step after each current plan step. 
         
@@ -72,6 +82,19 @@ class NlPlan():
             return self.id_steps[-1][0]
         else:
             return None
+
+    def step_ref_counts(self):
+        """ Count number of references for each step.
+        
+        Returns:
+            dictionary mapping step IDs to number of references
+        """
+        step_ref_counts = collections.defaultdict(lambda:0)
+        for _, step in self.id_steps:
+            for part in step:
+                if isinstance(part, int):
+                    step_ref_counts[part] += 1
+        return step_ref_counts
 
     def steps(self, offset=0):
         """ Generates list of natural language plan steps. 
@@ -290,14 +313,16 @@ class NlPlanner():
             conjuncts = self._conjuncts(where_expr)
             for pred in conjuncts:
                 pred_labels, pred_plan = self.nl(pred)
+                pred_plan = self._simplify_plan(pred_plan)
+                pred_plan.id_steps[-1][1].insert(0, 'Filter table:')
                 plan.add_plan(pred_plan)
-                tables = self._tables(pred)
-                if len(tables) == 1:
-                    table = tables.pop()
-                    step = ['Filter'] + [table] + ['using'] + pred_labels
-                else:
-                    step = ['Filter using'] + pred_labels
-                plan.add_step(step)
+                # tables = self._tables(pred)
+                # if len(tables) == 1:
+                    # table = tables.pop()
+                    # step = ['Filter'] + [table] + ['using'] + pred_labels
+                # else:
+                    # step = ['Filter using'] + pred_labels
+                # plan.add_step(step)
         
         # Join tables considering join conditions
         left_op = from_expressions[0]
@@ -608,6 +633,37 @@ class NlPlanner():
         last_labels = [plan.add_step(step)]
         return last_labels, plan
     
+    def _simplify_plan(self, plan):
+        """ Try to simplify given plan by merging steps. 
+        
+        Args:
+            plan: try to reduce number of steps in this plan
+            
+        Returns:
+            simplified plan
+        """
+        id_to_step = plan.id_to_step()
+        step_ref_counts = plan.step_ref_counts()
+        for step_id, step in plan.id_steps:
+            new_step = []
+            for part in step:
+                if isinstance(part, int):
+                    ref_step = id_to_step[part]
+                    if ref_step[0] == 'Check if':
+                        new_step += ref_step[1:]
+                        step_ref_counts[part] -= 1
+                        if step_ref_counts[part] == 0:
+                            del id_to_step[part]
+                        continue
+                
+                new_step += [part]
+            id_to_step[step_id] = new_step
+        id_steps = sorted(id_to_step.items(), key=lambda t:t[0])
+        
+        new_plan = NlPlan()
+        new_plan.id_steps = id_steps
+        return new_plan
+    
     def _star_nl(self, _):
         """ Translates star into natural language. """
         return ['all columns'], NlPlan()
@@ -666,24 +722,26 @@ class NlPlanner():
 
 if __name__ == '__main__':
     
-    with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
-        test_cases = json.load(file)
-        
-    planner = NlPlanner(False)
-    for idx, test_case in enumerate(test_cases[0:100]):
-        db_id = test_case['db_id']
-        query = test_case['query']
-        print(f'{idx}: {db_id}/{query}')
-        plan = planner.plan(query)
-        print(plan.steps())
+    # with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
+        # test_cases = json.load(file)
+        #
+    # planner = NlPlanner(False)
+    # for idx, test_case in enumerate(test_cases[0:100]):
+        # db_id = test_case['db_id']
+        # query = test_case['query']
+        # print(f'{idx}: {db_id}/{query}')
+        # plan = planner.plan(query)
+        # print(plan.steps())
     
     # query = "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.age  >  20"
     # query = "SELECT T1.CountryName FROM COUNTRIES AS T1 JOIN CONTINENTS AS T2 ON T1.Continent  =  T2.ContId JOIN CAR_MAKERS AS T3 ON T1.CountryId  =  T3.Country WHERE T2.Continent  =  'europe' GROUP BY T1.CountryName HAVING count(*)  >=  3"
     #query = "select count(*) from ta as a join tb as b on (a.x=b.x) where a.c = 1 and a.d = 2 and (b.i=1 or b.j=2)"
-    # planner = NlPlanner(False)
-    # plan = planner.plan(query)
-    # for step in plan.steps():
-        # print(step)
+    # query = "SELECT T2.name FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id JOIN concert AS T3 ON T1.concert_id  =  T3.concert_id WHERE T3.year  =  2014"
+    query = "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T3.pettype  =  'dog'"
+    planner = NlPlanner(False)
+    plan = planner.plan(query)
+    for step in plan.steps():
+        print(step)
     
     # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
         # test_cases = json.load(file)
