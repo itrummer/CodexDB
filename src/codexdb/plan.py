@@ -3,6 +3,7 @@ Created on Jan 21, 2022
 
 @author: immanueltrummer
 '''
+import collections
 import json
 import sqlglot.parser
 import sqlglot.tokens
@@ -183,36 +184,27 @@ class NlPlanner():
         plan.add_step(write_out)
         return plan
     
+    def _alias(self, expression):
+        """ Extract alias from alias expression. """
+        assert expression.key == 'alias', 'No alias type expression'
+        alias_id = expression.args['alias']
+        return self._identifier_label(alias_id)
+    
     def _select_nl(self, expression):
         """ Generates natural language plan for select query. """
-        from_labels, plan = self.nl(expression, 'from')
-        last_labels = from_labels
-        
-        for join_expr in expression.args.get("joins", []):
-            join_table = join_expr.args.get('this')
-            join_pred = join_expr.args.get('on')
-            table_labels, table_prep = self.nl(join_table)
-            plan.add_plan(table_prep)
-            filter_label, filter_prep = self.nl(join_pred)
-            filter_steps = filter_prep.id_steps
-            print(filter_steps)
-            if len(filter_steps) == 1:
-                join_step = ['Join'] + last_labels + ['and'] + \
-                    table_labels + [':'] + filter_steps[0][1]
-                last_labels = [plan.add_step(join_step)]
-            else:
-                cross_step = ['Join'] + last_labels + ['and'] + table_labels
-                filter_step = ['Keep rows if'] + filter_label + ['is true']
-                plan.add_step(cross_step)
-                plan.add_plan(filter_prep)
-                last_labels = [plan.add_step(filter_step)]
-        
-        if expression.args.get('where'):
-            where_expr = expression.args['where'].args['this']
-            where_labels, where_prep = self.nl(where_expr)
-            plan.add_plan(where_prep)
-            where_step = ['Filter'] + from_labels + ['using'] + where_labels
-            last_labels = [plan.add_step(where_step)]
+        if expression.args['joins']:
+            last_labels, plan = self._filter_and_join(expression)
+
+        else:
+            from_labels, plan = self.nl(expression, 'from')
+            last_labels = from_labels
+            
+            if expression.args.get('where'):
+                where_expr = expression.args['where'].args['this']
+                where_labels, where_prep = self.nl(where_expr)
+                plan.add_plan(where_prep)
+                where_step = ['Filter'] + from_labels + ['using'] + where_labels
+                last_labels = [plan.add_step(where_step)]
 
         if expression.args.get('group'):
             group_expr = expression.args['group']
@@ -264,6 +256,62 @@ class NlPlanner():
         
         return last_labels, plan
     
+    def _filter_and_join(self, expression):
+        """ Join tables and apply unary predicates. """
+        # tbl_to_preds = self._unary_predicates(expression)
+        from_expressions = expression.args['from'].args['expressions']
+        join_expressions = expression.args.get('joins')
+        
+        tbl_expressions = from_expressions
+        for join in join_expressions:
+            tbl_expression = join.args['this']
+            tbl_expressions += [tbl_expression]
+        
+        # Load data and assign aliases
+        plan = NlPlan()
+        for tbl_expression in tbl_expressions:
+            table = self._tables(tbl_expression).pop()
+            alias = table
+            if tbl_expression.key == 'alias':
+                alias = self._alias(tbl_expression)
+            step = ['Load table'] + [table] + ['and store as'] + [alias]
+            plan.add_step(step)
+            
+            # preds = tbl_to_preds[alias]
+            # for pred in preds:
+                # pred_label, pred_plan = self.nl(pred)
+                # plan.add_plan(pred_plan)
+                # step = ['Filter'] + [alias] + ['using'] + pred_label
+                # plan.add_step(step)
+        
+        # Apply predicates in where clause
+        if expression.args.get('where'):
+            where_expr = expression.args['where'].args['this']
+            conjuncts = self._conjuncts(where_expr)
+            for pred in conjuncts:
+                pred_labels, pred_plan = self.nl(pred)
+                plan.add_plan(pred_plan)
+                tables = self._tables(pred)
+                if len(tables) == 1:
+                    table = tables.pop()
+                    step = ['Filter'] + [table] + ['using'] + pred_labels
+                else:
+                    step = ['Filter using'] + pred_labels
+                plan.add_step(step)
+        
+        # Join tables considering join conditions
+        left_op = from_expressions[0]
+        left_label = self._tables(left_op).pop()
+        for join in join_expressions:
+            right_op = join.args['this']
+            right_label = self._tables(right_op).pop()
+            eq_label = self._join_eq_label(join)
+            step = ['Join'] + [left_label] + ['with'] + \
+                [right_label] + ['ensuring that'] + [eq_label]
+            left_label = plan.add_step(step)
+
+        return [left_label], plan
+    
     def _agg_nl(self, expression, agg_name):
         """ Translates aggregate into natural language. 
         
@@ -281,28 +329,6 @@ class NlPlanner():
     def _avg_nl(self, expression):
         """ Translate average aggregate into natural language. """
         return self._agg_nl(expression, 'average')
-    
-    def _max_nl(self, expression):
-        """ Translate maximum aggregate into natural language. """
-        return self._agg_nl(expression, 'maximum')
-    
-    def _min_nl(self, expression):
-        """ Translate minimum aggregate into natural language. """
-        return self._agg_nl(expression, 'minimum')
-    
-    def _sum_nl(self, expression):
-        """ Translate sum aggregate into natural language. """
-        return self._agg_nl(expression, 'sum')
-    
-    def _count_nl(self, expression):
-        """ Translate count aggregate into natural language. """
-        count_args = expression.args.get('this')
-        if count_args.args.get('this').key == 'star':
-            return ['number of rows'], NlPlan()
-        else:
-            arg_labels, prep = self.nl(count_args)
-            labels = ['count of rows without null values in'] + arg_labels
-            return labels, prep
     
     def _between_nl(self, expression):
         """ Translates between statement into natural language. """
@@ -366,6 +392,30 @@ class NlPlanner():
             labels += ['in'] + db_labels
         return labels, plan
 
+    def _conjuncts(self, expression):
+        """ Extract list of conjuncts from expression. """
+        if expression.key == 'and':
+            conjuncts = []
+            conjuncts += [expression.args.get('this')]
+            conjuncts += [expression.args.get('expression')]
+            return conjuncts
+        else:
+            return [expression]
+
+    def _count_nl(self, expression):
+        """ Translate count aggregate into natural language. """
+        count_args = expression.args.get('this')
+        if count_args.args.get('this').key == 'star':
+            return ['number of rows'], NlPlan()
+        else:
+            arg_labels, prep = self.nl(count_args)
+            labels = ['count of rows without null values in'] + arg_labels
+            return labels, prep
+
+    def _eq_nl(self, expression):
+        """ Translate equality condition into natural language. """
+        return self._cmp(expression, 'equals')
+
     def _except_nl(self, expression):
         """ Translates SQL except expression into natural language. """
         return self._set_operation(expression, 'From', 'remove', None)
@@ -379,6 +429,33 @@ class NlPlanner():
             plan.add_plan(prep)
             labels += new_labels + [', ']
         return labels[:-1], plan
+    
+    def _from_nl(self, expression):
+        """ Translates from clause into natural language description. """
+        last_label = None
+        for expr in expression.args['expressions']:
+            from_label, from_prep = self.nl(expr)
+            if last_label is None:
+                last_label = from_label
+                plan = from_prep
+            else:
+                step = ['Join', last_label, 'with', from_label, '.']
+                last_label = plan.add_step(step)
+        return last_label, plan
+    
+    def _identifier_label(self, expression):
+        """ Construct text label for identifier. """
+        label = expression.args.get('this') or ''
+        if not self.id_case:
+            label = label.lower()
+        if self.quote_ids or expression.args.get('quoted'):
+            label = f"'{label}'"
+        return label
+    
+    def _identifier_nl(self, expression):
+        """ Express identifier (e.g., table name) in natural language. """
+        label = self._identifier_label(expression)
+        return [label], NlPlan()
     
     def _in_nl(self, expression):
         """ Translate SQL IN expression into natural language. """
@@ -397,6 +474,18 @@ class NlPlanner():
         drop_duplicates = True if distinct is not None else False
         postfix = 'and eliminate duplicates' if drop_duplicates else None
         return self._set_operation(expression, 'Intersect', 'and', postfix)
+    
+    def _join_eq_label(self, expression):
+        """ Translate equality join condition into natural language label. """
+        predicate = expression.args['on']
+        assert predicate.key == 'eq', 'No equality join predicate'
+        left_op = predicate.args.get('this')
+        right_op = predicate.args.get('expression')
+        left_labels, _ = self._column_nl(left_op)
+        right_labels, _ = self._column_nl(right_op)
+        left_label = ' '.join(left_labels)
+        right_label = ' '.join(right_labels)
+        return left_label + ' equals ' + right_label
     
     def _join_nl(self, expression):
         """ Translates join expression into natural language. """
@@ -422,6 +511,14 @@ class NlPlanner():
         else:
             return [text], NlPlan()
     
+    def _max_nl(self, expression):
+        """ Translate maximum aggregate into natural language. """
+        return self._agg_nl(expression, 'maximum')
+    
+    def _min_nl(self, expression):
+        """ Translate minimum aggregate into natural language. """
+        return self._agg_nl(expression, 'minimum')
+    
     def _not_nl(self, expression):
         """ Express negation in natural language. """
         op_label, plan = self.nl(expression, 'this')
@@ -439,10 +536,6 @@ class NlPlanner():
         is_desc = True if expression.args.get('desc') else False
         direction = '(descending)' if is_desc else '(ascending)'
         return last_labels + [direction], plan
-    
-    def _eq_nl(self, expression):
-        """ Translate equality condition into natural language. """
-        return self._cmp(expression, 'equals')
 
     def _gt_nl(self, expression):
         """ Translate greater than condition into natural language. """
@@ -479,19 +572,6 @@ class NlPlanner():
     def _and_nl(self, expression):
         """ Translate logical and into natural language. """
         return self._cmp(expression, 'and')
-    
-    def _from_nl(self, expression):
-        """ Translates from clause into natural language description. """
-        last_label = None
-        for expr in expression.args['expressions']:
-            from_label, from_prep = self.nl(expr)
-            if last_label is None:
-                last_label = from_label
-                plan = from_prep
-            else:
-                step = ['Join', last_label, 'with', from_label, '.']
-                last_label = plan.add_step(step)
-        return last_label, plan
 
     def _alias_nl(self, expression):
         """ Translate alias into natural language. """
@@ -532,6 +612,10 @@ class NlPlanner():
         """ Translates star into natural language. """
         return ['all columns'], NlPlan()
 
+    def _sum_nl(self, expression):
+        """ Translate sum aggregate into natural language. """
+        return self._agg_nl(expression, 'sum')
+
     def _table_nl(self, expression):
         """ Describe table in natural language. """
         table_labels, plan = self.nl(expression, 'this')
@@ -539,14 +623,41 @@ class NlPlanner():
         last_labels = [plan.add_step(step)]
         return last_labels, plan
     
-    def _identifier_nl(self, expression):
-        """ Express identifier (e.g., table name) in natural language. """
-        label = expression.args.get('this') or ''
-        if not self.id_case:
-            label = label.lower()
-        if self.quote_ids or expression.args.get('quoted'):
-            label = f"'{label}'"
-        return [label], NlPlan()
+    def _tables(self, expression):
+        """ Returns set of tables mentioned in expression. """
+        tables = set()
+        if isinstance(expression, list):
+            for element in expression:
+                tables.update(self._tables(element))
+        
+        elif isinstance(expression, sqlglot.expressions.Expression):
+            if expression.key == 'table':
+                tbl_expr = expression.args.get('this')
+                tbl_label = self._identifier_label(tbl_expr)
+                tables.add(tbl_label)
+            else:
+                for k, v in expression.args.items():
+                    if k == 'table' and v is not None:
+                        tbl_label = self._identifier_label(v)
+                        tables.add(tbl_label)
+                    else:
+                        tables.update(self._tables(v))
+            
+        return tables
+    
+    def _unary_predicates(self, expression):
+        """ Map tables to their unary predicates. """
+        tbl_to_preds = collections.defaultdict(lambda:[])
+        if expression.args.get('where'):
+            where_expr = expression.args['where'].args['this']
+            conjuncts = self._conjuncts(where_expr)
+            for conjunct in conjuncts:
+                tables = self._tables(conjunct)
+                assert len(tables) == 1, 'Only unary predicates!'
+                table = tables.pop()
+                tbl_to_preds[table] += [conjunct]
+        
+        return tbl_to_preds
     
     def _neg_nl(self, expression):
         """ Translates negation into natural language. """
@@ -559,17 +670,20 @@ if __name__ == '__main__':
         test_cases = json.load(file)
         
     planner = NlPlanner(False)
-    for idx, test_case in enumerate(test_cases[0:200]):
+    for idx, test_case in enumerate(test_cases[0:100]):
         db_id = test_case['db_id']
         query = test_case['query']
         print(f'{idx}: {db_id}/{query}')
-        # plan = planner.plan(query)
-        # print(plan.steps())
+        plan = planner.plan(query)
+        print(plan.steps())
     
     # query = "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.age  >  20"
-    # planner = NlPlanner()
+    # query = "SELECT T1.CountryName FROM COUNTRIES AS T1 JOIN CONTINENTS AS T2 ON T1.Continent  =  T2.ContId JOIN CAR_MAKERS AS T3 ON T1.CountryId  =  T3.Country WHERE T2.Continent  =  'europe' GROUP BY T1.CountryName HAVING count(*)  >=  3"
+    #query = "select count(*) from ta as a join tb as b on (a.x=b.x) where a.c = 1 and a.d = 2 and (b.i=1 or b.j=2)"
+    # planner = NlPlanner(False)
     # plan = planner.plan(query)
-    # print(plan.steps())
+    # for step in plan.steps():
+        # print(step)
     
     # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
         # test_cases = json.load(file)
