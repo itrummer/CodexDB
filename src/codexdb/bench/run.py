@@ -57,7 +57,7 @@ def test(data_dir, test_path, sample_path, id_case,
                     data_dir, test_path, 'python', 
                     model_id, prompt_style, id_case, 
                     mod_start, mod_between, mod_end, 
-                    sample_path, nr_samples, 200, 
+                    sample_path, nr_samples, 100, 
                     'executed', 4, log_path, result_path)
 
 
