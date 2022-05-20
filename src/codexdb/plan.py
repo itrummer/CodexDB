@@ -389,7 +389,7 @@ class NlPlanner():
         
         selectors = expression.args.get('expressions')
         select_labels = []
-        for selector in selectors:
+        for idx, selector in enumerate(selectors, 1):
             selector = self._strip_tables(selector)
             select_cmd, select_prep = self.nl(selector)
             plan.add_plan(select_prep)
@@ -398,6 +398,7 @@ class NlPlanner():
             if select_labels:
                 select_labels += [',']
             select_labels += [select_label]
+            select_labels += [f'(column {idx})']
         
         step = ['Create table with columns for'] + select_labels
         last_labels = [plan.add_step(step)]
@@ -501,11 +502,15 @@ class NlPlanner():
     def _count_nl(self, expression):
         """ Translate count aggregate into natural language. """
         count_args = expression.args.get('this')
+        row_ref = 'rows'
+        if expression.args.get('distinct') is True:
+            row_ref = 'distinct rows'
         if count_args.args.get('this').key == 'star':
-            return ['number of rows'], NlPlan()
+            return ['number of'] + [row_ref], NlPlan()
         else:
             arg_labels, prep = self.nl(count_args)
-            labels = ['count of rows without null values in'] + arg_labels
+            labels = ['count of'] + [row_ref] + \
+                ['without null values in'] + arg_labels
             return labels, prep
 
     def _eq_nl(self, expression):
@@ -823,28 +828,30 @@ class NlPlanner():
 
 if __name__ == '__main__':
     
-    with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
-        test_cases = json.load(file)
-        
-    planner = NlPlanner(False)
-    for idx, test_case in enumerate(test_cases[0:200:2]):
-        db_id = test_case['db_id']
-        query = test_case['query']
-        print('-----------------------')
-        print(f'Q{idx}: {db_id}/{query}')
-        plan = planner.plan(query)
-        for step in plan.steps():
-            print(step)
+    # with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
+        # test_cases = json.load(file)
+        #
+    # planner = NlPlanner(False)
+    # for idx, test_case in enumerate(test_cases[0:200:2]):
+        # db_id = test_case['db_id']
+        # query = test_case['query']
+        # print('-----------------------')
+        # print(f'Q{idx}: {db_id}/{query}')
+        # plan = planner.plan(query)
+        # for step in plan.steps():
+            # print(step)
     
     # query = "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.age  >  20"
     # query = "SELECT T1.CountryName FROM COUNTRIES AS T1 JOIN CONTINENTS AS T2 ON T1.Continent  =  T2.ContId JOIN CAR_MAKERS AS T3 ON T1.CountryId  =  T3.Country WHERE T2.Continent  =  'europe' GROUP BY T1.CountryName HAVING count(*)  >=  3"
     #query = "select count(*) from ta as a join tb as b on (a.x=b.x) where a.c = 1 and a.d = 2 and (b.i=1 or b.j=2)"
     # query = "SELECT T2.name FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id JOIN concert AS T3 ON T1.concert_id  =  T3.concert_id WHERE T3.year  =  2014"
     # query = "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T3.pettype  =  'dog'"
-    # planner = NlPlanner(False)
-    # plan = planner.plan(query)
-    # for step in plan.steps():
-        # print(step)
+    #query = "SELECT count(DISTINCT pettype) FROM pets"
+    query = "select count(*) ,  t1.stuid from student as t1 join has_pet as t2 on t1.stuid  =  t2.stuid group by t1.stuid"
+    planner = NlPlanner(False)
+    plan = planner.plan(query)
+    for step in plan.steps():
+        print(step)
     
     # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
         # test_cases = json.load(file)

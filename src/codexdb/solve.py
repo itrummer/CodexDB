@@ -53,14 +53,12 @@ def result_cmp(ref_output, cmp_output, reorder):
         Comparable flag, number of differences, similarity
     """
     print(f'-- CodexDB output:\n{cmp_output}\n--\n')
-    print(f'DF Index: {cmp_output.index}')
-    print(f'DF info: {cmp_output.info()}')
+    print(f'CodexDB Index: {cmp_output.index}')
+    print(f'CodexDB info: {cmp_output.info()}')
     print(f'-- Reference output:\n{ref_output}\n--\n')
-    print(f'DF Index: {ref_output.index}')
-    print(f'DF info: {ref_output.info()}')
+    print(f'Reference Index: {ref_output.index}')
+    print(f'Reference info: {ref_output.info()}')
     
-    ref_output.reindex()
-    cmp_output.reindex()
     ref_output.columns = range(ref_output.shape[1])
     cmp_output.columns = range(cmp_output.shape[1])
     try:
@@ -74,6 +72,9 @@ def result_cmp(ref_output, cmp_output, reorder):
             column_idxs = list(range(nr_columns))
             ref_output.sort_values(by=column_idxs, inplace=True)
             cmp_output.sort_values(by=column_idxs, inplace=True)
+
+        ref_output.reindex()
+        cmp_output.reindex()
 
         print(f'--- CodexDB column types:\n{cmp_output.dtypes}')
         print(f'--- CodexDB normalized output:\n{cmp_output}\n--\n')
