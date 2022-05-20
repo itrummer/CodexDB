@@ -27,7 +27,8 @@ def train(data_dir, train_path, log_path, id_case,
     """
     codexdb.solve.main(
         data_dir, train_path, 'python', 'davinci-codex', 'plan', 
-        id_case, mod_start, mod_between, mod_end, '', 0, 50, 
+        id_case, mod_start, mod_between, mod_end, '', 0, 
+        0, 1, 50,
         'solved', 10, log_path, result_path)
 
 def test(data_dir, test_path, sample_path, id_case,
@@ -57,7 +58,7 @@ def test(data_dir, test_path, sample_path, id_case,
                     data_dir, test_path, 'python', 
                     model_id, prompt_style, id_case, 
                     mod_start, mod_between, mod_end, 
-                    sample_path, nr_samples, 100, 
+                    sample_path, nr_samples, 0, 1, 100, 
                     'executed', 4, log_path, result_path)
 
 

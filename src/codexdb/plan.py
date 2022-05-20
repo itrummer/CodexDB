@@ -212,6 +212,18 @@ class NlPlanner():
         assert expression.key == 'alias', 'No alias type expression'
         alias_id = expression.args['alias']
         return self._identifier_label(alias_id)
+
+    def _alias_nl(self, expression):
+        """ Translate alias into natural language. """
+        alias_labels, alias_prep = self.nl(expression, 'alias')
+        this_labels, plan = self.nl(expression, 'this')
+        plan.add_plan(alias_prep)
+        last_labels = this_labels + ['(aka.'] + alias_labels + [')']
+        return last_labels, plan
+    
+    def _and_nl(self, expression):
+        """ Translate logical and into natural language. """
+        return self._cmp(expression, 'and')
     
     def _select_nl(self, expression):
         """ Generates natural language plan for select query. """
@@ -525,6 +537,14 @@ class NlPlanner():
                 last_label = plan.add_step(step)
         return last_label, plan
     
+    def _gt_nl(self, expression):
+        """ Translate greater than condition into natural language. """
+        return self._cmp(expression, 'is greater than')
+
+    def _gte_nl(self, expression):
+        """ Translate greater or equal into natural language. """
+        return self._cmp(expression, 'is greater or equal to')
+    
     def _identifier_label(self, expression):
         """ Construct text label for identifier. """
         label = expression.args.get('this') or ''
@@ -556,6 +576,10 @@ class NlPlanner():
         drop_duplicates = True if distinct is not None else False
         postfix = 'and eliminate duplicates' if drop_duplicates else None
         return self._set_operation(expression, 'Intersect', 'and', postfix)
+
+    def _is_nl(self, expression):
+        """ Translate SQL IS comparison into natural language. """
+        return self._cmp(expression, 'is')
     
     def _join_eq_label(self, expression):
         """ Translate equality join condition into natural language label. """
@@ -593,6 +617,18 @@ class NlPlanner():
         else:
             return [text], NlPlan()
     
+    def _like_nl(self, expression):
+        """ Translate SQL LIKE into natural language. """
+        return self._cmp(expression, 'matches')
+
+    def _lt_nl(self, expression):
+        """ Translate less than comparison into natural language. """
+        return self._cmp(expression, 'is less than')
+
+    def _lte_nl(self, expression):
+        """ Translates less or equal than comparison into natural language. """
+        return self._cmp(expression, 'is less than or equal to')
+    
     def _max_nl(self, expression):
         """ Translate maximum aggregate into natural language. """
         return self._agg_nl(expression, 'maximum')
@@ -600,6 +636,15 @@ class NlPlanner():
     def _min_nl(self, expression):
         """ Translate minimum aggregate into natural language. """
         return self._agg_nl(expression, 'minimum')
+    
+    def _neg_nl(self, expression):
+        """ Translates negation into natural language. """
+        labels, plan = self.nl(expression, 'this')
+        return ['-'] + labels, plan
+
+    def _neq_nl(self, expression):
+        """ Translates inequality into natural language. """
+        return self._cmp(expression, 'is not equal to')
     
     def _not_nl(self, expression):
         """ Express negation in natural language. """
@@ -619,49 +664,9 @@ class NlPlanner():
         direction = '(descending)' if is_desc else '(ascending)'
         return last_labels + [direction], plan
 
-    def _gt_nl(self, expression):
-        """ Translate greater than condition into natural language. """
-        return self._cmp(expression, 'is greater than')
-
-    def _gte_nl(self, expression):
-        """ Translate greater or equal into natural language. """
-        return self._cmp(expression, 'is greater or equal to')
-
-    def _is_nl(self, expression):
-        """ Translate SQL IS comparison into natural language. """
-        return self._cmp(expression, 'is')
-
-    def _like_nl(self, expression):
-        """ Translate SQL LIKE into natural language. """
-        return self._cmp(expression, 'matches')
-
-    def _lt_nl(self, expression):
-        """ Translate less than comparison into natural language. """
-        return self._cmp(expression, 'is less than')
-
-    def _lte_nl(self, expression):
-        """ Translates less or equal than comparison into natural language. """
-        return self._cmp(expression, 'is less than or equal to')
-    
-    def _neq_nl(self, expression):
-        """ Translates inequality into natural language. """
-        return self._cmp(expression, 'is not equal to')
-
     def _or_nl(self, expression):
         """ Translate logical or into natural language. """
         return self._cmp(expression, 'or')
-
-    def _and_nl(self, expression):
-        """ Translate logical and into natural language. """
-        return self._cmp(expression, 'and')
-
-    def _alias_nl(self, expression):
-        """ Translate alias into natural language. """
-        alias_labels, alias_prep = self.nl(expression, 'alias')
-        this_labels, plan = self.nl(expression, 'this')
-        plan.add_plan(alias_prep)
-        last_labels = this_labels + ['(aka.'] + alias_labels + [')']
-        return last_labels, plan
 
     def _paren_nl(self, expression):
         """ Translate parenthesis expression to natural language. """
@@ -794,10 +799,13 @@ class NlPlanner():
         
         return tbl_to_preds
     
-    def _neg_nl(self, expression):
-        """ Translates negation into natural language. """
-        labels, plan = self.nl(expression, 'this')
-        return ['-'] + labels, plan
+    def _union_nl(self, expression):
+        """ Translates union into natural language. """
+        distinct = expression.args.get('distinct')
+        drop_duplicates = True if distinct is not None else False
+        postfix = 'and eliminate duplicates' if drop_duplicates else None
+        return self._set_operation(expression, 'Form union of', 'and', postfix)
+
 
 if __name__ == '__main__':
     
@@ -805,7 +813,7 @@ if __name__ == '__main__':
         test_cases = json.load(file)
         
     planner = NlPlanner(False)
-    for idx, test_case in enumerate(test_cases[0:60:2]):
+    for idx, test_case in enumerate(test_cases[0:200:2]):
         db_id = test_case['db_id']
         query = test_case['query']
         print('-----------------------')

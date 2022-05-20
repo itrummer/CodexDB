@@ -147,7 +147,7 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
 def main(
         data_dir, test_path, language, model_id, prompt_style, id_case,
         mod_start, mod_between, mod_end, sample_path, nr_samples, 
-        nr_tests, termination, max_tries,
+        test_start, test_step, test_end, termination, max_tries,
         log_path, result_path):
     """ Try solving given test cases and write results to file.
     
@@ -163,7 +163,9 @@ def main(
         mod_end: modification at plan end
         sample_path: path to example library
         nr_samples: number of examples in prompt
-        nr_tests: process so many test cases
+        test_start: index of first test case
+        test_step: gap between test case indexes
+        test_end: index of last test case + 1
         termination: termination criterion
         max_tries: maximal tries per test case
         log_path: path for logging output
@@ -204,7 +206,7 @@ def main(
                 engine = codexdb.engine.SqliteEngine(catalog)
         
             idx_to_results = {}
-            for i in range(nr_tests):
+            for i in range(test_start, test_end, test_step):
                 print(f'Starting test case nr. {i} ...')
                 test_case = test_cases[i]
                 cur_results = solve(

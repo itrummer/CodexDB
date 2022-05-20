@@ -22,7 +22,9 @@ if __name__ == '__main__':
     data_dir = config['data_dir']
     sample_path = config['sample_path']
     test_path = config['test_path']
-    nr_tests = config['nr_tests']
+    test_start = config['test_start']
+    test_step = config['test_step']
+    test_end = config['test_end']
     model_id = config['model_id']
     prompt_style = config['prompt_style']
     nr_samples = config['nr_samples']
@@ -43,5 +45,6 @@ if __name__ == '__main__':
         data_dir, test_path, 'python', 
         model_id, prompt_style, id_case, 
         mod_start, mod_between, mod_end, 
-        sample_path, nr_samples, nr_tests, 
+        sample_path, nr_samples, 
+        test_start, test_step, test_end,
         'executed', nr_retries, log_path, result_path)
