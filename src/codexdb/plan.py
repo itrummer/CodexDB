@@ -624,23 +624,14 @@ class NlPlanner():
     def _lower_ids(self, expression):
         """ Lower references to databases, tables, and columns. """
         def lower_id(node):
-            """ Transforms references in one node to lower case. """
-            if node.key == 'column':
-                keys = ['this', 'table']
-            elif node.key == 'table':
-                keys = ['this']
-            else:
-                keys = []
-            
-            for key in keys:
-                if key in node.args:
-                    value = node.args[key]
-                    if isinstance(value, str):
-                        value = value.lower()
-                        node.args[key] = value
-            
+            """ Transforms unquoted identifiers to lower case. """
+            if node.key == 'identifier':
+                value = node.args['this']
+                if not node.args['quoted']:
+                    value = value.lower()
+                node.args['this'] = value
             return node
-        
+
         return expression.transform(
             lambda n:lower_id(n))
 
