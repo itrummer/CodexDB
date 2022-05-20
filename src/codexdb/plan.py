@@ -577,10 +577,9 @@ class NlPlanner():
     
     def _intersect_nl(self, expression):
         """ Translate set intersection into natural language. """
-        distinct = expression.args.get('distinct')
-        drop_duplicates = True if distinct is not None else False
-        postfix = 'and eliminate duplicates' if drop_duplicates else None
-        return self._set_operation(expression, 'Intersect', 'and', postfix)
+        return self._set_operation(
+            expression, 'Intersect', 'and', 
+            'and eliminate duplicates')
 
     def _is_nl(self, expression):
         """ Translate SQL IS comparison into natural language. """
@@ -596,7 +595,7 @@ class NlPlanner():
         right_labels, _ = self._column_nl(right_op)
         left_label = ' '.join(left_labels)
         right_label = ' '.join(right_labels)
-        return left_label + ' equals ' + right_label
+        return left_label + ' (left) equals ' + right_label + ' (right)'
     
     def _join_nl(self, expression):
         """ Translates join expression into natural language. """

@@ -80,7 +80,13 @@ def result_cmp(ref_output, cmp_output, reorder):
         print(f'--- CodexDB normalized output:\n{cmp_output}\n--\n')
         print(f'--- Reference column types:\n{ref_output.dtypes}')
         print(f'--- Normalized reference output:\n{ref_output}\n--\n')
-        diffs = ref_output.compare(cmp_output, align_axis=0)
+        
+        nr_ref_rows = ref_output.shape[0]
+        nr_cmp_rows = cmp_output.shape[0]
+        if nr_ref_rows == 0 and nr_cmp_rows == 0:
+            diffs = pd.DataFrame()
+        else:
+            diffs = ref_output.compare(cmp_output, align_axis=0)
         print(f'-- Differences:\n{diffs}\n--\n')
         nr_diffs = diffs.shape[0]
         return True, nr_diffs, 1.0/(nr_diffs+1)
