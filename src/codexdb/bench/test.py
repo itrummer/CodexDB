@@ -7,7 +7,7 @@ import argparse
 import codexdb.solve
 import json
 import openai
-import os
+import os.path
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -34,13 +34,13 @@ if __name__ == '__main__':
     mod_end = config['mod_end']
     nr_retries = config['nr_retries']
     out_dir = config['out_dir']
-    
-    if os.listdir(out_dir):
-        raise ValueError('Output directory must be empty!')
 
     run_id = f'{model_id}_{prompt_style}_{nr_samples}'
     log_path = f'{out_dir}/log_{run_id}'
     result_path = f'{out_dir}/results_{run_id}.json'
+    if os.path.exists(log_path) or os.path.exists(result_path):
+        raise ValueError('Cannot override existing files!')
+    
     codexdb.solve.main(
         data_dir, test_path, 'python', 
         model_id, prompt_style, id_case, 
