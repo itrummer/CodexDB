@@ -202,6 +202,8 @@ class NlPlanner():
         """
         tokens = self.tokenizer.tokenize(query)
         ast = self.parser.parse(tokens)[0]
+        if not self.id_case:
+            ast = self._lower_ids(ast)
         labels, plan = self.nl(ast)
         write_out = ['Write'] + labels + ["to file 'result.csv' (with header)"]
         plan.add_step(write_out)
@@ -548,8 +550,6 @@ class NlPlanner():
     def _identifier_label(self, expression):
         """ Construct text label for identifier. """
         label = expression.args.get('this') or ''
-        if not self.id_case:
-            label = label.lower()
         if self.quote_ids or expression.args.get('quoted'):
             label = f"'{label}'"
         return label
@@ -620,6 +620,29 @@ class NlPlanner():
     def _like_nl(self, expression):
         """ Translate SQL LIKE into natural language. """
         return self._cmp(expression, 'matches')
+
+    def _lower_ids(self, expression):
+        """ Lower references to databases, tables, and columns. """
+        def lower_id(node):
+            """ Transforms references in one node to lower case. """
+            if node.key == 'column':
+                keys = ['this', 'table']
+            elif node.key == 'table':
+                keys = ['this']
+            else:
+                keys = []
+            
+            for key in keys:
+                if key in node.args:
+                    value = node.args[key]
+                    if isinstance(value, str):
+                        value = value.lower()
+                        node.args[key] = value
+            
+            return node
+        
+        return expression.transform(
+            lambda n:lower_id(n))
 
     def _lt_nl(self, expression):
         """ Translate less than comparison into natural language. """
