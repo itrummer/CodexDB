@@ -216,7 +216,7 @@ class NlPlanner():
     def _select_nl(self, expression):
         """ Generates natural language plan for select query. """
         if expression.args['joins']:
-            last_labels, plan = self._filter_and_join(expression)
+            return self._filter_and_join(expression)
 
         else:
             from_labels, plan = self.nl(expression, 'from')
@@ -229,55 +229,55 @@ class NlPlanner():
                 where_step = ['Filter'] + from_labels + ['using'] + where_labels
                 last_labels = [plan.add_step(where_step)]
 
-        if expression.args.get('group'):
-            group_expr = expression.args['group']
-            group_labels, group_prep = self._expressions(group_expr)
-            plan.add_plan(group_prep)
-            group_step = \
-                ['Group rows from'] + last_labels + \
-                ['using'] + group_labels
-            last_labels = [plan.add_step(group_step)]
-        
-        if expression.args.get('having'):
-            having_expr = expression.args['having'].args['this']
-            having_labels, having_prep = self.nl(having_expr)
-            plan.add_plan(having_prep)
-            having_step = \
-                ['Filter groups from'] + last_labels + \
-                ['using'] + having_labels
-            last_labels = [plan.add_step(having_step)]
-        
-        if expression.args.get('order'):
-            order_expr = expression.args['order']
-            order_labels, order_prep = self._expressions(order_expr)
-            plan.add_plan(order_prep)
-            order_step = \
-                ['Order rows from'] + last_labels + \
-                ['using'] + order_labels
-            last_labels = [plan.add_step(order_step)]
-        
-        if expression.args.get('limit'):
-            limit_expr = expression.args['limit'].args['this']
-            limit_labels, limit_prep = self.nl(limit_expr)
-            plan.add_plan(limit_prep)
-            limit_step = \
-                ['Keep only'] + limit_labels + \
-                ['rows from'] + last_labels
-            last_labels = [plan.add_step(limit_step)]
-        
-        select_labels, select_prep = self._expressions(expression)
-        plan.add_plan(select_prep)
-        select_step = ['Create table with columns'] + select_labels + \
-            ['from'] + last_labels
-        last_labels = [plan.add_step(select_step)]
-        
-        if expression.args.get('distinct'):
-            distinct_step = \
-                ['Only keep unique values in the rows from'] + \
-                last_labels
-            last_labels = [plan.add_step(distinct_step)]
-        
-        return last_labels, plan
+            if expression.args.get('group'):
+                group_expr = expression.args['group']
+                group_labels, group_prep = self._expressions(group_expr)
+                plan.add_plan(group_prep)
+                group_step = \
+                    ['Group rows from'] + last_labels + \
+                    ['using'] + group_labels
+                last_labels = [plan.add_step(group_step)]
+            
+            if expression.args.get('having'):
+                having_expr = expression.args['having'].args['this']
+                having_labels, having_prep = self.nl(having_expr)
+                plan.add_plan(having_prep)
+                having_step = \
+                    ['Filter groups from'] + last_labels + \
+                    ['using'] + having_labels
+                last_labels = [plan.add_step(having_step)]
+            
+            if expression.args.get('order'):
+                order_expr = expression.args['order']
+                order_labels, order_prep = self._expressions(order_expr)
+                plan.add_plan(order_prep)
+                order_step = \
+                    ['Order rows from'] + last_labels + \
+                    ['using'] + order_labels
+                last_labels = [plan.add_step(order_step)]
+            
+            if expression.args.get('limit'):
+                limit_expr = expression.args['limit'].args['this']
+                limit_labels, limit_prep = self.nl(limit_expr)
+                plan.add_plan(limit_prep)
+                limit_step = \
+                    ['Keep only'] + limit_labels + \
+                    ['rows from'] + last_labels
+                last_labels = [plan.add_step(limit_step)]
+            
+            select_labels, select_prep = self._expressions(expression)
+            plan.add_plan(select_prep)
+            select_step = ['Create table with columns'] + select_labels + \
+                ['from'] + last_labels
+            last_labels = [plan.add_step(select_step)]
+            
+            if expression.args.get('distinct'):
+                distinct_step = \
+                    ['Only keep unique values in the rows from'] + \
+                    last_labels
+                last_labels = [plan.add_step(distinct_step)]
+            
+            return last_labels, plan
     
     def _filter_and_join(self, expression):
         """ Join tables and apply unary predicates. """
@@ -290,13 +290,17 @@ class NlPlanner():
             tbl_expression = join.args['this']
             tbl_expressions += [tbl_expression]
         
-        # Load data and assign aliases
-        plan = NlPlan()
+        tables_aliases = []
         for tbl_expression in tbl_expressions:
             table = self._tables(tbl_expression).pop()
             alias = table
             if tbl_expression.key == 'alias':
                 alias = self._alias(tbl_expression)
+            tables_aliases += [(table, alias)]
+        
+        # Load data and assign aliases
+        plan = NlPlan()
+        for table, alias in tables_aliases:
             step = ['Load table'] + [table] + ['and store as'] + [alias]
             plan.add_step(step)
             
@@ -314,28 +318,81 @@ class NlPlanner():
             for pred in conjuncts:
                 pred_labels, pred_plan = self.nl(pred)
                 pred_plan = self._simplify_plan(pred_plan)
-                pred_plan.id_steps[-1][1].insert(0, 'Filter table:')
+                tables = self._tables(pred)
+                if len(tables) == 1:
+                    table = tables.pop()
+                    prefix = f'Filter {table}:'
+                else:
+                    prefix = 'Filter table:'
+                pred_plan.id_steps[-1][1].insert(0, prefix)
                 plan.add_plan(pred_plan)
-                # tables = self._tables(pred)
-                # if len(tables) == 1:
-                    # table = tables.pop()
-                    # step = ['Filter'] + [table] + ['using'] + pred_labels
-                # else:
-                    # step = ['Filter using'] + pred_labels
                 # plan.add_step(step)
         
         # Join tables considering join conditions
-        left_op = from_expressions[0]
-        left_label = self._tables(left_op).pop()
-        for join in join_expressions:
-            right_op = join.args['this']
-            right_label = self._tables(right_op).pop()
+        left_label = tables_aliases[0][1]
+        for idx, join in enumerate(join_expressions, 1):
+            right_label = tables_aliases[idx][1]
+            join = self._strip_tables(join)
             eq_label = self._join_eq_label(join)
             step = ['Join'] + [left_label] + ['with'] + \
-                [right_label] + ['ensuring that'] + [eq_label]
+                [right_label] + ['- condition:'] + [eq_label]
             left_label = plan.add_step(step)
+        last_labels = [left_label]
 
-        return [left_label], plan
+        if expression.args.get('group'):
+            group_expr = expression.args['group']
+            group_expr = self._strip_tables(group_expr)
+            group_labels, group_prep = self._expressions(group_expr)
+            plan.add_plan(group_prep)
+            group_step = ['Group'] + last_labels + ['by'] + group_labels
+            last_labels = [plan.add_step(group_step)]
+        
+        if expression.args.get('having'):
+            having_expr = expression.args['having'].args['this']
+            having_expr = self._strip_tables(having_expr)
+            having_labels, having_prep = self.nl(having_expr)
+            plan.add_plan(having_prep)
+            having_step = ['Filter groups from'] + last_labels + \
+                ['using'] + having_labels
+            last_labels = [plan.add_step(having_step)]
+        
+        if expression.args.get('order'):
+            order_expr = expression.args['order']
+            order_expr = self._strip_tables(order_expr)
+            order_labels, order_prep = self._expressions(order_expr)
+            plan.add_plan(order_prep)
+            order_step = ['Order'] + last_labels + ['by'] + order_labels
+            last_labels = [plan.add_step(order_step)]
+        
+        if expression.args.get('limit'):
+            limit_expr = expression.args['limit'].args['this']
+            limit_expr = self._strip_tables(limit_expr)
+            limit_labels, limit_prep = self.nl(limit_expr)
+            plan.add_plan(limit_prep)
+            limit_step = ['Keep only'] + limit_labels + \
+                ['rows from'] + last_labels
+            last_labels = [plan.add_step(limit_step)]
+        
+        selectors = expression.args.get('expressions')
+        select_labels = []
+        for selector in selectors:
+            selector = self._strip_tables(selector)
+            select_cmd, select_prep = self.nl(selector)
+            plan.add_plan(select_prep)
+            step = ['Retrieve'] + select_cmd + ['from'] + last_labels
+            select_label = plan.add_step(step)
+            if select_labels:
+                select_labels += [',']
+            select_labels += [select_label]
+        
+        step = ['Create table with columns for'] + select_labels
+        last_labels = [plan.add_step(step)]
+        
+        if expression.args.get('distinct'):
+            distinct_step = ['Only keep unique rows from'] + last_labels
+            last_labels = [plan.add_step(distinct_step)]
+
+        return last_labels, plan
     
     def _agg_nl(self, expression, agg_name):
         """ Translates aggregate into natural language. 
@@ -668,6 +725,28 @@ class NlPlanner():
         """ Translates star into natural language. """
         return ['all columns'], NlPlan()
 
+    def _strip_tables(self, expression):
+        """ Recursively strips table references from expression.
+        
+        Args:
+            expression: strip table references from this expression
+        
+        Returns:
+            expression without table references
+        """
+        def column_without_table(expression):
+            """ Removes tables from column references. """
+            if expression.key == 'column':
+                if 'table' in expression.args:
+                    del expression.args['table']
+            return expression
+
+        if isinstance(expression, str):
+            return expression
+        else:
+            return expression.transform(
+                lambda n:column_without_table(n))
+
     def _sum_nl(self, expression):
         """ Translate sum aggregate into natural language. """
         return self._agg_nl(expression, 'sum')
@@ -722,26 +801,28 @@ class NlPlanner():
 
 if __name__ == '__main__':
     
-    # with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
-        # test_cases = json.load(file)
-        #
-    # planner = NlPlanner(False)
-    # for idx, test_case in enumerate(test_cases[0:100]):
-        # db_id = test_case['db_id']
-        # query = test_case['query']
-        # print(f'{idx}: {db_id}/{query}')
-        # plan = planner.plan(query)
-        # print(plan.steps())
+    with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
+        test_cases = json.load(file)
+        
+    planner = NlPlanner(False)
+    for idx, test_case in enumerate(test_cases[0:60:2]):
+        db_id = test_case['db_id']
+        query = test_case['query']
+        print('-----------------------')
+        print(f'Q{idx}: {db_id}/{query}')
+        plan = planner.plan(query)
+        for step in plan.steps():
+            print(step)
     
     # query = "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.age  >  20"
     # query = "SELECT T1.CountryName FROM COUNTRIES AS T1 JOIN CONTINENTS AS T2 ON T1.Continent  =  T2.ContId JOIN CAR_MAKERS AS T3 ON T1.CountryId  =  T3.Country WHERE T2.Continent  =  'europe' GROUP BY T1.CountryName HAVING count(*)  >=  3"
     #query = "select count(*) from ta as a join tb as b on (a.x=b.x) where a.c = 1 and a.d = 2 and (b.i=1 or b.j=2)"
     # query = "SELECT T2.name FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id JOIN concert AS T3 ON T1.concert_id  =  T3.concert_id WHERE T3.year  =  2014"
-    query = "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T3.pettype  =  'dog'"
-    planner = NlPlanner(False)
-    plan = planner.plan(query)
-    for step in plan.steps():
-        print(step)
+    # query = "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T3.pettype  =  'dog'"
+    # planner = NlPlanner(False)
+    # plan = planner.plan(query)
+    # for step in plan.steps():
+        # print(step)
     
     # with open('/Users/immanueltrummer/benchmarks/WikiSQL/data/results_test.json') as file:
         # test_cases = json.load(file)
