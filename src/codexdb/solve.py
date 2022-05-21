@@ -73,8 +73,8 @@ def result_cmp(ref_output, cmp_output, reorder):
             ref_output.sort_values(by=column_idxs, inplace=True)
             cmp_output.sort_values(by=column_idxs, inplace=True)
 
-        ref_output.reindex()
-        cmp_output.reindex()
+        ref_output.reset_index(drop=True, inplace=True)
+        cmp_output.reset_index(drop=True, inplace=True)
 
         print(f'--- CodexDB column types:\n{cmp_output.dtypes}')
         print(f'--- CodexDB normalized output:\n{cmp_output}\n--\n')
