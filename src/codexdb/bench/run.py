@@ -26,7 +26,7 @@ def train(data_dir, train_path, log_path, id_case,
         result_path: path to file for result output
     """
     codexdb.solve.main(
-        data_dir, train_path, 'python', 'davinci-codex', 'plan', 
+        data_dir, train_path, 'python', 'code-davinci-002', 'plan', 
         id_case, mod_start, mod_between, mod_end, '', 0, 
         0, 1, 50,
         'solved', 10, log_path, result_path)
@@ -45,10 +45,7 @@ def test(data_dir, test_path, sample_path, id_case,
         mod_end: modification at plan end
         out_dir: generate output in this directory
     """
-    # for model_id in ['cushman-codex', 'davinci-codex']:
-        # for prompt_style in ['plan', 'query', 'question']:
-            # for nr_samples in [0, 2, 4]:
-    for model_id in ['davinci-codex']:
+    for model_id in ['code-davinci-002', 'code-cushman-001']:
         for prompt_style in ['plan']:
             for nr_samples in [2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
@@ -58,8 +55,8 @@ def test(data_dir, test_path, sample_path, id_case,
                     data_dir, test_path, 'python', 
                     model_id, prompt_style, id_case, 
                     mod_start, mod_between, mod_end, 
-                    sample_path, nr_samples, 0, 1, 100, 
-                    'executed', 4, log_path, result_path)
+                    sample_path, nr_samples, 0, 2, 200, 
+                    'executed', 2, log_path, result_path)
 
 
 if __name__ == '__main__':
