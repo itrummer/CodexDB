@@ -166,6 +166,8 @@ class PythonGenerator(CodeGenerator):
         self.mod_start = mod_start
         self.mod_between = mod_between
         self.mod_end = mod_end
+        # Reproducible experiments
+        random.seed(42)
     
     def _db_info(self, schema, db_dir, files, max_rows):
         """ Generate description of database.
