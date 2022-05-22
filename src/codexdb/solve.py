@@ -66,6 +66,26 @@ def result_cmp(ref_output, cmp_output, reorder):
         ref_output = ref_output.astype(str)
         cmp_output = cmp_output.astype(str)
         
+        print('Normalizing representation of integers ...')
+        def to_int(float_str):
+            """ Transforms rounded float values into integers. """
+            if float_str.endswith('.0'):
+                return float_str[:-2]
+            else:
+                return float_str
+        ref_output = ref_output.applymap(to_int)
+        cmp_output = cmp_output.applymap(to_int)
+        
+        print('Normalizing representation of lists ...')
+        def unwrap(cell):
+            """ Unwrap elements from singleton lists. """
+            if isinstance(cell, list) and len(cell) == 1:
+                return cell[0]
+            else:
+                return cell
+        ref_output = ref_output.applymap(unwrap)
+        cmp_output = cmp_output.applymap(unwrap)
+        
         if reorder:
             print('Reordering Rows Before Comparison')
             nr_columns = len(ref_output.columns)

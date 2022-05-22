@@ -227,74 +227,88 @@ class NlPlanner():
         """ Translate logical and into natural language. """
         return self._cmp(expression, 'and')
     
-    def _select_nl(self, expression):
-        """ Generates natural language plan for select query. """
-        if expression.args['joins']:
-            return self._filter_and_join(expression)
-
-        else:
-            from_labels, plan = self.nl(expression, 'from')
-            last_labels = from_labels
-            
-            if expression.args.get('where'):
-                where_expr = expression.args['where'].args['this']
-                where_labels, where_prep = self.nl(where_expr)
-                plan.add_plan(where_prep)
-                where_step = ['Filter'] + from_labels + ['using'] + where_labels
-                last_labels = [plan.add_step(where_step)]
-
-            if expression.args.get('group'):
-                group_expr = expression.args['group']
-                group_labels, group_prep = self._expressions(group_expr)
-                plan.add_plan(group_prep)
-                group_step = \
-                    ['Group rows from'] + last_labels + \
-                    ['using'] + group_labels
-                last_labels = [plan.add_step(group_step)]
-            
-            if expression.args.get('having'):
-                having_expr = expression.args['having'].args['this']
-                having_labels, having_prep = self.nl(having_expr)
-                plan.add_plan(having_prep)
-                having_step = \
-                    ['Filter groups from'] + last_labels + \
-                    ['using'] + having_labels
-                last_labels = [plan.add_step(having_step)]
-            
-            if expression.args.get('order'):
-                order_expr = expression.args['order']
-                order_labels, order_prep = self._expressions(order_expr)
-                plan.add_plan(order_prep)
-                order_step = \
-                    ['Order rows from'] + last_labels + \
-                    ['using'] + order_labels
-                last_labels = [plan.add_step(order_step)]
-            
-            if expression.args.get('limit'):
-                limit_expr = expression.args['limit'].args['this']
-                limit_labels, limit_prep = self.nl(limit_expr)
-                plan.add_plan(limit_prep)
-                limit_step = \
-                    ['Keep only'] + limit_labels + \
-                    ['rows from'] + last_labels
-                last_labels = [plan.add_step(limit_step)]
-            
-            select_labels, select_prep = self._expressions(expression)
-            plan.add_plan(select_prep)
-            select_step = ['Create table with columns'] + select_labels + \
-                ['from'] + last_labels
-            last_labels = [plan.add_step(select_step)]
-            
-            if expression.args.get('distinct'):
-                distinct_step = \
-                    ['Only keep unique values in the rows from'] + \
-                    last_labels
-                last_labels = [plan.add_step(distinct_step)]
-            
-            return last_labels, plan
+    def _agg_nl(self, expression, agg_name):
+        """ Translates aggregate into natural language. 
+        
+        Args:
+            expression: aggregate expression to translate
+            agg_name: name of aggregate to use in description
+        
+        Returns:
+            list of labels, plan preparing aggregate
+        """
+        arg_labels, prep = self.nl(expression, 'this')
+        labels = [agg_name] + ['of'] + arg_labels
+        return labels, prep
     
-    def _filter_and_join(self, expression):
-        """ Join tables and apply unary predicates. """
+    def _avg_nl(self, expression):
+        """ Translate average aggregate into natural language. """
+        return self._agg_nl(expression, 'average')
+    
+    def _between_nl(self, expression):
+        """ Translates between statement into natural language. """
+        op = expression.args.get('this')
+        low = expression.args.get('low')
+        high = expression.args.get('high')
+        op_label, op_prep = self.nl(op)
+        low_label, low_prep = self.nl(low)
+        high_label, high_prep = self.nl(high)
+        plan = NlPlan()
+        plan.add_plan(op_prep)
+        plan.add_plan(low_prep)
+        plan.add_plan(high_prep)
+        step = ['Check if'] + op_label + ['is between'] + \
+            low_label + ['and'] + high_label
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
+    
+    def _binary(self, expression):
+        """ Pre-processes a generic binary expression. 
+        
+        Args:
+            expression: a generic binary expression
+        
+        Returns:
+            tuple: left labels, right labels, combined preparation
+        """
+        left_labels, plan = self.nl(expression, 'this')
+        right_labels, right_prep = self.nl(expression, 'expression')
+        plan.add_plan(right_prep)
+        return left_labels, right_labels, plan
+    
+    def _cmp(self, expression, comparator):
+        """ Processes a binary comparison.
+        
+        Args:
+            expression: a binary comparison expression
+            comparator: natural language comparator
+        
+        Returns:
+            labels representing comparison result, corresponding plan
+        """
+        left, right, plan = self._binary(expression)
+        step = ['Check if'] + left + [comparator] + right
+        last_labels = [plan.add_step(step)]
+        return last_labels, plan
+
+    def _column_nl(self, expression):
+        """ Express a column reference in natural language. """
+        labels, plan = self.nl(expression.args['this'])
+        # labels += ['column']
+        table = expression.args.get('table')
+        if table:
+            table_labels, table_prep = self.nl(table)
+            plan.add_plan(table_prep)
+            labels += ['in'] + table_labels
+        database = expression.args.get('database')
+        if database:
+            db_labels, db_prep = self.nl(database)
+            plan.add_plan(db_prep)
+            labels += ['in'] + db_labels
+        return labels, plan
+
+    def _complex_select_nl(self, expression):
+        """ Translate complex select expression into natural language plan. """
         # tbl_to_preds = self._unary_predicates(expression)
         from_expressions = expression.args['from'].args['expressions']
         join_expressions = expression.args.get('joins')
@@ -408,86 +422,6 @@ class NlPlanner():
             last_labels = [plan.add_step(distinct_step)]
 
         return last_labels, plan
-    
-    def _agg_nl(self, expression, agg_name):
-        """ Translates aggregate into natural language. 
-        
-        Args:
-            expression: aggregate expression to translate
-            agg_name: name of aggregate to use in description
-        
-        Returns:
-            list of labels, plan preparing aggregate
-        """
-        arg_labels, prep = self.nl(expression, 'this')
-        labels = [agg_name] + ['of'] + arg_labels
-        return labels, prep
-    
-    def _avg_nl(self, expression):
-        """ Translate average aggregate into natural language. """
-        return self._agg_nl(expression, 'average')
-    
-    def _between_nl(self, expression):
-        """ Translates between statement into natural language. """
-        op = expression.args.get('this')
-        low = expression.args.get('low')
-        high = expression.args.get('high')
-        op_label, op_prep = self.nl(op)
-        low_label, low_prep = self.nl(low)
-        high_label, high_prep = self.nl(high)
-        plan = NlPlan()
-        plan.add_plan(op_prep)
-        plan.add_plan(low_prep)
-        plan.add_plan(high_prep)
-        step = ['Check if'] + op_label + ['is between'] + \
-            low_label + ['and'] + high_label
-        last_labels = [plan.add_step(step)]
-        return last_labels, plan
-    
-    def _binary(self, expression):
-        """ Pre-processes a generic binary expression. 
-        
-        Args:
-            expression: a generic binary expression
-        
-        Returns:
-            tuple: left labels, right labels, combined preparation
-        """
-        left_labels, plan = self.nl(expression, 'this')
-        right_labels, right_prep = self.nl(expression, 'expression')
-        plan.add_plan(right_prep)
-        return left_labels, right_labels, plan
-    
-    def _cmp(self, expression, comparator):
-        """ Processes a binary comparison.
-        
-        Args:
-            expression: a binary comparison expression
-            comparator: natural language comparator
-        
-        Returns:
-            labels representing comparison result, corresponding plan
-        """
-        left, right, plan = self._binary(expression)
-        step = ['Check if'] + left + [comparator] + right
-        last_labels = [plan.add_step(step)]
-        return last_labels, plan
-
-    def _column_nl(self, expression):
-        """ Express a column reference in natural language. """
-        labels, plan = self.nl(expression.args['this'])
-        # labels += ['column']
-        table = expression.args.get('table')
-        if table:
-            table_labels, table_prep = self.nl(table)
-            plan.add_plan(table_prep)
-            labels += ['in'] + table_labels
-        database = expression.args.get('database')
-        if database:
-            db_labels, db_prep = self.nl(database)
-            plan.add_plan(db_prep)
-            labels += ['in'] + db_labels
-        return labels, plan
 
     def _conjuncts(self, expression):
         """ Extract list of conjuncts from expression. """
@@ -690,6 +624,76 @@ class NlPlanner():
         """ Translate parenthesis expression to natural language. """
         return self.nl(expression, 'this')
     
+    def _select_nl(self, expression):
+        """ Generates natural language plan for select query. """
+        # Check for complex queries
+        has_joins = expression.args['joins']
+        has_multi_select = len(expression.args['expressions']) > 1
+        has_sub_queries = expression.sql().lower().count('select') > 1
+        if has_joins or has_multi_select or has_sub_queries:
+            return self._complex_select_nl(expression)
+
+        else:
+            from_labels, plan = self.nl(expression, 'from')
+            last_labels = from_labels
+            
+            if expression.args.get('where'):
+                where_expr = expression.args['where'].args['this']
+                where_labels, where_prep = self.nl(where_expr)
+                plan.add_plan(where_prep)
+                where_step = ['Filter'] + from_labels + ['using'] + where_labels
+                last_labels = [plan.add_step(where_step)]
+
+            if expression.args.get('group'):
+                group_expr = expression.args['group']
+                group_labels, group_prep = self._expressions(group_expr)
+                plan.add_plan(group_prep)
+                group_step = \
+                    ['Group rows from'] + last_labels + \
+                    ['using'] + group_labels
+                last_labels = [plan.add_step(group_step)]
+            
+            if expression.args.get('having'):
+                having_expr = expression.args['having'].args['this']
+                having_labels, having_prep = self.nl(having_expr)
+                plan.add_plan(having_prep)
+                having_step = \
+                    ['Filter groups from'] + last_labels + \
+                    ['using'] + having_labels
+                last_labels = [plan.add_step(having_step)]
+            
+            if expression.args.get('order'):
+                order_expr = expression.args['order']
+                order_labels, order_prep = self._expressions(order_expr)
+                plan.add_plan(order_prep)
+                order_step = \
+                    ['Order rows from'] + last_labels + \
+                    ['using'] + order_labels
+                last_labels = [plan.add_step(order_step)]
+            
+            if expression.args.get('limit'):
+                limit_expr = expression.args['limit'].args['this']
+                limit_labels, limit_prep = self.nl(limit_expr)
+                plan.add_plan(limit_prep)
+                limit_step = \
+                    ['Keep only'] + limit_labels + \
+                    ['rows from'] + last_labels
+                last_labels = [plan.add_step(limit_step)]
+            
+            select_labels, select_prep = self._expressions(expression)
+            plan.add_plan(select_prep)
+            select_step = ['Create table with columns'] + select_labels + \
+                ['from'] + last_labels
+            last_labels = [plan.add_step(select_step)]
+            
+            if expression.args.get('distinct'):
+                distinct_step = \
+                    ['Only keep unique values in the rows from'] + \
+                    last_labels
+                last_labels = [plan.add_step(distinct_step)]
+            
+            return last_labels, plan
+    
     def _set_operation(self, expression, prefix, connector, postfix):
         """ Translate set expression into natural language.
         
@@ -827,18 +831,18 @@ class NlPlanner():
 
 if __name__ == '__main__':
     
-    # with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
-        # test_cases = json.load(file)
-        #
-    # planner = NlPlanner(False)
-    # for idx, test_case in enumerate(test_cases[0:200:2]):
-        # db_id = test_case['db_id']
-        # query = test_case['query']
-        # print('-----------------------')
-        # print(f'Q{idx}: {db_id}/{query}')
-        # plan = planner.plan(query)
-        # for step in plan.steps():
-            # print(step)
+    with open('/Users/immanueltrummer/benchmarks/spider/results_dev.json') as file:
+        test_cases = json.load(file)
+        
+    planner = NlPlanner(False)
+    for idx, test_case in enumerate(test_cases[0:200:2]):
+        db_id = test_case['db_id']
+        query = test_case['query']
+        print('-----------------------')
+        print(f'Q{idx}: {db_id}/{query}')
+        plan = planner.plan(query)
+        for step in plan.steps():
+            print(step)
     
     # query = "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.age  >  20"
     # query = "SELECT T1.CountryName FROM COUNTRIES AS T1 JOIN CONTINENTS AS T2 ON T1.Continent  =  T2.ContId JOIN CAR_MAKERS AS T3 ON T1.CountryId  =  T3.Country WHERE T2.Continent  =  'europe' GROUP BY T1.CountryName HAVING count(*)  >=  3"
