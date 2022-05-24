@@ -50,15 +50,14 @@ def analyze_code(run_dir):
         run_dir: directory containing benchmark results
     """
     print('Analyzing generated code ...')
-    result_path = f'{run_dir}/results_davinci-codex_plan_2.json'
+    result_path = f'{run_dir}/results_code-davinci-002_plan_4.json'
     with open(result_path) as file:
         data = json.load(file)
     
     lib_count = collections.defaultdict(lambda:0)
     tries_by_case = data.values()
     libraries = [
-        'csv', 'pandas', 'vaex', 'dask', 
-        'modin', 'julia', 'datatable']
+        'csv', 'pandas', 'vaex', 'datatable']
     for tries in tries_by_case:
         code = tries[-1]['code']
         for library in libraries:
