@@ -22,7 +22,8 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
         aggregated value over all tries
     """
     values = []
-    for model_id in ['cushman-codex', 'davinci-codex']:
+    #for model_id in ['cushman-codex', 'davinci-codex']:
+    for model_id in ['code-cushman-001', 'code-davinci-002']:
         # for prompt_style in ['question', 'query', 'plan']:
         for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
