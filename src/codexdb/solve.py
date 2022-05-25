@@ -115,7 +115,8 @@ def result_cmp(ref_output, cmp_output, reorder):
         print(f'Exception: {e}')
         return False, -1, 0
 
-def solve(catalog, test_case, coder, engine, termination, max_tries):
+def solve(catalog, test_case, coder, engine, 
+          termination, max_tries, max_temperature):
     """ Solve given test case by generating code.
     
     Args:
@@ -125,6 +126,7 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
         engine: execution engine for code
         termination: criterion to advance to next case
         max_tries: maximal number of tries
+        max_temperature: maximal temperature
     
     Returns:
         list of dictionaries with generated code and statistics
@@ -135,7 +137,7 @@ def solve(catalog, test_case, coder, engine, termination, max_tries):
     question = test_case['question']
     query = test_case['query']
     reorder = False if 'order by' in query.lower() else True
-    temperature_step = 0.5 / max_tries
+    temperature_step = max_temperature / max_tries
     print(f'Treating query {query}, question {question}.')
 
     results = []
@@ -175,7 +177,7 @@ def main(
         data_dir, test_path, language, model_id, prompt_style, id_case,
         mod_start, mod_between, mod_end, sample_path, nr_samples, 
         test_start, test_step, test_end, termination, max_tries,
-        log_path, result_path):
+        max_temperature, log_path, result_path):
     """ Try solving given test cases and write results to file.
     
     Args:
@@ -195,6 +197,7 @@ def main(
         test_end: index of last test case + 1
         termination: termination criterion
         max_tries: maximal tries per test case
+        max_temperature: maximal temperature
         log_path: path for logging output
         result_path: path to result .json file
     """
@@ -238,7 +241,7 @@ def main(
                 test_case = test_cases[i]
                 cur_results = solve(
                     catalog, test_case, coder, engine, 
-                    termination, max_tries)
+                    termination, max_tries, max_temperature)
                 idx_to_results[i] = cur_results
                 print(cur_results)
         
@@ -271,4 +274,4 @@ if __name__ == '__main__':
         args.data_dir, args.test_path, args.language, args.model_id, 
         args.prompt_style, args.mod_start, args.mod_between, args.mod_end, 
         args.sample_path, args.nr_samples, args.nr_tests, args.termination, 
-        args.max_tries, args.log_path, args.result_path)
+        args.max_tries, 0.5, args.log_path, args.result_path)

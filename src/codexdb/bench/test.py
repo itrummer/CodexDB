@@ -33,9 +33,11 @@ if __name__ == '__main__':
     mod_between = config['mod_between']
     mod_end = config['mod_end']
     nr_retries = config['nr_retries']
+    max_temperature = config['max_temperature']
     out_dir = config['out_dir']
 
-    run_id = f'{model_id}_{prompt_style}_{nr_samples}'
+    run_id = f'{model_id}_{prompt_style}_S{nr_samples}_' +\
+        f'R{nr_retries}_T{max_temperature}'
     log_path = f'{out_dir}/log_{run_id}'
     result_path = f'{out_dir}/results_{run_id}.json'
     if os.path.exists(log_path) or os.path.exists(result_path):
@@ -46,5 +48,5 @@ if __name__ == '__main__':
         model_id, prompt_style, id_case, 
         mod_start, mod_between, mod_end, 
         sample_path, nr_samples, 
-        test_start, test_step, test_end,
-        'executed', nr_retries, log_path, result_path)
+        test_start, test_step, test_end, 'executed', 
+        nr_retries, max_temperature, log_path, result_path)
