@@ -37,7 +37,7 @@ if __name__ == '__main__':
         ('', 'Print progress updates', 'progress')]:
         sample_path = f'/home/ubuntu/codexdb/experiments/spider3/{out_suffix}/train_plain.json'
         for max_temperature in [0.125, 0.25, 0.5, 1.0, 2.0]:
-            out_dir = f'/home/ubuntu/codexdb/experiments/temperature/{out_suffix}'
+            out_dir = f'/home/ubuntu/codexdb/experiments/spider3/temperature/{out_suffix}'
             run_id = f'{model_id}_{prompt_style}_S{nr_samples}_' +\
                 f'R{nr_retries}_T{max_temperature}'
             log_path = f'{out_dir}/log_{run_id}'
