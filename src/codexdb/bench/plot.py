@@ -160,7 +160,7 @@ def generate_plot(run_dir, y_fct):
         list of plot groups
     """
     plots = []
-    for model_id in ['cushman-codex', 'davinci-codex']:
+    for model_id in ['code-cushman-001', 'code-davinci-002']:
         plot = []
         for prompt_style in ['question', 'query', 'plan']:
         # for prompt_style in ['plan']:
