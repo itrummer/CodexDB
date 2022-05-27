@@ -27,7 +27,7 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
         # for prompt_style in ['question', 'query', 'plan']:
         for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
-                run_id = f'{model_id}_{prompt_style}_{nr_samples}'
+                run_id = f'{model_id}_{prompt_style}_S{nr_samples}_R2_T0.5'
                 result_path = f'{run_dir}/results_{run_id}.json'
                 try:
                     with open(result_path) as file:
@@ -50,7 +50,7 @@ def analyze_code(run_dir):
         run_dir: directory containing benchmark results
     """
     print('Analyzing generated code ...')
-    result_path = f'{run_dir}/results_code-davinci-002_plan_4.json'
+    result_path = f'{run_dir}/results_code-davinci-002_plan_S4_R2_T0.5.json'
     with open(result_path) as file:
         data = json.load(file)
     
