@@ -247,7 +247,7 @@ class PythonGenerator(CodeGenerator):
         prompt_parts += self._db_info(schema, db_dir, files, 5)
         if self.prompt_style in ['question', 'query', 'plan']:
             if self.prompt_style == 'question':
-                prompt_parts.append(f'Question: {query}')
+                prompt_parts.append(f'Question: {question}')
             elif self.prompt_style == 'query':
                 prompt_parts.append(f'SQL query: {query}')
             else:
