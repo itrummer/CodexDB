@@ -11,10 +11,13 @@ Next, it uses the generated examples as part of the prompt (few-shot learning) t
 ## How to cite
 
 ```
-@article{trummer2022codexdb,
-  title={CodexDB: Generating Code for Processing SQL Queries using GPT-3 Codex},
-  author={Trummer, Immanuel},
-  journal={arXiv:2204.08941 },
-  year={2022}
+@article{Trummer2022b,
+author = {Trummer, Immanuel},
+journal = {PVLDB},
+number = {11},
+pages = {2921 -- 2928},
+title = {{CodexDB: Synthesizing code for query processing from natural language instructions using GPT-3 Codex}},
+volume = {15},
+year = {2022}
 }
 ```
