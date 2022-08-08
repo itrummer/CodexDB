@@ -1,1 +1,3 @@
 theme: jekyll-theme-cayman
+title: "CodexDB - Powered by GPT-3"
+description: "CodexDB synthesizes code for SQL query processing from natural language instructions"
