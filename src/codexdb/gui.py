@@ -18,6 +18,7 @@ print(f'sys.path: {sys.path}')
 
 import codexdb.catalog
 import codexdb.code
+import codexdb.engine
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ai_key', type=str, help='Access key for OpenAI platform')
