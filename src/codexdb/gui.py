@@ -45,8 +45,10 @@ with st.expander('Data Source'):
     db_id = st.selectbox('Select source database:', options=db_ids)
     
     schema = catalog.schema(db_id)
-    for table_idx, table in enumerate(schema['table_names']): 
-        columns = [c[1] for c in schema['column_names'] if c[0] == table_idx]
+    all_tables = schema['table_names_original']
+    all_columns = schema['column_names_original']
+    for table_idx, table in enumerate(all_tables): 
+        columns = [c[1] for c in all_columns if c[0] == table_idx]
         st.write(f'{table}({", ".join(columns)})')
 
 
