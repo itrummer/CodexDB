@@ -81,6 +81,12 @@ with st.sidebar:
             min_value=0, max_value=6))
     
     
+    with st.expander('Termination Condition'):
+        
+        execute_code = st.checkbox('Check if Executable', value=1)
+        verify_result = st.checkbox('Verify Query Result', value=1)
+    
+    
     with st.expander('Code Customization'):
         mod_start = st.text_input('General instructions (natural language):')
         mod_between = st.text_input('Per-step instructions (natural language):')
