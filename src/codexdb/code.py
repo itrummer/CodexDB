@@ -49,7 +49,7 @@ class CodeGenerator(abc.ABC):
         db_dir = self.catalog.db_dir(db_id)
         question = test_case['question']
         query = test_case['query']
-        suffix = self._get_prompt(schema, db_dir, files, question, query)
+        suffix = self.get_prompt(schema, db_dir, files, question, query)
         prompt = prefix + '\n' + suffix
         stats, gen_code = self._complete(prompt, temperature)
         final_code = self.code_prefix + gen_code + self.code_suffix
@@ -120,7 +120,7 @@ class CodeGenerator(abc.ABC):
         return lines
     
     @abc.abstractmethod
-    def _get_prompt(self, schema, db_dir, files, question, query):
+    def get_prompt(self, schema, db_dir, files, question, query):
         """ Generate prompt for processing specific query. 
         
         Args:
@@ -229,7 +229,7 @@ class PythonGenerator(CodeGenerator):
                 
         return lines
     
-    def _get_prompt(self, schema, db_dir, files, question, query):
+    def get_prompt(self, schema, db_dir, files, question, query):
         """ Generate prompt for processing specific query. 
         
         Args:
@@ -280,7 +280,7 @@ class PythonGenerator(CodeGenerator):
             for example in selected:
                 db_id = example['schema']['db_id']
                 db_dir = self.catalog.db_dir(db_id)
-                prompt = self._get_prompt(
+                prompt = self.get_prompt(
                     example['schema'], db_dir, example['files'], 
                     example['question'], example['query'])
                 parts.append(prompt)
@@ -304,7 +304,7 @@ class SqlGenerator(CodeGenerator):
         self.ai_kwargs['stop'] = ['#', ';']
         self.code_prefix = 'SELECT '
     
-    def _get_prompt(self, schema, db_dir, files, question, query):
+    def get_prompt(self, schema, db_dir, files, question, query):
         """ Returns prompt for given question. """
         lines = []
         lines.append('### Postgres SQL tables, with their properties:')
@@ -333,7 +333,7 @@ class SqlGenerator(CodeGenerator):
         for example in selected:
             db_id = example['schema']['db_id']
             db_dir = self.catalog.db_dir(db_id)
-            prompt = self._get_prompt(
+            prompt = self.get_prompt(
                 example['schema'], db_dir, example['files'], 
                 example['question'], example['query'])
             parts.append(prompt + example['query'][6:])

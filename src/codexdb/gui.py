@@ -116,6 +116,14 @@ if st.button('Generate Code'):
         ref_result = pd.read_sql_query(query, con)
     
     for try_idx in range(max_tries):
+        
+        db_id = test_case['db_id']
+        schema = catalog.schema(db_id)
+        files = catalog.files(db_id)
+        db_dir = catalog.db_dir(db_id)
+        prompt = coder.get_prompt(schema, db_dir, files, '', query)
+        st.code(prompt, language='python')
+        
         temperature = start_temp + temp_step * try_idx
         gen_stats, code = coder.generate(test_case, temperature)
         st.code(code, language='python')
