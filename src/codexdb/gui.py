@@ -39,6 +39,14 @@ st.markdown('''
 CodexDB generates customizable code for SQL processing via GPT-3 Codex.
 ''')
 
+
+with st.expander('Data Source'):
+    db_ids = catalog.db_ids()
+    db_id = st.selectbox('Select source database:', options=db_ids)
+    
+    st.write(catalog.schema(db_id))
+
+
 with st.expander('Model Configuration'):
     
     model_ids = ['code-cushman-001', 'code-davinci-002']
@@ -71,9 +79,6 @@ with st.expander('Code Customization'):
     mod_between = st.text_input('Per-step instructions (natural language):')
     mod_end = ''
 
-
-db_ids = catalog.db_ids()
-db_id = st.selectbox('Select source database:', options=db_ids)
 
 id_case = 0
 query = st.text_input('Write SQL query:')
