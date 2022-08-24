@@ -17,6 +17,7 @@ sys.path.append(str(root_dir))
 print(f'sys.path: {sys.path}')
 
 import codexdb.catalog
+import codexdb.code
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ai_key', type=str, help='Access key for OpenAI platform')
