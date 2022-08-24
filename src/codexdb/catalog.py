@@ -41,6 +41,14 @@ class DbCatalog():
         """
         return f'{self.data_dir}/database/{db_id}'
     
+    def db_ids(self):
+        """ Returns IDs of available databases.
+        
+        Returns:
+            list with database IDs
+        """
+        return self.schemata.keys()
+    
     def file_name(self, db_id, table):
         """ Returns name of file storing table data.
         
