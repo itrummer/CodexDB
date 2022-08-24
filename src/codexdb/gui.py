@@ -155,7 +155,7 @@ if st.button('Generate Code'):
                 st.write('CodexDB Result:')
                 st.dataframe(codb_result)
         
-        if (condition == 0 and executed) or \
-            (condition == 1 and similarity >= 1.0):
+        if (condition == 1 and executed) or \
+            (condition == 2 and similarity >= 1.0):
             st.write('Termination Criterion Satisfied.')
             break
