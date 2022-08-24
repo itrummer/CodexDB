@@ -118,7 +118,7 @@ if st.button('Generate Code'):
     for try_idx in range(max_tries):
         temperature = start_temp + temp_step * try_idx
         gen_stats, code = coder.generate(test_case, temperature)
-        st.write(f'Code: {code}')
+        st.code(code, language='python')
         
         executed, codb_result, elapsed_s = engine.execute(db_id, code, 30)
         comparable, nr_diffs, similarity = codexdb.solve.result_cmp(
