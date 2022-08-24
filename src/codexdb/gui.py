@@ -43,7 +43,6 @@ CodexDB generates customizable code for SQL processing via GPT-3 Codex.
 with st.expander('Data Source'):
     db_ids = catalog.db_ids()
     db_id = st.selectbox('Select source database:', options=db_ids)
-    
     st.write(catalog.schema(db_id))
 
 
