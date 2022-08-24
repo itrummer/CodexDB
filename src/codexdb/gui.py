@@ -40,49 +40,51 @@ CodexDB generates customizable code for SQL processing via GPT-3 Codex.
 ''')
 
 
-with st.expander('Data Source'):
-    db_ids = catalog.db_ids()
-    db_id = st.selectbox('Select source database:', options=db_ids)
+with st.sidebar:
+
+    with st.expander('Data Source'):
+        db_ids = catalog.db_ids()
+        db_id = st.selectbox('Select source database:', options=db_ids)
+        
+        schema = catalog.schema(db_id)
+        all_tables = schema['table_names_original']
+        all_columns = schema['column_names_original']
+        for table_idx, table in enumerate(all_tables): 
+            columns = [c[1] for c in all_columns if c[0] == table_idx]
+            st.write(f'{table}({", ".join(columns)})')
     
-    schema = catalog.schema(db_id)
-    all_tables = schema['table_names_original']
-    all_columns = schema['column_names_original']
-    for table_idx, table in enumerate(all_tables): 
-        columns = [c[1] for c in all_columns if c[0] == table_idx]
-        st.write(f'{table}({", ".join(columns)})')
-
-
-with st.expander('Model Configuration'):
     
-    model_ids = ['code-cushman-001', 'code-davinci-002']
-    model_id = st.selectbox(
-        'Select GPT-3 Codex Model:', 
-        options=model_ids, index=1)
+    with st.expander('Model Configuration'):
+        
+        model_ids = ['code-cushman-001', 'code-davinci-002']
+        model_id = st.selectbox(
+            'Select GPT-3 Codex Model:', 
+            options=model_ids, index=1)
+        
+        start_temp = float(st.slider(
+            'Start temperature:', 
+            min_value=0.0, max_value=1.0))
+        final_temp = float(st.slider(
+            'Final temperature:',
+            min_value=0.0, max_value=1.0))
     
-    start_temp = float(st.slider(
-        'Start temperature:', 
-        min_value=0.0, max_value=1.0))
-    final_temp = float(st.slider(
-        'Final temperature:',
-        min_value=0.0, max_value=1.0))
-
-
-with st.expander('Prompt Configuration'):
-       
-    prompt_styles = ['query', 'plan']
-    prompt_style = st.selectbox(
-        'Select prompt style:', 
-        options=prompt_styles, index=1)
     
-    nr_samples = int(st.slider(
-        'Number of samples in prompt:', 
-        min_value=0, max_value=6))
-
-
-with st.expander('Code Customization'):
-    mod_start = st.text_input('General instructions (natural language):')
-    mod_between = st.text_input('Per-step instructions (natural language):')
-    mod_end = ''
+    with st.expander('Prompt Configuration'):
+           
+        prompt_styles = ['query', 'plan']
+        prompt_style = st.selectbox(
+            'Select prompt style:', 
+            options=prompt_styles, index=1)
+        
+        nr_samples = int(st.slider(
+            'Number of samples in prompt:', 
+            min_value=0, max_value=6))
+    
+    
+    with st.expander('Code Customization'):
+        mod_start = st.text_input('General instructions (natural language):')
+        mod_between = st.text_input('Per-step instructions (natural language):')
+        mod_end = ''
 
 
 id_case = 0
