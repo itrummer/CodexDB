@@ -4,6 +4,7 @@ Created on Aug 23, 2022
 @author: immanueltrummer
 '''
 import argparse
+import openai
 import os
 import pathlib
 import streamlit as st
@@ -25,6 +26,7 @@ parser.add_argument('ai_key', type=str, help='Access key for OpenAI platform')
 parser.add_argument('data_dir', type=str, help='Path to data directory')
 args = parser.parse_args()
 
+openai.api_key = args.ai_key
 catalog = codexdb.catalog.DbCatalog(args.data_dir)
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -34,12 +36,23 @@ st.markdown('''
 CodexDB generates customizable code for SQL processing via GPT-3 Codex.
 ''')
 
-with st.expander('Prompt Configuration'):
+with st.expander('Model Configuration'):
+    
     model_ids = ['code-cushman-001', 'code-davinci-002']
     model_id = st.selectbox(
         'Select GPT-3 Codex Model:', 
         options=model_ids, index=1)
     
+    start_temp = float(st.slider(
+        'Start temperature:', 
+        min_value=0.0, max_value=1.0))
+    final_temp = float(st.slider(
+        'Final temperature:',
+        min_value=0.0, max_value=1.0))
+
+
+with st.expander('Prompt Configuration'):
+       
     prompt_styles = ['query', 'plan']
     prompt_style = st.selectbox(
         'Select prompt style:', 
@@ -48,22 +61,24 @@ with st.expander('Prompt Configuration'):
     nr_samples = int(st.slider(
         'Number of samples in prompt:', 
         min_value=0, max_value=6))
-    
-    nr_tries = int(st.slider(
-        'Number of generation tries:',
-        min_value=1, max_value=10))
+
 
 with st.expander('Code Customization'):
     mod_start = st.text_input('General instructions (natural language):')
     mod_between = st.text_input('Per-step instructions (natural language):')
     mod_end = ''
 
+
 db_ids = catalog.db_ids()
 db_id = st.selectbox('Select source database:', options=db_ids)
 
-
 id_case = 0
 query = st.text_input('Write SQL query:')
+
+nr_tries = int(st.slider(
+    'Number of generation tries:',
+    min_value=1, max_value=10))
+
 
 if st.button('Generate Code'):
     examples = []
@@ -76,3 +91,4 @@ if st.button('Generate Code'):
         mod_end=mod_end)
     engine = codexdb.engine.PythonEngine(
         catalog, id_case)
+    
