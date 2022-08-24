@@ -66,7 +66,7 @@ with st.sidebar:
             min_value=0.0, max_value=1.0))
         final_temp = float(st.slider(
             'Final temperature:',
-            min_value=0.0, max_value=1.0))
+            min_value=0.0, max_value=1.0, value=0.5))
     
     
     with st.expander('Prompt Configuration'):
