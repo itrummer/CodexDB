@@ -102,7 +102,7 @@ query = st.text_input('Write SQL query:')
 
 max_tries = int(st.slider(
     'Number of generation tries:',
-    min_value=1, max_value=10))
+    min_value=1, max_value=10, value=3))
 
 examples = []
 temp_delta = final_temp - start_temp
