@@ -43,7 +43,11 @@ CodexDB generates customizable code for SQL processing via GPT-3 Codex.
 with st.expander('Data Source'):
     db_ids = catalog.db_ids()
     db_id = st.selectbox('Select source database:', options=db_ids)
-    st.write(catalog.schema(db_id))
+    
+    schema = catalog.schema(db_id)
+    for table_idx, table in enumerate(schema['table_names']): 
+        columns = [c[1] for c in schema['column_names'] if c[0] == table_idx]
+        st.write(f'{table}({", ".join(columns)})')
 
 
 with st.expander('Model Configuration'):
