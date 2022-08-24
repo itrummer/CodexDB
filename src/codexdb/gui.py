@@ -6,8 +6,10 @@ Created on Aug 23, 2022
 import argparse
 import openai
 import os
+import pandas as pd
 import pathlib
 import streamlit as st
+import sqlite3
 import sys
 
 cur_file_dir = os.path.dirname(__file__)
@@ -20,6 +22,7 @@ print(f'sys.path: {sys.path}')
 import codexdb.catalog
 import codexdb.code
 import codexdb.engine
+import codexdb.solve
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ai_key', type=str, help='Access key for OpenAI platform')
@@ -75,20 +78,39 @@ db_id = st.selectbox('Select source database:', options=db_ids)
 id_case = 0
 query = st.text_input('Write SQL query:')
 
-nr_tries = int(st.slider(
+max_tries = int(st.slider(
     'Number of generation tries:',
     min_value=1, max_value=10))
 
+examples = []
+temp_delta = final_temp - start_temp
+temp_step = 0 if max_tries == 1 else temp_delta / (max_tries - 1.0)
+test_case = {'question':'', 'query':query, 'db_id':db_id}
+reorder = False if 'order by' in query.lower() else True
+
+coder = codexdb.code.PythonGenerator(
+    catalog, examples, nr_samples, 
+    prompt_style, model_id, 
+    id_case=id_case,
+    mod_start=mod_start, 
+    mod_between=mod_between, 
+    mod_end=mod_end)
+engine = codexdb.engine.PythonEngine(
+    catalog, id_case)
+
 
 if st.button('Generate Code'):
-    examples = []
-    coder = codexdb.code.PythonGenerator(
-        catalog, examples, nr_samples, 
-        prompt_style, model_id, 
-        id_case=id_case,
-        mod_start=mod_start, 
-        mod_between=mod_between, 
-        mod_end=mod_end)
-    engine = codexdb.engine.PythonEngine(
-        catalog, id_case)
     
+    sqlite_path = f'{args.data_dir}/database/{db_id}/{db_id}.sqlite'
+    with sqlite3.connect(sqlite_path) as con:
+        ref_result = pd.read_sql_query(query, con)
+    
+    for try_idx in range(max_tries):
+        temperature = start_temp + temp_step * try_idx
+        gen_stats, code = coder.generate(test_case, temperature)
+        st.write(f'Code: {code}')
+        
+        executed, codb_result, elapsed_s = engine.execute(db_id, code, 30)
+        comparable, nr_diffs, similarity = codexdb.solve.result_cmp(
+            ref_result, codb_result, reorder)
+        st.write(f'Result similarity: {similarity}')
