@@ -59,6 +59,7 @@ with st.expander('Code Customization'):
 db_ids = catalog.db_ids()
 db_id = st.selectbox('Select source database:', options=db_ids)
 
+
 id_case = 0
 query = st.text_input('Write SQL query:')
 
