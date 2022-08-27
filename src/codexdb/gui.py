@@ -86,7 +86,7 @@ with st.sidebar:
             'No Condition', 'Executable Code', 'Correct Result']
         condition = st.selectbox(
             'Select termination condition:', options=range(3), 
-            format_func=lambda i:termination_options[i])
+            format_func=lambda i:termination_options[i], index=2)
         # execute_code = st.checkbox('Check if Executable', value=1)
         # verify_result = st.checkbox('Verify Query Result', value=1)
     
