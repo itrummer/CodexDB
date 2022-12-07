@@ -1,7 +1,7 @@
 CodexDB synthesizes query-specific code for processing SQL queries using OpenAI's GPT-3 Codex model. Users customize generated code using natural language instructions. For instance, lay users may describe, in natural language, non-standard output to generate that helps debug their SQL queries. Advanced users may instruct the system to use specific techniques or libraries for query processing, enabling fast prototyping. This talk gives an overview of CodexDB:
 
 <p align="center">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/vp5kXKnutSk?start=1786" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uPyjIkHYsxY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </p>
 
 # Implementation Details
