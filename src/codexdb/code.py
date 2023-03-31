@@ -28,7 +28,7 @@ class CodeGenerator(abc.ABC):
         self.examples = examples
         self.nr_samples = nr_samples
         self.prompt_style = prompt_style
-        self.ai_kwargs = {'engine':model_id}
+        self.ai_kwargs = {'model':model_id}
         self.code_prefix = ''
         self.code_suffix = ''
     
@@ -72,13 +72,20 @@ class CodeGenerator(abc.ABC):
             try:
                 print(f'\nPrompt:\n*******\n{prompt}\n*******')
                 start_s = time.time()
-                response = openai.Completion.create(
-                    prompt=prompt, temperature=temperature,
-                    **self.ai_kwargs)
+                response = openai.ChatCompletion.create(
+                    messages=[{'user':prompt}],
+                    temperature=temperature,
+                    **self.ai_kwargs
+                    )
+                completion = response['choices'][0]['message']['content']
+                # response = openai.Completion.create(
+                    # prompt=prompt, temperature=temperature,
+                    # **self.ai_kwargs)
+                # completion = response['choices'][0]['text']
                 total_s = time.time() - start_s
                 stats['last_request_s'] = total_s
                 stats['error'] = False
-                return stats, response['choices'][0]['text']
+                return stats, completion
             except openai.error.InvalidRequestError as e:
                 print(f'InvalidRequestError: {e} - giving up')
                 # No point in retrying (often: prompt to long)

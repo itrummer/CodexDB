@@ -56,7 +56,7 @@ with st.sidebar:
     
     with st.expander('Model Configuration'):
         
-        model_ids = ['gpt-4', 'davinci', 'cushman:2020-05-03', 'babbage', 'ada']
+        model_ids = ['gpt-4', 'gpt-3.5-turbo']
         model_id = st.selectbox(
             'Select GPT Model:', 
             options=model_ids, index=0)
