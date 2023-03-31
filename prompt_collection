@@ -139,3 +139,20 @@ Programming and scripting languages supported by Codex:
 # 3. Write index to file on hard disk.
 # 4. Print out name of index file only.
 
+---
+"""
+This Python program answers the query "What is the total number of singers?" on the following tables:
+Table stadium with columns Stadium_ID, Location, Name, Capacity, Highest, Lowest, Average, stored in stadium.csv.
+Table singer with columns Singer_ID, Name, Country, Song_Name, Song_release_year, Age, Is_male, stored in singer.csv.
+Table concert with columns concert_ID, concert_Name, Theme, Stadium_ID, Year, stored in concert.csv.
+Table singer_in_concert with columns concert_ID, Singer_ID, stored in singer_in_concert.csv.
+1. Load data for all relevant tables.
+2. Calculate the answer to the query.
+3. Write query results to file 'result.csv'.
+Generate code to reduce main memory footprint as much as possible.
+"""
+---
+1. Import library for processing tabular data in parallel.
+1. Import library for processing tabular data on GPU.
+1. Import library for processing tabular data on TPU.
+(with temperature 0.2 - no start/end tags, 400 tokens)

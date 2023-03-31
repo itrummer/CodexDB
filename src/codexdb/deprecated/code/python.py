@@ -3,14 +3,14 @@ Created on Sep 23, 2021
 
 @author: immanueltrummer
 '''
-import codexdb.code.generic
+import codexdb.deprecated.code_gen.generic
 from contextlib import redirect_stdout
 from io import StringIO
 import pandas as pd
 import sys
 
 
-class PythonGenerator(codexdb.code.generic.Generator):
+class PythonGenerator(codexdb.deprecated.code_gen.generic.Generator):
     """ Generates Python code. """
     
     def execute(self, db_id, question, generated):

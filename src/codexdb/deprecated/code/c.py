@@ -3,9 +3,9 @@ Created on Sep 26, 2021
 
 @author: immanueltrummer
 '''
-import codexdb.code.generic
+import codexdb.deprecated.code_gen.generic
 
-class Cgenerator(codexdb.code.generic):
+class Cgenerator(codexdb.deprecated.code_gen.generic):
     """ Generates C code. """
     
     @abstractmethod

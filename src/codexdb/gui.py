@@ -33,10 +33,10 @@ openai.api_key = args.ai_key
 catalog = codexdb.catalog.DbCatalog(args.data_dir)
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-st.set_page_config(page_title='CodexDB')
+st.set_page_config(page_title='GPT-DB')
 st.markdown('''
-# CodexDB
-CodexDB generates customizable code for SQL processing via GPT-3 Codex.
+# GPT-DB
+GPT-DB generates customizable code for SQL processing via GPT.
 ''')
 
 
@@ -56,10 +56,10 @@ with st.sidebar:
     
     with st.expander('Model Configuration'):
         
-        model_ids = ['code-cushman-001', 'code-davinci-002']
+        model_ids = ['gpt-4', 'davinci', 'cushman:2020-05-03', 'babbage', 'ada']
         model_id = st.selectbox(
-            'Select GPT-3 Codex Model:', 
-            options=model_ids, index=1)
+            'Select GPT Model:', 
+            options=model_ids, index=0)
         
         start_temp = float(st.slider(
             'Start temperature:', 

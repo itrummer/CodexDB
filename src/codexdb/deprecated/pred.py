@@ -4,7 +4,7 @@ Created on Sep 20, 2021
 @author: immanueltrummer
 '''
 import argparse
-import codexdb.code.python
+import codexdb.deprecated.code_gen.python
 import codexdb.deprecated.check
 import json
 import openai
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     openai.api_key = args.key
-    p_gen = codexdb.code.python.PythonGenerator(args.spider)
+    p_gen = codexdb.deprecated.code_gen.python.PythonGenerator(args.spider)
     q_path = f'{args.spider}/results_dev.json'
     with open(q_path) as file:
         queries = json.load(file)
