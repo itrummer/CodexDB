@@ -73,7 +73,9 @@ class CodeGenerator(abc.ABC):
                 print(f'\nPrompt:\n*******\n{prompt}\n*******')
                 start_s = time.time()
                 response = openai.ChatCompletion.create(
-                    messages=[{'role':'user', 'content':prompt}],
+                    messages=[
+                        {'role':'system', 'content':'You write Python code, implementing Python comments.'},
+                        {'role':'user', 'content':prompt}],
                     temperature=temperature,
                     **self.ai_kwargs
                     )
