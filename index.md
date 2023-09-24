@@ -11,4 +11,5 @@ CodexDB is a framework on top of OpenAI's GPT-3 Codex model. Given an SQL query 
 
 # Publications
 
+- **VLDB 2023** Demonstrating GPT-DB: Generating Query-Specific and Customizable Code for SQL Processing with GPT-4. _Immanuel Trummer_.
 - **VLDB 2022** CodexDB: synthesizing code for query processing from natural language instructions using GPT-3 Codex. _Immanuel Trummer_.
