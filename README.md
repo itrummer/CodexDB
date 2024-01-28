@@ -49,9 +49,9 @@ export CODEXDB_PYTHON=python3
 
 **WARNING: CodexDB generates Python code for query execution via large language models. Since CodexDB cannot guarantee to generate correct code, it is highly recommended to execute code remotely on a temporary machine. If executing CodexDB locally, executing the generated code may alter system state or delete files on hard disk.**
 
-1. Start the CodexDB Web interface (replace the three dots with your OpenAI access key!):
+1. Start the CodexDB Web interface (replace `[OPENAI_API_ACCESS_KEY]` with your OpenAI access key!):
 ```
-streamlit run src/codexdb/gui.py ... /home/ubuntu/spider
+streamlit run src/codexdb/gui.py [OPENAI_API_ACCESS_KEY] /home/ubuntu/spider
 ```
 2. After executing the command above, you should see two URLs on the console:
 - Network URL
