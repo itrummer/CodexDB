@@ -36,7 +36,10 @@ unzip spider.zip
 cd CodexDB
 PYTHONPATH=src python3 src/codexdb/prep/spider.py /home/ubuntu/spider
 ```
-7. Set all required environment variables:
+7. Set the following environment variables:
+- `CODEXDB_TMP` designates a working directory into which CodexDB writes temporary files (e.g., Python code for query execution).
+- `CODEXDB_PYTHON` is the name (or path) of the Python interpreter CodexDB uses to test the Python code it generates.
+E.g., set the two variables using the following commands:
 ```
 export CODEXDB_TMP=/tmp
 export CODEXDB_PYTHON=python3
@@ -44,11 +47,14 @@ export CODEXDB_PYTHON=python3
 
 # Running CodexDB
 
-1. Start the CodexDB Web interface (in the following command, replace the three dots with your OpenAI access key!):
+1. Start the CodexDB Web interface (replace the three dots with your OpenAI access key!):
 ```
 streamlit run src/codexdb/gui.py ... /home/ubuntu/spider
 ```
-2. Access the CodexDB Web interface via the Web browser.
+2. After executing the command above, you should see two URLs on the console:
+- Network URL
+- External URL
+If using CodexDB on your local machine, open the first URL on your Web browser. If using CodexDB on a remote machine, use the second URL. You may have to enable external access in the second case. E.g., when running CodexDB on Amazon EC2, make sure to add an inbound rule allowing TCP access on port 8501.
 
 # How to Run Benchmarks
 
