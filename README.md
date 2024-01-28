@@ -59,6 +59,12 @@ streamlit run src/codexdb/gui.py [OPENAI_API_ACCESS_KEY] /home/ubuntu/spider
 
 If using CodexDB on your local machine, open the first URL on your Web browser. If using CodexDB on a remote machine, open the second URL via your local Web browser. You may have to enable external access in the second case. E.g., when running CodexDB on Amazon EC2, make sure to add an inbound rule allowing TCP access on port 8501.
 
+# Troubleshooting
+
+CodexDB only works with specific versions of the `sqlglot` SQL parsing library. If you encounter frequent errors in `plan.py`, check the installed version of sqlglot by running `pip show sqlglot` in the terminal. The required version is 1.16.1. If you see a different version number, uninstall sqlglot (`sudo pip uninstall sqlglot`) and reinstall the required version (e.g., by running `pip install sqlglot==1.16.1`).
+
+CodexDB only supports a restricted class of SQL queries via the "plan" prompt. In particular, it only supports the specific join syntax used in the queries of the SPIDER benchmark. If your query falls outside of the class of supported queries, you can switch to the "query" prompt by selecting the corresponding prompt style in the "Prompt Configuration" section (see buttons on the left side of the Web interface). This prompt style does not integrate a summary of processing steps into the prompt and may therefore degrade quality.
+
 # How to Run Benchmarks
 
 The code under "/src/codexdb/bench/run.py" reads SQL queries from an input file and generates code that complies with additional instructions. 
