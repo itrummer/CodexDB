@@ -47,6 +47,8 @@ export CODEXDB_PYTHON=python3
 
 # Running CodexDB
 
+**WARNING: CodexDB generates Python code for query execution via large language models. Since CodexDB cannot guarantee to generate correct code, it is highly recommended to execute code remotely on a temporary machine. If executing CodexDB locally, executing the generated code may alter system state or delete files on hard disk.**
+
 1. Start the CodexDB Web interface (replace the three dots with your OpenAI access key!):
 ```
 streamlit run src/codexdb/gui.py ... /home/ubuntu/spider
@@ -54,7 +56,8 @@ streamlit run src/codexdb/gui.py ... /home/ubuntu/spider
 2. After executing the command above, you should see two URLs on the console:
 - Network URL
 - External URL
-If using CodexDB on your local machine, open the first URL on your Web browser. If using CodexDB on a remote machine, use the second URL. You may have to enable external access in the second case. E.g., when running CodexDB on Amazon EC2, make sure to add an inbound rule allowing TCP access on port 8501.
+
+If using CodexDB on your local machine, open the first URL on your Web browser. If using CodexDB on a remote machine, open the second URL via your local Web browser. You may have to enable external access in the second case. E.g., when running CodexDB on Amazon EC2, make sure to add an inbound rule allowing TCP access on port 8501.
 
 # How to Run Benchmarks
 
