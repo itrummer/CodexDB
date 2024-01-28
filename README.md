@@ -65,12 +65,6 @@ CodexDB only works with specific versions of the `sqlglot` SQL parsing library. 
 
 CodexDB only supports a restricted class of SQL queries via the "plan" prompt. In particular, it only supports the specific join syntax used in the queries of the SPIDER benchmark. If your query falls outside of the class of supported queries, you can switch to the "query" prompt by selecting the corresponding prompt style in the "Prompt Configuration" section (see buttons on the left side of the Web interface). This prompt style does not integrate a summary of processing steps into the prompt and may therefore degrade quality.
 
-# How to Run Benchmarks
-
-The code under "/src/codexdb/bench/run.py" reads SQL queries from an input file and generates code that complies with additional instructions. 
-It first performs a training run in which it solves 50 training queries with a high number of retries, increasing the chances to generate accurate code. 
-Next, it uses the generated examples as part of the prompt (few-shot learning) to solve test queries with a lower number of retries.
-
 ## How to cite
 
 ```
