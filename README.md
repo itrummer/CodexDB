@@ -47,7 +47,7 @@ export CODEXDB_PYTHON=python3
 
 # Running CodexDB
 
-**WARNING: CodexDB generates Python code for query execution via large language models. Since CodexDB cannot guarantee to generate correct code, it is highly recommended to execute code remotely on a temporary machine. If executing CodexDB locally, executing the generated code may alter system state or delete files on hard disk.**
+**WARNING: CodexDB generates Python code for query execution via large language models. Since CodexDB cannot guarantee to generate correct code, it is highly recommended to avoid running CodexDB on your primary machine. Instead, run CodexDB on a temporary EC2 instance and log into the Web interface from your primary machine.**
 
 1. Start the CodexDB Web interface (replace `[OPENAI_API_ACCESS_KEY]` with your OpenAI access key!):
 ```
