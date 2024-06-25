@@ -74,7 +74,8 @@ class CodeGenerator(abc.ABC):
                 start_s = time.time()
                 response = openai.ChatCompletion.create(
                     messages=[
-                        {'role':'system', 'content':'You write Python code, implementing Python comments.'},
+                        {'role':'system', 
+                         'content':'You write Python code, implementing Python comments.'},
                         {'role':'user', 'content':prompt}],
                     temperature=temperature,
                     **self.ai_kwargs

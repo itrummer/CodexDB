@@ -26,10 +26,10 @@ def train(data_dir, train_path, log_path, id_case,
         result_path: path to file for result output
     """
     codexdb.solve.main(
-        data_dir, train_path, 'python', 'code-davinci-002', 'plan', 
+        data_dir, train_path, 'python', 'gpt-4o', 'plan', 
         id_case, mod_start, mod_between, mod_end, '', 0, 
         0, 1, 50,
-        'solved', 10, log_path, result_path)
+        'solved', 10, 1, log_path, result_path)
 
 def test(data_dir, test_path, sample_path, id_case,
          mod_start, mod_between, mod_end, out_dir):
@@ -45,7 +45,7 @@ def test(data_dir, test_path, sample_path, id_case,
         mod_end: modification at plan end
         out_dir: generate output in this directory
     """
-    for model_id in ['code-davinci-002', 'code-cushman-001']:
+    for model_id in ['gpt-3.5-turbo', 'gpt-4o']:
         for prompt_style in ['plan']:
             for nr_samples in [2, 4]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
@@ -56,7 +56,7 @@ def test(data_dir, test_path, sample_path, id_case,
                     model_id, prompt_style, id_case, 
                     mod_start, mod_between, mod_end, 
                     sample_path, nr_samples, 0, 2, 200, 
-                    'executed', 2, log_path, result_path)
+                    'executed', 2, 1, log_path, result_path)
 
 
 if __name__ == '__main__':
