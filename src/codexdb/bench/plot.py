@@ -23,7 +23,8 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
     """
     values = []
     #for model_id in ['cushman-codex', 'davinci-codex']:
-    for model_id in ['code-cushman-001', 'code-davinci-002']:
+    #for model_id in ['code-cushman-001', 'code-davinci-002']:
+    for model_id in ['gpt-3.5-turbo', 'gpt-4o']:
         # for prompt_style in ['question', 'query', 'plan']:
         for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
