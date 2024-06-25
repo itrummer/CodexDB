@@ -78,7 +78,7 @@ class CodeGenerator(abc.ABC):
                          'content':'You write Python code, implementing Python comments.'},
                         {'role':'user', 'content':prompt}],
                     temperature=temperature,
-                    **self.ai_kwargs
+                    **self.ai_kwargs, max_tokens=4000,
                     )
                 completion = response['choices'][0]['message']['content']
                 # response = openai.Completion.create(
