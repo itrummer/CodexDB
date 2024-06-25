@@ -80,8 +80,11 @@ class CodeGenerator(abc.ABC):
                         {'role':'user', 'content':prompt}],
                     temperature=temperature,
                     **self.ai_kwargs)
-                completion = self._extract(response)
+                completion = self._extract_code(response)
                 total_s = time.time() - start_s
+                usage = response['usage']
+                stats['prompt_tokens'] = usage['prompt_tokens']
+                stats['completion_tokens'] = usage['completion_tokens']
                 stats['last_request_s'] = total_s
                 stats['error'] = False
                 return stats, completion
@@ -125,7 +128,7 @@ class CodeGenerator(abc.ABC):
             lines.append(','.join(row_parts))
         return lines
     
-    def _extract(self, response):
+    def _extract_code(self, response):
         """ Extract Python code from LLM answer.
         
         Args:
