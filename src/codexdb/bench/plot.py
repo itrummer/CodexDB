@@ -69,7 +69,11 @@ def analyze_code(run_dir):
         run_dir: directory containing benchmark results
     """
     print('Analyzing generated code ...')
-    result_path = f'{run_dir}/results_code-davinci-002_plan_S4_R2_T0.5.json'
+    model_id = model_ids[-1]
+    prompt_style = 'plan'
+    nr_samples = 2
+    run_id = get_run_id(model_id, prompt_style, nr_samples)
+    result_path = f'{run_dir}/results_{run_id}.json'
     with open(result_path) as file:
         data = json.load(file)
     
