@@ -58,9 +58,11 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
                                     if value is not None:
                                         values.append(value)
                 except Exception as e:
-                    print(e)
+                    pass
+                    #print(e)
     
     return agg_fct(values)
+
 
 def analyze_code(run_dir):
     """ Analyze generated code. 
@@ -99,6 +101,7 @@ def analyze_code(run_dir):
     
     print(lib_count)
     print(reg_count)
+
 
 def analyze_training(run_dir):
     """ Analyze training process. """
@@ -172,6 +175,7 @@ def count_solved(results, must_contain, multiplicity):
                     nr_solved += 1
     return nr_solved
 
+
 def generate_plot(run_dir, y_fct):
     """ Generates commands for PGF group plot. 
     
@@ -198,11 +202,12 @@ def generate_plot(run_dir, y_fct):
                         point = f'({nr_samples}, {y_coordinate})'
                         line += [point]
                 except Exception as e:
-                    print(f'Exception for {result_path}: {e}')
+                    #print(f'Exception for {result_path}: {e}')
                     line += ['(-1, -1)']
             plot += ['\\addplot coordinates {' +  ' '.join(line) + '};']
         plots += ['\n'.join(plot)]
     return plots
+
 
 def median(results, extractor, solved):
     """ Calculate median of numerical field over all tries.
@@ -224,6 +229,7 @@ def median(results, extractor, solved):
                     values += [value]
     return statistics.median(values) if values else -1
 
+
 def print_aggs(run_dir, solved, map_fct):
     """ Print out aggregates for tries in directory.
     
@@ -237,6 +243,7 @@ def print_aggs(run_dir, solved, map_fct):
         agg_val = agg_all(run_dir, solved, map_fct, agg_fct)
         print(f'{agg_fct}:{agg_val}')
     print('\n' * 3)
+
 
 def print_group(plots):
     """ Print out a group of plots.
