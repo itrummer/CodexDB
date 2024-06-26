@@ -13,6 +13,20 @@ import statistics
 model_ids = ['gpt-3.5-turbo', 'gpt-4o']
 
 
+def get_run_id(model_id, prompt_style, nr_samples):
+    """ Generate string ID characterizing run settings.
+    
+    Args:
+        model_id: ID of the LLM used.
+        prompt_style: style of prompt.
+        nr_samples: how many samples for few-shot learning.
+    
+    Returns:
+        string ID of run (used in result file names).
+    """
+    return f'{model_id}_{prompt_style}_{nr_samples}'
+
+
 def agg_all(run_dir, solved, map_fct, agg_fct):
     """ Calculate aggregates over all runs.
     
@@ -32,7 +46,7 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
         # for prompt_style in ['question', 'query', 'plan']:
         for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
-                run_id = f'{model_id}_{prompt_style}_S{nr_samples}_R2_T0.5'
+                run_id = get_run_id(model_id, prompt_style, nr_samples)
                 result_path = f'{run_dir}/results_{run_id}.json'
                 try:
                     with open(result_path) as file:
@@ -171,7 +185,7 @@ def generate_plot(run_dir, y_fct):
         # for prompt_style in ['plan']:
             line = []
             for nr_samples in [0, 2, 4]:
-                run_id = f'{model_id}_{prompt_style}_{nr_samples}'
+                run_id = get_run_id(model_id, prompt_style, nr_samples)
                 result_path = f'{run_dir}/results_{run_id}.json'
                 try:
                     with open(result_path) as file:
