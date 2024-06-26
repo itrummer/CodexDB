@@ -9,6 +9,10 @@ import json
 import re
 import statistics
 
+
+model_ids = ['gpt-3.5-turbo', 'gpt-4o']
+
+
 def agg_all(run_dir, solved, map_fct, agg_fct):
     """ Calculate aggregates over all runs.
     
@@ -24,7 +28,7 @@ def agg_all(run_dir, solved, map_fct, agg_fct):
     values = []
     #for model_id in ['cushman-codex', 'davinci-codex']:
     #for model_id in ['code-cushman-001', 'code-davinci-002']:
-    for model_id in ['gpt-3.5-turbo', 'gpt-4o']:
+    for model_id in model_ids:
         # for prompt_style in ['question', 'query', 'plan']:
         for prompt_style in ['plan']:
             for nr_samples in [0, 2, 4]:
@@ -161,7 +165,7 @@ def generate_plot(run_dir, y_fct):
         list of plot groups
     """
     plots = []
-    for model_id in ['code-cushman-001', 'code-davinci-002']:
+    for model_id in model_ids:
         plot = []
         for prompt_style in ['question', 'query', 'plan']:
         # for prompt_style in ['plan']:
