@@ -132,7 +132,7 @@ def analyze_training(run_dir):
     total_s = 0
     for tries in tries_by_case:
         for one_try in tries:
-            generation_s = one_try['last_request_s']
+            generation_s = one_try['gen_total_s']
             execution_s = one_try['execution_s']['total_s']
             total_s += generation_s
             total_s += execution_s
