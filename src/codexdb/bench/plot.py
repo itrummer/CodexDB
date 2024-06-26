@@ -171,7 +171,7 @@ def generate_plot(run_dir, y_fct):
         # for prompt_style in ['plan']:
             line = []
             for nr_samples in [0, 2, 4]:
-                run_id = f'{model_id}_{prompt_style}_S{nr_samples}_R2_T0.5'
+                run_id = f'{model_id}_{prompt_style}_{nr_samples}'
                 result_path = f'{run_dir}/results_{run_id}.json'
                 try:
                     with open(result_path) as file:
