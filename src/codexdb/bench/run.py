@@ -46,8 +46,8 @@ def test(data_dir, test_path, sample_path, id_case,
         out_dir: generate output in this directory
     """
     for model_id in ['gpt-3.5-turbo', 'gpt-4o']:
-        for prompt_style in ['plan', 'query']:
-            for nr_samples in [0, 2, 4]:
+        for prompt_style in ['plan']:
+            for nr_samples in [2]:
                 run_id = f'{model_id}_{prompt_style}_{nr_samples}'
                 log_path = f'{out_dir}/log_{run_id}'
                 result_path = f'{out_dir}/results_{run_id}.json'
