@@ -91,7 +91,8 @@ def analyze_code(run_dir):
     
     reg_count = collections.defaultdict(lambda:0)
     reg_exps = [
-        'print\(\'Done\.\'\)', 'print\(([a-zA-Z_])+\)', 
+        'print\(\'Done\.\'\)', 'print\(\'Done\'\)',
+        'print\(([a-zA-Z_])+\)',
         'print\(["|\'].+["|\']\)', 'print']
     for tries in tries_by_case:
         code = tries[-1]['code']
