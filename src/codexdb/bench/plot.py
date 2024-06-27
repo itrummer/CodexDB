@@ -299,8 +299,21 @@ if __name__ == '__main__':
     print_group(generate_plot(args.run_dir, y_fct))
     print_aggs(args.run_dir, True, map_fct)
     
+    print('PROMPT TOKENS')
+    map_fct = lambda x:x['gen_stats']['prompt_tokens']
+    y_fct = lambda d:median(d, map_fct, False)
+    print_group(generate_plot(args.run_dir, y_fct))
+    print_aggs(args.run_dir, False, map_fct)
+    
+    print('COMPLETION TOKENS')
+    map_fct = lambda x:x['gen_stats']['completion_tokens']
+    y_fct = lambda d:median(d, map_fct, False)
+    print_group(generate_plot(args.run_dir, y_fct))
+    print_aggs(args.run_dir, False, map_fct)
+    
     print('ANALYZING CODE')
     analyze_code(args.run_dir)
+    print('\n\n\n')
     
     print('ANALYZING TRAINING')
     analyze_training(args.run_dir)
