@@ -93,6 +93,8 @@ def analyze_code(run_dir):
     reg_exps = [
         'print\(\'Done\.\'\)', 'print\(\'Done\'\)',
         'print\("Done"\)', 'print\("Done."\)',
+        'print\("done"\)', 'print\("done."\)',
+        'print\(\'done\'\)', 'print\(\'done.\'\)',
         'print\(([a-zA-Z_])+\)',
         'print\(["|\'].+["|\']\)', 'print']
     for tries in tries_by_case:
