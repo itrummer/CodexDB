@@ -31,7 +31,7 @@ cd ..
 pip install gdown
 gdown 1WwbJjvqPzLIcVmn8QcTOWr79oOFKFO6e
 sudo apt install unzip
-unzip spider.zip
+unzip spider_data.zip
 ```
 6. Pre-process the SPIDER data set:
 ```
