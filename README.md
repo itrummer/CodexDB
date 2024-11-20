@@ -4,7 +4,7 @@ CodexDB allows users to specify natural language instructions, together with the
 
 # Setup
 
-The following instructions have been tested on an EC2 instance of type t2.medium with Ubuntu 22.04 OS and 25 GB of disk space.
+The following instructions have been tested on an EC2 instance of type t2.medium with Ubuntu 22.04 OS, Python 3.12, and 25 GB of disk space.
 
 1. After logging into the EC2 instance, run the following command (from ```/home/ubuntu```):
 ```
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 5. Download and unzip the SPIDER dataset for benchmarking:
 ```
 cd ..
-sudo pip install gdown
+pip install gdown
 gdown 1iRDVHLr4mX2wQKSgA9J8Pire73Jahh0m
 sudo apt install unzip
 unzip spider.zip
