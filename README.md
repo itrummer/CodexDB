@@ -19,9 +19,11 @@ cd CodexDB/
 sudo apt update
 sudo apt install python3-pip
 ```
-4. Use pip to install required dependencies (make sure to use sudo):
+4. Create and activate a virtual environment and use pip to install dependencies:
 ```
-sudo pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 5. Download and unzip the SPIDER dataset for benchmarking:
 ```
