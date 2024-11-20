@@ -36,7 +36,7 @@ unzip spider_data.zip
 6. Pre-process the SPIDER data set:
 ```
 cd CodexDB
-PYTHONPATH=src python3 src/codexdb/prep/spider.py /home/ubuntu/spider
+PYTHONPATH=src python3 src/codexdb/prep/spider.py /home/ubuntu/spider_data
 ```
 7. Set the following environment variables:
 - `CODEXDB_TMP` designates a working directory into which CodexDB writes temporary files (e.g., Python code for query execution).
@@ -53,7 +53,7 @@ export CODEXDB_PYTHON=python3
 
 1. Start the CodexDB Web interface (replace `[OPENAI_API_ACCESS_KEY]` with your OpenAI access key!):
 ```
-streamlit run src/codexdb/gui.py [OPENAI_API_ACCESS_KEY] /home/ubuntu/spider
+streamlit run src/codexdb/gui.py [OPENAI_API_ACCESS_KEY] /home/ubuntu/spider_data
 ```
 2. After executing the command above, you should see two URLs on the console:
 - Network URL
