@@ -262,7 +262,9 @@ if __name__ == '__main__':
     parser.add_argument('mod_end', type=str, help='Instructions at end')
     parser.add_argument('sample_path', type=str, help='Path to sample file')
     parser.add_argument('nr_samples', type=int, help='Number of samples in prompt')
-    parser.add_argument('nr_tests', type=int, help='Number of test cases')
+    parser.add_argument('test_start', type=int, help='Index of first test case')
+    parser.add_argument('test_step', type=int, help='Gap between test case indexes')
+    parser.add_argument('test_end', type=int, help='Index of last test case +1')
     parser.add_argument('termination', type=str, help='Termination criterion')
     parser.add_argument('max_tries', type=int, help='Maximal number of tries')
     parser.add_argument('log_path', type=str, help='Redirect output here')
@@ -273,5 +275,6 @@ if __name__ == '__main__':
     main(
         args.data_dir, args.test_path, args.language, args.model_id, 
         args.prompt_style, args.mod_start, args.mod_between, args.mod_end, 
-        args.sample_path, args.nr_samples, args.nr_tests, args.termination, 
-        args.max_tries, 0.5, args.log_path, args.result_path)
+        args.sample_path, args.nr_samples, args.test_start, args.test_step, 
+        args.test_end, args.termination, args.max_tries, 0.5, 
+        args.log_path, args.result_path)
