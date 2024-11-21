@@ -274,7 +274,7 @@ if __name__ == '__main__':
     openai.api_key = args.ai_key
     main(
         args.data_dir, args.test_path, args.language, args.model_id, 
-        args.prompt_style, args.mod_start, args.mod_between, args.mod_end, 
+        args.prompt_style, True, args.mod_start, args.mod_between, args.mod_end, 
         args.sample_path, args.nr_samples, args.test_start, args.test_step, 
         args.test_end, args.termination, args.max_tries, 0.5, 
         args.log_path, args.result_path)
