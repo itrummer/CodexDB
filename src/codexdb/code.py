@@ -271,10 +271,18 @@ class PythonGenerator(CodeGenerator):
         prompt_parts.append('"""')
         prompt_parts += self._db_info(schema, db_dir, files, 5)
         if self.prompt_style in ['question', 'query', 'plan']:
-            if self.prompt_style == 'question':
-                prompt_parts.append(f'Question: {question}')
-            elif self.prompt_style == 'query':
-                prompt_parts.append(f'SQL query: {query}')
+            if self.prompt_style in ['question', 'query']:
+                if self.prompt_style == 'question':
+                    prompt_parts.append(f'Question: {question}')
+                else:
+                    prompt_parts.append(f'SQL query: {query}')
+                
+                if self.mod_between:
+                    prompt_parts.append(f'Between steps: {self.mod_between}')
+                if self.mod_start:
+                    prompt_parts.append(self.mod_start)
+                if self.mod_end:
+                    prompt_parts.append(self.mod_end)
             else:
                 prompt_parts.append('Processing steps:')
                 plan = self.planner.plan(query)
