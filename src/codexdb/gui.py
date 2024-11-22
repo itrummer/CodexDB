@@ -36,7 +36,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 st.set_page_config(page_title='CARD')
 st.markdown('''
 # CARD
-CARD: the Coding Assistant foR Data.
+CARD: the Coding Assistant for Data.
 ''')
 
 
@@ -98,7 +98,7 @@ with st.sidebar:
 
 
 id_case = 0
-query = st.text_input('Write SQL query:')
+query = st.text_input('Write query:')
 
 max_tries = int(st.slider(
     'Number of generation tries:',
