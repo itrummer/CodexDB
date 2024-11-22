@@ -123,9 +123,10 @@ engine = codexdb.engine.PythonEngine(
 
 if st.button('Generate Code'):
     
-    sqlite_path = f'{args.data_dir}/database/{db_id}/{db_id}.sqlite'
-    with sqlite3.connect(sqlite_path) as con:
-        ref_result = pd.read_sql_query(query, con)
+    if condition > 1:
+        sqlite_path = f'{args.data_dir}/database/{db_id}/{db_id}.sqlite'
+        with sqlite3.connect(sqlite_path) as con:
+            ref_result = pd.read_sql_query(query, con)
     
     for try_idx in range(max_tries):
         
