@@ -130,7 +130,7 @@ if st.button('Generate Code'):
     
     for try_idx in range(max_tries):
         
-        st.subheader(f'Trial {(try_idx+1)}')
+        st.subheader(f'Trial {(try_idx+1)} ...')
         
         db_id = test_case['db_id']
         schema = catalog.schema(db_id)
@@ -153,11 +153,11 @@ if st.button('Generate Code'):
                 st.dataframe(ref_result)
                 st.write('CARD Result:')
                 st.dataframe(codb_result)
+
+        with st.expander('Input Prompt'):
+            st.code(prompt, language='python')
         
         if (condition == 1 and executed) or \
             (condition == 2 and similarity >= 1.0):
             st.write('Termination Criterion Satisfied.')
             break
-        
-        with st.expander('Input Prompt'):
-            st.code(prompt, language='python')
