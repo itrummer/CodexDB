@@ -15,6 +15,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('in_path', type=str, help='Path to input file')
     parser.add_argument('model', type=str, help='Base model for fine-tuning')
+    parser.add_argument('suffix', type=str, help='Suffix used in model name')
     args = parser.parse_args()
     
     reply = client.files.create(
@@ -23,7 +24,9 @@ if __name__ == '__main__':
     file_id = reply.id
     
     reply = client.fine_tuning.jobs.create(
-        training_file=file_id, model=args.model)
+        training_file=file_id, 
+        model=args.model,
+        suffix=args.suffix)
     job_id = reply.id
     print(f'Job ID: {job_id}')
     
